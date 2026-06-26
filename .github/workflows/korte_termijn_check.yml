@@ -1,0 +1,49 @@
+name: Korte-termijn check (elke 2 uur)
+
+on:
+  schedule:
+    # Elke 2 uur op weekdagen tijdens beurstijden (09:00–17:00 Amsterdam = 07:00–15:00 UTC zomer / 08:00–16:00 UTC winter)
+    # Ruim gekozen: 07:00–17:00 UTC op weekdagen — script zelf filtert op echte beurstijd
+    - cron: "0 7,9,11,13,15,17 * * 1-5"
+  workflow_dispatch:  # Handmatig starten mogelijk
+
+# Voorkomt gelijktijdige runs
+concurrency:
+  group: korte-termijn
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Geschatte duur: ~2-3 minuten per run
+    # 6 runs/dag × 5 dagen × ~3 min = ~90 min/maand — ruim binnen 2.000 gratis minuten
+    permissions:
+      contents: write  # Nodig om logboek terug te committen
+
+    steps:
+      - name: Code ophalen
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Afhankelijkheden installeren
+        run: pip install yfinance>=0.2.0
+
+      - name: Korte-termijn check uitvoeren
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python beleggingen.py kort
+
+      - name: Logboek committen (als er wijzigingen zijn)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/signalen_logboek.json
+          git diff --staged --quiet || git commit -m "chore: signalen logboek bijgewerkt [skip ci]"
+          git push || true

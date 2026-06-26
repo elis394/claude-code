@@ -1,0 +1,18 @@
+{
+  "posities": [],
+  "_voorbeelden": [
+    {
+      "ticker": "ASML.AS",
+      "naam": "ASML Holding",
+      "beurs": "Euronext Amsterdam",
+      "sector": "Technologie",
+      "regio": "Europa",
+      "aankoopdatum": "2024-06-01",
+      "aankooprijs_eur": 750.00,
+      "aantal": 2,
+      "stop_loss_eur": 650.00,
+      "opmerking": "Voorbeeld - verwijder en voeg eigen posities toe"
+    }
+  ],
+  "_instructie": "Voeg tickers toe aan 'posities' array. Gebruik .AS voor Euronext Amsterdam, .DE voor Xetra, zonder suffix voor NYSE/NASDAQ."
+}

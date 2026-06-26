@@ -1,0 +1,29 @@
+{
+  "etfs": [
+    {
+      "naam": "SPDR MSCI World UCITS ETF (Acc)",
+      "ticker": "SWRD.AS",
+      "beurs": "Euronext Amsterdam",
+      "eenheden": 0,
+      "totaal_geïnvesteerd_eur": 0,
+      "aankoopdatum": "2024-01-01",
+      "opmerking": "Vul in: aantal eenheden en totaal geïnvesteerd bedrag in EUR"
+    },
+    {
+      "naam": "Vanguard FTSE All-World UCITS ETF (Acc)",
+      "ticker": "VWCE.AS",
+      "beurs": "Euronext Amsterdam",
+      "eenheden": 0,
+      "totaal_geïnvesteerd_eur": 0,
+      "aankoopdatum": "2024-01-01",
+      "opmerking": "Vul in: aantal eenheden en totaal geïnvesteerd bedrag in EUR"
+    }
+  ],
+  "_tickers_alternatief": {
+    "SWRD_xetra": "SWRD.DE",
+    "VWCE_xetra": "VWCE.DE",
+    "SWRD_euronext": "SWRD.AS",
+    "VWCE_euronext": "VWCE.AS"
+  },
+  "_opmerking": "Gebruik .AS voor Euronext Amsterdam, .DE voor Xetra"
+}

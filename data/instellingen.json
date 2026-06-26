@@ -1,0 +1,44 @@
+{
+  "korte_termijn": {
+    "totaal_budget_eur": 0,
+    "max_per_positie_pct": 5,
+    "max_risico_per_trade_pct": 2,
+    "opmerking_budget": "Vul totaal_budget_eur in met uw korte-termijn handelsbudget"
+  },
+  "lange_termijn": {
+    "drawdown_waarschuwing_pct": -15,
+    "opmerking": "Waarschuwing bij -15% vanaf piekwaarde"
+  },
+  "spreiding": {
+    "max_per_positie_aandacht_pct": 15,
+    "max_per_positie_probleem_pct": 30,
+    "max_per_sector_pct": 20,
+    "opmerking": "Vuistregels portefeuilletheorie, geen persoonlijk financieel advies"
+  },
+  "meldingen": {
+    "ntfy_topic": "VUL_UW_NTFY_TOPIC_IN",
+    "opmerking_ntfy": "Vervang door uw geheime ntfy topic-naam (ook instellen als GitHub Actions secret NTFY_TOPIC)"
+  },
+  "bolero_tarieven": {
+    "schijf_1_max_eur": 250,
+    "schijf_1_kost_eur": 2.50,
+    "schijf_2_max_eur": 1000,
+    "schijf_2_kost_eur": 5.00,
+    "schijf_3_max_eur": 2500,
+    "schijf_3_kost_eur": 7.50,
+    "max_kost_pct_waarschuwing": 1.5,
+    "geldig_vanaf": "2026-01-01"
+  },
+  "rss_feeds": [
+    "https://feeds.reuters.com/reuters/businessNews",
+    "https://feeds.reuters.com/reuters/worldNews",
+    "https://finance.yahoo.com/news/rssindex"
+  ],
+  "nieuws_filter_termen": [
+    "oorlog", "conflict", "sancties", "verkiezingen", "centrale bank",
+    "war", "conflict", "sanctions", "election", "central bank", "fed",
+    "rente", "inflatie", "recessie", "recession", "inflation"
+  ],
+  "vix_drempel_let_op": 20,
+  "vix_drempel_waarschuwing": 30
+}

@@ -1,0 +1,48 @@
+name: Wekelijkse samenvatting (vrijdag)
+
+on:
+  schedule:
+    # Elke vrijdag om 17:30 Amsterdam-tijd (~15:30 UTC zomer / 16:30 UTC winter)
+    # Na marktsluit Euronext Amsterdam (17:35) — gekozen 15:30 UTC als conservatieve schatting
+    - cron: "30 15 * * 5"
+  workflow_dispatch:
+
+concurrency:
+  group: wekelijks
+  cancel-in-progress: true
+
+jobs:
+  samenvatting:
+    runs-on: ubuntu-latest
+    # Geschatte duur: ~3-5 minuten per run
+    # 4 runs/maand × ~5 min = ~20 min/maand
+    permissions:
+      contents: write
+
+    steps:
+      - name: Code ophalen
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Afhankelijkheden installeren
+        run: pip install yfinance>=0.2.0
+
+      - name: Wekelijkse samenvatting genereren
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python beleggingen.py wekelijks
+
+      - name: Logboek committen (als er wijzigingen zijn)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/signalen_logboek.json
+          git diff --staged --quiet || git commit -m "chore: wekelijks logboek bijgewerkt [skip ci]"
+          git push || true
