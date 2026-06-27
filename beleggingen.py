@@ -74,7 +74,14 @@ def eur_str(bedrag: float) -> str:
 
 def pct_str(pct: float) -> str:
     teken = "+" if pct >= 0 else ""
-    return f"{teken}{pct:.2f}%"
+    return f"{teken}{pct:.2f}%".replace(".", ",")
+
+_NL_DAGEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"]
+_NL_MAANDEN = ["", "januari", "februari", "maart", "april", "mei", "juni",
+                "juli", "augustus", "september", "oktober", "november", "december"]
+
+def datum_nl(dt: datetime) -> str:
+    return f"{_NL_DAGEN[dt.weekday()]} {dt.day} {_NL_MAANDEN[dt.month]} {dt.year}"
 
 def repo_grootte() -> str:
     try:
@@ -209,7 +216,7 @@ def bereken_etf_prestaties(etf: dict, koers: dict) -> dict:
 
 def wekelijkse_etf_samenvatting(holdings: dict, instellingen: dict) -> list[str]:
     drempel = instellingen["lange_termijn"]["drawdown_waarschuwing_pct"]
-    regels = ["📊 *WEKELIJKSE ETF-SAMENVATTING*", f"Datum: {nu_amsterdam().strftime('%A %d %B %Y')}"]
+    regels = ["📊 *WEKELIJKSE ETF-SAMENVATTING*", f"Datum: {datum_nl(nu_amsterdam())}"]
     totaal_waarde = 0
     totaal_geïnvesteerd = 0
     waarschuwingen = []
