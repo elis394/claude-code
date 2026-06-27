@@ -598,7 +598,7 @@ def stuur_ntfy_melding(onderwerp: str, tekst: str, prioriteit: str = "default") 
     url = f"https://ntfy.sh/{topic}"
     data = tekst.encode("utf-8")
     headers = {
-        "Title": onderwerp,
+        "Title": urllib.parse.quote(onderwerp),
         "Priority": prioriteit,
         "Tags": "chart_with_upwards_trend",
         "Content-Type": "text/plain; charset=utf-8",
