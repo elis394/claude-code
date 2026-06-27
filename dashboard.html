@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Beleggingsdashboard</title>
+  <style>
+    :root {
+      --groen: #27ae60;
+      --rood: #e74c3c;
+      --oranje: #f39c12;
+      --blauw: #2980b9;
+      --achtergrond: #0d1117;
+      --kaart: #161b22;
+      --tekst: #e6edf3;
+      --subtekst: #8b949e;
+      --rand: #30363d;
+      --accent: #1f6feb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--achtergrond);
+      color: var(--tekst);
+      min-height: 100vh;
+      padding: 0 0 2rem;
+    }
+    .balk {
+      background: var(--kaart);
+      border-bottom: 1px solid var(--rand);
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .balk h1 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .balk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .balk-item {
+      background: var(--achtergrond);
+      border: 1px solid var(--rand);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+    }
+    .balk-label { font-size: 0.65rem; color: var(--subtekst); text-transform: uppercase; letter-spacing: 0.05em; }
+    .balk-waarde { font-size: 1rem; font-weight: 700; margin-top: 0.1rem; }
+    .groen { color: var(--groen); }
+    .rood { color: var(--rood); }
+    .oranje { color: var(--oranje); }
+    .blauw { color: var(--blauw); }
+    .container { padding: 1rem; max-width: 600px; margin: 0 auto; }
+    .sectie { margin-bottom: 1.5rem; }
+    .sectie-titel {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--subtekst);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid var(--rand);
+    }
+    .kaart {
+      background: var(--kaart);
+      border: 1px solid var(--rand);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .kaart-titel { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .kaart-rij {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.25rem 0;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--rand);
+    }
+    .kaart-rij:last-child { border-bottom: none; }
+    .kaart-label { color: var(--subtekst); }
+    .grote-knop {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+      text-align: center;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .grote-knop:active { opacity: 0.7; }
+    .knop-primair { background: var(--accent); color: white; }
+    .knop-secundair { background: var(--kaart); color: var(--tekst); border: 1px solid var(--rand); }
+    .knop-gevaar { background: #da3633; color: white; }
+    .form-groep { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--subtekst);
+      margin-bottom: 0.35rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--achtergrond);
+      border: 1px solid var(--rand);
+      border-radius: 8px;
+      color: var(--tekst);
+      font-size: 1rem;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-groen { background: rgba(39,174,96,0.2); color: var(--groen); }
+    .badge-rood { background: rgba(231,76,60,0.2); color: var(--rood); }
+    .badge-oranje { background: rgba(243,156,18,0.2); color: var(--oranje); }
+    .badge-blauw { background: rgba(41,128,185,0.2); color: var(--blauw); }
+    .melding {
+      background: rgba(243,156,18,0.1);
+      border: 1px solid rgba(243,156,18,0.3);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      align-items: flex-end;
+    }
+    .modal-overlay.actief { display: flex; }
+    .modal {
+      background: var(--kaart);
+      border-top: 1px solid var(--rand);
+      border-radius: 20px 20px 0 0;
+      padding: 1.5rem 1rem 2rem;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-titel {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--rand);
+    }
+    .disclaimer {
+      font-size: 0.7rem;
+      color: var(--subtekst);
+      text-align: center;
+      padding: 0 1rem;
+      margin-top: 1rem;
+    }
+    .laadindicator {
+      text-align: center;
+      color: var(--subtekst);
+      font-size: 0.85rem;
+      padding: 1rem;
+    }
+    #statusbericht {
+      background: rgba(31,111,235,0.1);
+      border: 1px solid rgba(31,111,235,0.3);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Bovenste overzichtsbalk -->
+<div class="balk">
+  <h1>📊 Mijn Beleggingen</h1>
+  <div class="balk-grid">
+    <div class="balk-item">
+      <div class="balk-label">Totale waarde</div>
+      <div class="balk-waarde" id="balk-totaal">—</div>
+    </div>
+    <div class="balk-item">
+      <div class="balk-label">Actieve signalen</div>
+      <div class="balk-waarde" id="balk-signalen">—</div>
+    </div>
+    <div class="balk-item">
+      <div class="balk-label">Risiconiveau</div>
+      <div class="balk-waarde" id="balk-risico">—</div>
+    </div>
+    <div class="balk-item">
+      <div class="balk-label">Spreiding</div>
+      <div class="balk-waarde" id="balk-spreiding">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="statusbericht"></div>
+
+  <!-- Snelknoppen -->
+  <div class="sectie">
+    <div class="sectie-titel">Acties</div>
+    <button class="grote-knop knop-primair" onclick="openModal('modal-holdings')">
+      ✏️ Holdings bijwerken
+    </button>
+    <button class="grote-knop knop-secundair" onclick="openModal('modal-watchlist')">
+      📋 Watchlist bewerken
+    </button>
+    <button class="grote-knop knop-secundair" onclick="openModal('modal-instellingen')">
+      ⚙️ Budget &amp; instellingen
+    </button>
+  </div>
+
+  <!-- ETF-overzicht -->
+  <div class="sectie">
+    <div class="sectie-titel">Lange termijn — ETF's</div>
+    <div id="etf-lijst"><div class="laadindicator">Laden...</div></div>
+  </div>
+
+  <!-- Watchlist-posities -->
+  <div class="sectie">
+    <div class="sectie-titel">Korte termijn — Watchlist</div>
+    <div id="watchlist-lijst"><div class="laadindicator">Laden...</div></div>
+  </div>
+
+  <!-- Signalen logboek -->
+  <div class="sectie">
+    <div class="sectie-titel">Recente signalen</div>
+    <div id="signalen-lijst"><div class="laadindicator">Laden...</div></div>
+  </div>
+
+  <p class="disclaimer">
+    Dit zijn regelgebaseerde signalen, geen financieel advies.<br>
+    Gebaseerd op algemeen aanvaarde vuistregels uit portefeuilletheorie.
+  </p>
+</div>
+
+<!-- Modal: Holdings bijwerken -->
+<div class="modal-overlay" id="modal-holdings">
+  <div class="modal">
+    <div class="modal-titel">✏️ Holdings bijwerken</div>
+    <div id="holdings-form-inhoud">
+      <p style="color:var(--subtekst);font-size:0.85rem;margin-bottom:1rem;">
+        Vul het aantal eenheden en totaal geïnvesteerd bedrag in voor elke ETF.
+      </p>
+    </div>
+    <button class="grote-knop knop-primair" onclick="slaHoldingsOp()">Opslaan</button>
+    <button class="grote-knop knop-secundair" onclick="sluitModal('modal-holdings')">Annuleren</button>
+  </div>
+</div>
+
+<!-- Modal: Watchlist bewerken -->
+<div class="modal-overlay" id="modal-watchlist">
+  <div class="modal">
+    <div class="modal-titel">📋 Watchlist bewerken</div>
+    <p style="color:var(--subtekst);font-size:0.85rem;margin-bottom:1rem;">
+      Bewerk <code style="color:var(--tekst)">data/watchlist.json</code> rechtstreeks
+      via de GitHub-app op je iPhone om posities toe te voegen of te verwijderen.
+    </p>
+    <div class="melding">
+      <strong>Velden per positie:</strong><br>
+      ticker, naam, sector, regio, aankoopdatum, aankooprijs_eur, aantal, stop_loss_eur
+    </div>
+    <div class="kaart">
+      <div class="kaart-rij">
+        <span class="kaart-label">Euronext Amsterdam</span>
+        <span>ASML.AS, ADYEN.AS</span>
+      </div>
+      <div class="kaart-rij">
+        <span class="kaart-label">Xetra</span>
+        <span>SAP.DE, ADS.DE</span>
+      </div>
+      <div class="kaart-rij">
+        <span class="kaart-label">NYSE/NASDAQ</span>
+        <span>AAPL, MSFT</span>
+      </div>
+    </div>
+    <button class="grote-knop knop-secundair" onclick="sluitModal('modal-watchlist')">Sluiten</button>
+  </div>
+</div>
+
+<!-- Modal: Budget & instellingen -->
+<div class="modal-overlay" id="modal-instellingen">
+  <div class="modal">
+    <div class="modal-titel">⚙️ Budget &amp; instellingen</div>
+    <div class="form-groep">
+      <label class="form-label">Korte-termijn budget (EUR)</label>
+      <input type="number" class="form-input" id="inst-budget" placeholder="bv. 5000" step="100">
+    </div>
+    <div class="form-groep">
+      <label class="form-label">Max per positie (%)</label>
+      <input type="number" class="form-input" id="inst-max-pos" placeholder="5" step="1" min="1" max="50">
+    </div>
+    <div class="form-groep">
+      <label class="form-label">Max risico per trade (%)</label>
+      <input type="number" class="form-input" id="inst-max-risico" placeholder="2" step="0.5" min="0.5" max="10">
+    </div>
+    <button class="grote-knop knop-primair" onclick="slaInstellingenOp()">Opslaan</button>
+    <button class="grote-knop knop-secundair" onclick="sluitModal('modal-instellingen')">Annuleren</button>
+  </div>
+</div>
+
+<script>
+// ---- Data laden uit JSON-bestanden via fetch ----
+let holdingsData = null;
+let watchlistData = null;
+let instellingenData = null;
+let logboekData = null;
+
+async function laadAlles() {
+  try {
+    [holdingsData, watchlistData, instellingenData, logboekData] = await Promise.all([
+      fetch('data/holdings.json').then(r => r.json()),
+      fetch('data/watchlist.json').then(r => r.json()),
+      fetch('data/instellingen.json').then(r => r.json()),
+      fetch('logs/signalen_logboek.json').then(r => r.json()),
+    ]);
+    tekenETFs();
+    tekenWatchlist();
+    tekenSignalen();
+    vulInstellingenIn();
+    werkBalkBij();
+  } catch(e) {
+    document.getElementById('statusbericht').style.display = 'block';
+    document.getElementById('statusbericht').textContent =
+      'Dashboard werkt het beste als lokale webserver (python3 -m http.server). ' +
+      'Via GitHub Pages of lokaal: open index.html via een server.';
+  }
+}
+
+function eurStr(bedrag) {
+  return '€' + bedrag.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace('.', ',').replace(/,(\d{2})$/, ',$1');
+}
+function pctStr(p) { return (p >= 0 ? '+' : '') + p.toFixed(2) + '%'; }
+
+function tekenETFs() {
+  const el = document.getElementById('etf-lijst');
+  const etfs = holdingsData?.etfs || [];
+  if (!etfs.length) { el.innerHTML = '<div class="laadindicator">Geen ETFs ingesteld.</div>'; return; }
+  el.innerHTML = etfs.map(e => {
+    const ingevuld = e.eenheden > 0;
+    return `<div class="kaart">
+      <div class="kaart-titel">${e.naam}</div>
+      <div class="kaart-rij"><span class="kaart-label">Ticker</span><span>${e.ticker}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Beurs</span><span>${e.beurs}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Eenheden</span>
+        <span>${ingevuld ? e.eenheden : '<span style="color:var(--oranje)">Nog in te vullen</span>'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Geïnvesteerd</span>
+        <span>${ingevuld ? eurStr(e.totaal_geïnvesteerd_eur) : '—'}</span></div>
+    </div>`;
+  }).join('');
+  vulHoldingsFormIn();
+}
+
+function vulHoldingsFormIn() {
+  const el = document.getElementById('holdings-form-inhoud');
+  const etfs = holdingsData?.etfs || [];
+  el.innerHTML = '<p style="color:var(--subtekst);font-size:0.85rem;margin-bottom:1rem;">Vooraf ingevuld met huidige waarden.</p>' +
+    etfs.map((e, i) => `
+      <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--rand)">
+        <div style="font-weight:600;margin-bottom:0.75rem">${e.naam} (${e.ticker})</div>
+        <div class="form-groep">
+          <label class="form-label">Aantal eenheden</label>
+          <input type="number" class="form-input" id="etf-eenheden-${i}" value="${e.eenheden || ''}" placeholder="bv. 10" step="0.001" min="0">
+        </div>
+        <div class="form-groep">
+          <label class="form-label">Totaal geïnvesteerd (EUR)</label>
+          <input type="number" class="form-input" id="etf-investering-${i}" value="${e.totaal_geïnvesteerd_eur || ''}" placeholder="bv. 2500.00" step="0.01" min="0">
+        </div>
+      </div>
+    `).join('');
+}
+
+function tekenWatchlist() {
+  const el = document.getElementById('watchlist-lijst');
+  const posities = watchlistData?.posities || [];
+  if (!posities.length) {
+    el.innerHTML = '<div class="laadindicator">Geen posities — voeg toe via GitHub-app.</div>';
+    return;
+  }
+  el.innerHTML = posities.map(p => `
+    <div class="kaart">
+      <div class="kaart-titel">${p.naam || p.ticker} <span class="badge badge-blauw">${p.ticker}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Sector</span><span>${p.sector || '—'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Regio</span><span>${p.regio || '—'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Aankoop</span><span>${p.aankoopdatum || '—'} à ${p.aankooprijs_eur ? eurStr(p.aankooprijs_eur) : '—'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Aantal</span><span>${p.aantal || '—'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Stop-loss</span><span>${p.stop_loss_eur ? eurStr(p.stop_loss_eur) : '—'}</span></div>
+    </div>
+  `).join('');
+}
+
+function tekenSignalen() {
+  const el = document.getElementById('signalen-lijst');
+  const signalen = logboekData?.signalen || [];
+  if (!signalen.length) {
+    el.innerHTML = '<div class="laadindicator">Nog geen signalen geregistreerd.</div>';
+    return;
+  }
+  const recente = [...signalen].reverse().slice(0, 10);
+  el.innerHTML = recente.map(s => {
+    const koop = s.signaal === 'KOOP';
+    return `<div class="kaart">
+      <div class="kaart-rij">
+        <span><strong>${s.ticker}</strong></span>
+        <span class="badge ${koop ? 'badge-groen' : 'badge-rood'}">${s.signaal}</span>
+      </div>
+      <div class="kaart-rij"><span class="kaart-label">Datum</span><span>${s.datum?.slice(0,10) || '—'}</span></div>
+      <div class="kaart-rij"><span class="kaart-label">Prijs</span><span>${s.prijs ? eurStr(s.prijs) : '—'}</span></div>
+      <div style="font-size:0.75rem;color:var(--subtekst);margin-top:0.5rem">${s.reden || ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function vulInstellingenIn() {
+  const kt = instellingenData?.korte_termijn || {};
+  const budgetEl = document.getElementById('inst-budget');
+  const maxPosEl = document.getElementById('inst-max-pos');
+  const maxRisicoEl = document.getElementById('inst-max-risico');
+  if (budgetEl) budgetEl.value = kt.totaal_budget_eur || '';
+  if (maxPosEl) maxPosEl.value = kt.max_per_positie_pct || 5;
+  if (maxRisicoEl) maxRisicoEl.value = kt.max_risico_per_trade_pct || 2;
+}
+
+function werkBalkBij() {
+  // Totale waarde: som van ETF-investeringen (echte koers niet beschikbaar in statische HTML)
+  let totaal = 0;
+  (holdingsData?.etfs || []).forEach(e => { totaal += e.totaal_geïnvesteerd_eur || 0; });
+  (watchlistData?.posities || []).forEach(p => { totaal += (p.aankooprijs_eur || 0) * (p.aantal || 0); });
+  document.getElementById('balk-totaal').textContent = totaal > 0 ? eurStr(totaal) : '—';
+
+  const signalen = logboekData?.signalen || [];
+  const recenteSignalen = signalen.filter(s => {
+    if (!s.datum) return false;
+    const d = new Date(s.datum);
+    return (Date.now() - d.getTime()) < 7 * 24 * 3600 * 1000;
+  });
+  document.getElementById('balk-signalen').textContent = recenteSignalen.length || '—';
+  document.getElementById('balk-risico').textContent = '—';
+  document.getElementById('balk-spreiding').textContent = '✅';
+}
+
+// ---- Modals ----
+function openModal(id) { document.getElementById(id).classList.add('actief'); }
+function sluitModal(id) { document.getElementById(id).classList.remove('actief'); }
+
+// Sluit modal bij klik buiten
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('actief'); });
+});
+
+function toonStatus(tekst, kleur = 'var(--blauw)') {
+  const el = document.getElementById('statusbericht');
+  el.style.display = 'block';
+  el.style.color = kleur;
+  el.textContent = tekst;
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function slaHoldingsOp() {
+  const etfs = holdingsData?.etfs || [];
+  etfs.forEach((e, i) => {
+    const eenheden = parseFloat(document.getElementById(`etf-eenheden-${i}`)?.value);
+    const investering = parseFloat(document.getElementById(`etf-investering-${i}`)?.value);
+    if (!isNaN(eenheden)) e.eenheden = eenheden;
+    if (!isNaN(investering)) e.totaal_geïnvesteerd_eur = investering;
+  });
+  toonStatus('✅ Opgeslagen — commit via GitHub-app om permanent op te slaan.', 'var(--groen)');
+  sluitModal('modal-holdings');
+  tekenETFs();
+  werkBalkBij();
+}
+
+function slaInstellingenOp() {
+  if (!instellingenData) return;
+  const budget = parseFloat(document.getElementById('inst-budget')?.value);
+  const maxPos = parseFloat(document.getElementById('inst-max-pos')?.value);
+  const maxRisico = parseFloat(document.getElementById('inst-max-risico')?.value);
+  if (!isNaN(budget)) instellingenData.korte_termijn.totaal_budget_eur = budget;
+  if (!isNaN(maxPos)) instellingenData.korte_termijn.max_per_positie_pct = maxPos;
+  if (!isNaN(maxRisico)) instellingenData.korte_termijn.max_risico_per_trade_pct = maxRisico;
+  toonStatus('✅ Opgeslagen — commit via GitHub-app om permanent op te slaan.', 'var(--groen)');
+  sluitModal('modal-instellingen');
+}
+
+// ---- Init ----
+laadAlles();
+</script>
+</body>
+</html>
