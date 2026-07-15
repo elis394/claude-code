@@ -20,13 +20,12 @@ npm run dev
 
 ### Using it on your phone
 
-The app is a PWA (installable, works offline) and deploys to GitHub Pages
-via [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml).
+The app is a PWA (installable, works offline) and is hosted on Netlify,
+configured by [`netlify.toml`](./netlify.toml). Netlify builds directly from
+this (private) repo and serves it at a public URL — connect the repo once in
+the Netlify dashboard and every push redeploys automatically.
 
-One-time setup: in the repo's **Settings → Pages**, set **Source** to
-**GitHub Actions**. After that, every push to `main` that touches
-`household-manager/` publishes to `https://elis394.github.io/claude-code/`.
-Open that URL on your phone and use "Add to Home Screen" to install it.
+On your phone, open the Netlify URL and use "Add to Home Screen" to install it.
 
 Because data is stored per-browser, your phone and computer keep separate
 data — use the sidebar's Export/Import to move it between devices.

@@ -1,0 +1,17 @@
+# Netlify build configuration for the Homebase app (household-manager/).
+# Netlify builds and hosts directly from the repo — no GitHub Actions needed.
+
+[build]
+  base = "household-manager"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The app uses hash-based routing, so this fallback is only a safety net:
+# any path that doesn't match a real file serves index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

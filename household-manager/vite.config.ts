@@ -2,13 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// When deployed to GitHub Pages the app is served from /<repo>/.
-// Locally (dev / preview) we serve from the root.
-const base = process.env.GITHUB_PAGES ? '/claude-code/' : '/'
-
+// Served from the domain root (Netlify), so the default base ('/') is correct.
 // https://vite.dev/config/
 export default defineConfig({
-  base,
   plugins: [
     react(),
     VitePWA({
