@@ -18,6 +18,19 @@ npm install
 npm run dev
 ```
 
+### Using it on your phone
+
+The app is a PWA (installable, works offline) and deploys to GitHub Pages
+via [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml).
+
+One-time setup: in the repo's **Settings → Pages**, set **Source** to
+**GitHub Actions**. After that, every push to `main` that touches
+`household-manager/` publishes to `https://elis394.github.io/claude-code/`.
+Open that URL on your phone and use "Add to Home Screen" to install it.
+
+Because data is stored per-browser, your phone and computer keep separate
+data — use the sidebar's Export/Import to move it between devices.
+
 ### Sections
 
 - **Dashboard** — overview of what's due across the house
