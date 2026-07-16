@@ -30,6 +30,7 @@ export default function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     if (!ok) return;
     localStorage.clear();
     sessionStorage.clear();
+    indexedDB.deleteDatabase("household-manager-attachments");
     window.location.reload();
   }
 

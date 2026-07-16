@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useAppData } from "../lib/store";
-import type { RenovationProject, RenovationStatus } from "../types";
+import type { Attachment, RenovationProject, RenovationStatus } from "../types";
 import { formatDate } from "../lib/dates";
 import {
   Badge,
@@ -17,6 +17,9 @@ import {
   ProgressBar,
   formatCurrency,
 } from "../components/ui";
+import { AttachmentBadge, AttachmentField } from "../components/Attachment";
+import { deleteAttachment, stripExtension } from "../lib/attachments";
+import { usePendingAttachment } from "../lib/usePendingAttachment";
 
 const STATUS_LABELS: Record<RenovationStatus, string> = {
   planning: "Planning",
@@ -54,12 +57,21 @@ export default function Renovations() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [attachment, setAttachment] = useState<Attachment | undefined>(undefined);
   const [taskDrafts, setTaskDrafts] = useState<Record<string, string>>({});
   const [taskCostDrafts, setTaskCostDrafts] = useState<Record<string, string>>({});
+
+  usePendingAttachment((meta) => {
+    setEditingId(null);
+    setForm({ ...emptyForm, name: stripExtension(meta.name) });
+    setAttachment(meta);
+    setModalOpen(true);
+  });
 
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
+    setAttachment(undefined);
     setModalOpen(true);
   }
 
@@ -73,7 +85,13 @@ export default function Renovations() {
       startDate: project.startDate ?? "",
       targetDate: project.targetDate ?? "",
     });
+    setAttachment(project.attachment);
     setModalOpen(true);
+  }
+
+  async function handleRemoveAttachment() {
+    if (attachment) await deleteAttachment(attachment.id);
+    setAttachment(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -86,6 +104,7 @@ export default function Renovations() {
       budget: Number(form.budget) || 0,
       startDate: form.startDate || undefined,
       targetDate: form.targetDate || undefined,
+      attachment,
     };
     if (editingId) {
       updateRenovation(editingId, payload);
@@ -133,6 +152,11 @@ export default function Renovations() {
                     <p className="font-semibold text-slate-800 dark:text-slate-100">{project.name}</p>
                     {project.description && (
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{project.description}</p>
+                    )}
+                    {project.attachment && (
+                      <div className="mt-1">
+                        <AttachmentBadge attachment={project.attachment} />
+                      </div>
                     )}
                   </div>
                   <Badge tone={STATUS_TONE[project.status]}>{STATUS_LABELS[project.status]}</Badge>
@@ -253,6 +277,7 @@ export default function Renovations() {
               required
             />
           </Field>
+          {attachment && <AttachmentField attachment={attachment} onRemove={handleRemoveAttachment} />}
           <Field label="Description (optional)">
             <Textarea
               rows={2}

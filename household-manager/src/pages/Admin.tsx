@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { useAppData } from "../lib/store";
-import type { AdminItem, Frequency } from "../types";
+import type { AdminItem, Attachment, Frequency } from "../types";
 import { FREQUENCY_LABELS } from "../types";
 import { daysUntil, formatDateShort, isDueSoon, isOverdue } from "../lib/dates";
 import {
@@ -16,6 +16,9 @@ import {
   Select,
   Textarea,
 } from "../components/ui";
+import { AttachmentBadge, AttachmentField } from "../components/Attachment";
+import { deleteAttachment, stripExtension } from "../lib/attachments";
+import { usePendingAttachment } from "../lib/usePendingAttachment";
 
 const CATEGORIES = ["Insurance", "Subscription", "Document/ID", "Vehicle", "Warranty", "Home", "Other"];
 
@@ -32,7 +35,15 @@ export default function Admin() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [attachment, setAttachment] = useState<Attachment | undefined>(undefined);
   const [showDone, setShowDone] = useState(false);
+
+  usePendingAttachment((meta) => {
+    setEditingId(null);
+    setForm({ ...emptyForm, title: stripExtension(meta.name) });
+    setAttachment(meta);
+    setModalOpen(true);
+  });
 
   const sorted = useMemo(
     () =>
@@ -49,6 +60,7 @@ export default function Admin() {
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
+    setAttachment(undefined);
     setModalOpen(true);
   }
 
@@ -61,7 +73,13 @@ export default function Admin() {
       frequency: item.frequency ?? "once",
       notes: item.notes ?? "",
     });
+    setAttachment(item.attachment);
     setModalOpen(true);
+  }
+
+  async function handleRemoveAttachment() {
+    if (attachment) await deleteAttachment(attachment.id);
+    setAttachment(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -73,6 +91,7 @@ export default function Admin() {
       dueDate: form.dueDate || undefined,
       frequency: form.dueDate ? form.frequency : undefined,
       notes: form.notes.trim() || undefined,
+      attachment,
     };
     if (editingId) {
       updateAdminItem(editingId, payload);
@@ -139,6 +158,7 @@ export default function Admin() {
                     {overdue && <Badge tone="rose">Overdue</Badge>}
                     {!overdue && soon && <Badge tone="amber">Due soon</Badge>}
                     {item.status === "done" && <Badge tone="green">Done</Badge>}
+                    {item.attachment && <AttachmentBadge attachment={item.attachment} />}
                   </div>
                   {item.dueDate && (
                     <p className="mt-0.5 text-xs text-slate-400">
@@ -173,6 +193,7 @@ export default function Admin() {
               required
             />
           </Field>
+          {attachment && <AttachmentField attachment={attachment} onRemove={handleRemoveAttachment} />}
           <Field label="Category">
             <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
               {CATEGORIES.map((c) => (

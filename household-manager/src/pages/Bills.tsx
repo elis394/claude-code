@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useAppData } from "../lib/store";
-import type { Bill, Frequency } from "../types";
+import type { Attachment, Bill, Frequency } from "../types";
 import { FREQUENCY_LABELS } from "../types";
 import { daysUntil, formatDateShort, isDueSoon, isOverdue, todayIso } from "../lib/dates";
 import {
@@ -17,6 +17,9 @@ import {
   StatCard,
   formatCurrency,
 } from "../components/ui";
+import { AttachmentBadge, AttachmentField } from "../components/Attachment";
+import { deleteAttachment, stripExtension } from "../lib/attachments";
+import { usePendingAttachment } from "../lib/usePendingAttachment";
 
 const CATEGORIES = ["Housing", "Utilities", "Insurance", "Subscription", "Loan", "Other"];
 
@@ -36,7 +39,15 @@ export default function Bills() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [attachment, setAttachment] = useState<Attachment | undefined>(undefined);
   const [showPaid, setShowPaid] = useState(false);
+
+  usePendingAttachment((meta) => {
+    setEditingId(null);
+    setForm({ ...emptyForm, name: stripExtension(meta.name) });
+    setAttachment(meta);
+    setModalOpen(true);
+  });
 
   const sorted = useMemo(() => [...data.bills].sort((a, b) => a.dueDate.localeCompare(b.dueDate)), [data.bills]);
   const visible = sorted.filter((b) => showPaid || !b.paid);
@@ -62,6 +73,7 @@ export default function Bills() {
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
+    setAttachment(undefined);
     setModalOpen(true);
   }
 
@@ -77,7 +89,13 @@ export default function Bills() {
       autopay: bill.autopay,
       notes: bill.notes ?? "",
     });
+    setAttachment(bill.attachment);
     setModalOpen(true);
+  }
+
+  async function handleRemoveAttachment() {
+    if (attachment) await deleteAttachment(attachment.id);
+    setAttachment(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -92,6 +110,7 @@ export default function Bills() {
       frequency: form.frequency,
       autopay: form.autopay,
       notes: form.notes.trim() || undefined,
+      attachment,
     };
     if (editingId) {
       updateBill(editingId, payload);
@@ -159,6 +178,7 @@ export default function Bills() {
                     {bill.autopay && <Badge tone="teal">Autopay</Badge>}
                     {overdue && <Badge tone="rose">Overdue</Badge>}
                     {!overdue && soon && <Badge tone="amber">Due soon</Badge>}
+                    {bill.attachment && <AttachmentBadge attachment={bill.attachment} />}
                   </div>
                   <p className="mt-0.5 text-xs text-slate-400">
                     {formatDateShort(bill.dueDate)} ({d === 0 ? "today" : d > 0 ? `in ${d}d` : `${-d}d ago`}) ·{" "}
@@ -195,6 +215,7 @@ export default function Bills() {
               required
             />
           </Field>
+          {attachment && <AttachmentField attachment={attachment} onRemove={handleRemoveAttachment} />}
           <div className="grid grid-cols-2 gap-3">
             <Field label="Amount">
               <Input

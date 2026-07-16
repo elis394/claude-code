@@ -19,6 +19,7 @@ import type {
 import { emptyAppData } from "../types";
 import { addInterval, todayIso } from "./dates";
 import { makeId } from "./id";
+import { blobToDataUrl, dataUrlToBlob, deleteAttachment, getAttachmentBlob, putAttachmentBlob } from "./attachments";
 
 const STORAGE_KEY = "household-manager-data";
 
@@ -31,6 +32,16 @@ function load(): AppData {
   } catch {
     return { ...emptyAppData };
   }
+}
+
+function collectAttachmentIds(data: AppData): string[] {
+  return [
+    ...data.chores.map((c) => c.attachment?.id),
+    ...data.bills.map((b) => b.attachment?.id),
+    ...data.renovations.map((r) => r.attachment?.id),
+    ...data.transactions.map((t) => t.attachment?.id),
+    ...data.admin.map((a) => a.attachment?.id),
+  ].filter((id): id is string => !!id);
 }
 
 interface AppDataContextValue {
@@ -64,8 +75,8 @@ interface AppDataContextValue {
   deleteAdminItem: (id: string) => void;
   completeAdminItem: (id: string) => void;
 
-  exportData: () => string;
-  importData: (json: string) => boolean;
+  exportData: () => Promise<string>;
+  importData: (json: string) => Promise<boolean>;
   resetData: () => void;
 }
 
@@ -100,7 +111,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteChore = useCallback((id: string) => {
-    setData((d) => ({ ...d, chores: d.chores.filter((c) => c.id !== id) }));
+    setData((d) => {
+      const chore = d.chores.find((c) => c.id === id);
+      if (chore?.attachment) deleteAttachment(chore.attachment.id);
+      return { ...d, chores: d.chores.filter((c) => c.id !== id) };
+    });
   }, []);
 
   const completeChore = useCallback((id: string) => {
@@ -108,6 +123,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const chore = d.chores.find((c) => c.id === id);
       if (!chore) return d;
       if (chore.frequency === "once") {
+        if (chore.attachment) deleteAttachment(chore.attachment.id);
         return { ...d, chores: d.chores.filter((c) => c.id !== id) };
       }
       return {
@@ -130,7 +146,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteBill = useCallback((id: string) => {
-    setData((d) => ({ ...d, bills: d.bills.filter((b) => b.id !== id) }));
+    setData((d) => {
+      const bill = d.bills.find((b) => b.id === id);
+      if (bill?.attachment) deleteAttachment(bill.attachment.id);
+      return { ...d, bills: d.bills.filter((b) => b.id !== id) };
+    });
   }, []);
 
   const toggleBillPaid = useCallback((id: string) => {
@@ -161,7 +181,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteRenovation = useCallback((id: string) => {
-    setData((d) => ({ ...d, renovations: d.renovations.filter((r) => r.id !== id) }));
+    setData((d) => {
+      const project = d.renovations.find((r) => r.id === id);
+      if (project?.attachment) deleteAttachment(project.attachment.id);
+      return { ...d, renovations: d.renovations.filter((r) => r.id !== id) };
+    });
   }, []);
 
   const addRenovationTask = useCallback((projectId: string, task: Omit<RenovationTask, "id">) => {
@@ -208,7 +232,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteTransaction = useCallback((id: string) => {
-    setData((d) => ({ ...d, transactions: d.transactions.filter((t) => t.id !== id) }));
+    setData((d) => {
+      const tx = d.transactions.find((t) => t.id === id);
+      if (tx?.attachment) deleteAttachment(tx.attachment.id);
+      return { ...d, transactions: d.transactions.filter((t) => t.id !== id) };
+    });
   }, []);
 
   const addAdminItem = useCallback((item: Omit<AdminItem, "id">) => {
@@ -220,7 +248,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteAdminItem = useCallback((id: string) => {
-    setData((d) => ({ ...d, admin: d.admin.filter((a) => a.id !== id) }));
+    setData((d) => {
+      const item = d.admin.find((a) => a.id === id);
+      if (item?.attachment) deleteAttachment(item.attachment.id);
+      return { ...d, admin: d.admin.filter((a) => a.id !== id) };
+    });
   }, []);
 
   const completeAdminItem = useCallback((id: string) => {
@@ -236,12 +268,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const exportData = useCallback(() => JSON.stringify(data, null, 2), [data]);
+  const exportData = useCallback(async () => {
+    const attachments: Record<string, string> = {};
+    for (const id of collectAttachmentIds(data)) {
+      const blob = await getAttachmentBlob(id);
+      if (blob) attachments[id] = await blobToDataUrl(blob);
+    }
+    return JSON.stringify({ ...data, __attachments: attachments }, null, 2);
+  }, [data]);
 
-  const importData = useCallback((json: string) => {
+  const importData = useCallback(async (json: string) => {
     try {
       const parsed = JSON.parse(json);
-      setData({ ...emptyAppData, ...parsed });
+      const { __attachments, ...rest } = parsed;
+      setData({ ...emptyAppData, ...rest });
+      if (__attachments) {
+        for (const [id, dataUrl] of Object.entries(__attachments as Record<string, string>)) {
+          await putAttachmentBlob(id, await dataUrlToBlob(dataUrl));
+        }
+      }
       return true;
     } catch {
       return false;

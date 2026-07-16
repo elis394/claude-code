@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { Check, Plus, Trash2, User, X } from "lucide-react";
 import { useAppData } from "../lib/store";
-import type { Chore, Frequency } from "../types";
+import type { Attachment, Chore, Frequency } from "../types";
 import { FREQUENCY_LABELS } from "../types";
 import { daysUntil, formatDateShort, isDueSoon, isOverdue, todayIso } from "../lib/dates";
 import { Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Select } from "../components/ui";
+import { AttachmentBadge, AttachmentField } from "../components/Attachment";
+import { deleteAttachment, stripExtension } from "../lib/attachments";
+import { usePendingAttachment } from "../lib/usePendingAttachment";
 
 type FilterMode = "all" | "overdue";
 
@@ -22,8 +25,16 @@ export default function Chores() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [attachment, setAttachment] = useState<Attachment | undefined>(undefined);
   const [filter, setFilter] = useState<FilterMode>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+
+  usePendingAttachment((meta) => {
+    setEditingId(null);
+    setForm({ ...emptyForm, title: stripExtension(meta.name) });
+    setAttachment(meta);
+    setModalOpen(true);
+  });
 
   const sorted = useMemo(
     () => [...data.chores].sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
@@ -39,6 +50,7 @@ export default function Chores() {
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
+    setAttachment(undefined);
     setModalOpen(true);
   }
 
@@ -52,7 +64,13 @@ export default function Chores() {
       dueDate: chore.dueDate,
       notes: chore.notes ?? "",
     });
+    setAttachment(chore.attachment);
     setModalOpen(true);
+  }
+
+  async function handleRemoveAttachment() {
+    if (attachment) await deleteAttachment(attachment.id);
+    setAttachment(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -66,6 +84,7 @@ export default function Chores() {
       frequency: form.frequency,
       dueDate: form.dueDate,
       notes: form.notes.trim() || undefined,
+      attachment,
     };
     if (editingId) {
       updateChore(editingId, payload);
@@ -140,6 +159,7 @@ export default function Chores() {
                       <Badge tone="slate">{FREQUENCY_LABELS[chore.frequency]}</Badge>
                       {overdue && <Badge tone="rose">Overdue</Badge>}
                       {!overdue && soon && <Badge tone="amber">Due soon</Badge>}
+                      {chore.attachment && <AttachmentBadge attachment={chore.attachment} />}
                     </div>
                     <p className="mt-0.5 text-xs text-slate-400">
                       {formatDateShort(chore.dueDate)} ({d === 0 ? "today" : d > 0 ? `in ${d}d` : `${-d}d ago`})
@@ -182,6 +202,7 @@ export default function Chores() {
               required
             />
           </Field>
+          {attachment && <AttachmentField attachment={attachment} onRemove={handleRemoveAttachment} />}
           <div className="grid grid-cols-2 gap-3">
             <Field label="Assignee">
               <Input

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAppData } from "../lib/store";
 import LockSettings from "./LockSettings";
+import UploadEntry from "./UploadEntry";
 
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -30,8 +31,8 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleExport() {
-    const json = exportData();
+  async function handleExport() {
+    const json = await exportData();
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -49,8 +50,8 @@ export default function Layout() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const ok = importData(String(reader.result));
+    reader.onload = async () => {
+      const ok = await importData(String(reader.result));
       if (!ok) alert("Could not import that file — make sure it's a valid export.");
     };
     reader.readAsText(file);
@@ -86,6 +87,7 @@ export default function Layout() {
         ))}
       </nav>
       <div className="mt-auto flex flex-col gap-1 border-t border-slate-200 px-2 py-3 dark:border-slate-800">
+        <UploadEntry onNavigate={() => setMobileOpen(false)} />
         <button
           onClick={handleExport}
           className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"

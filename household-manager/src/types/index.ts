@@ -17,6 +17,13 @@ export const FREQUENCY_LABELS: Record<Frequency, string> = {
   yearly: "Yearly",
 };
 
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 export interface Chore {
   id: string;
   title: string;
@@ -26,6 +33,7 @@ export interface Chore {
   frequency: Frequency;
   dueDate: string; // ISO date (yyyy-mm-dd)
   lastCompletedDate?: string;
+  attachment?: Attachment;
 }
 
 export interface Bill {
@@ -39,6 +47,7 @@ export interface Bill {
   autopay: boolean;
   paid: boolean;
   notes?: string;
+  attachment?: Attachment;
 }
 
 export type RenovationStatus = "planning" | "in-progress" | "on-hold" | "completed";
@@ -59,6 +68,7 @@ export interface RenovationProject {
   startDate?: string;
   targetDate?: string;
   tasks: RenovationTask[];
+  attachment?: Attachment;
 }
 
 export type TransactionType = "income" | "expense";
@@ -71,6 +81,7 @@ export interface Transaction {
   type: TransactionType;
   category: string;
   account?: string;
+  attachment?: Attachment;
 }
 
 export type AdminStatus = "active" | "done";
@@ -83,6 +94,7 @@ export interface AdminItem {
   frequency?: Frequency;
   status: AdminStatus;
   notes?: string;
+  attachment?: Attachment;
 }
 
 export interface AppData {

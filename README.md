@@ -41,6 +41,17 @@ for ~30 seconds. There's no PIN recovery (nothing is stored anywhere but your
 browser) — forgetting it means using "Forgot PIN? Reset all data" on the lock
 screen, which wipes the browser's data and starts fresh.
 
+### Uploading files
+
+The sidebar's "Upload item" button lets you pick any file (a photo of a
+receipt, a bill PDF, a warranty document, anything) and asks which section it
+belongs to — Bill, Chore, Renovation project, Transaction, or Admin item. It
+then opens that section's normal add form, pre-filled with the filename, with
+the file attached. Files are stored in the browser's IndexedDB (not
+`localStorage`, which can't hold binary data at any real size) and are
+included in Export/Import backups so they survive moving data between
+devices.
+
 ### Sections
 
 - **Dashboard** — overview of what's due across the house

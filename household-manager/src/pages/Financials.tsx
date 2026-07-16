@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useAppData } from "../lib/store";
-import type { Transaction, TransactionType } from "../types";
+import type { Attachment, Transaction, TransactionType } from "../types";
 import { currentMonthKey, formatDate, todayIso } from "../lib/dates";
 import {
   Badge,
@@ -17,6 +17,9 @@ import {
   formatCurrency,
 } from "../components/ui";
 import CategoryBreakdown from "../components/CategoryBreakdown";
+import { AttachmentBadge, AttachmentField } from "../components/Attachment";
+import { deleteAttachment, stripExtension } from "../lib/attachments";
+import { usePendingAttachment } from "../lib/usePendingAttachment";
 
 const EXPENSE_CATEGORIES = ["Groceries", "Dining", "Transport", "Utilities", "Housing", "Health", "Entertainment", "Other"];
 const INCOME_CATEGORIES = ["Salary", "Freelance", "Gift", "Refund", "Other"];
@@ -35,7 +38,15 @@ export default function Financials() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [attachment, setAttachment] = useState<Attachment | undefined>(undefined);
   const [monthFilter, setMonthFilter] = useState(currentMonthKey());
+
+  usePendingAttachment((meta) => {
+    setEditingId(null);
+    setForm({ ...emptyForm, description: stripExtension(meta.name) });
+    setAttachment(meta);
+    setModalOpen(true);
+  });
 
   const monthTx = useMemo(
     () => data.transactions.filter((t) => currentMonthKey(t.date) === monthFilter),
@@ -65,6 +76,7 @@ export default function Financials() {
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
+    setAttachment(undefined);
     setModalOpen(true);
   }
 
@@ -78,7 +90,13 @@ export default function Financials() {
       date: tx.date,
       account: tx.account ?? "",
     });
+    setAttachment(tx.attachment);
     setModalOpen(true);
+  }
+
+  async function handleRemoveAttachment() {
+    if (attachment) await deleteAttachment(attachment.id);
+    setAttachment(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -91,6 +109,7 @@ export default function Financials() {
       category: form.category,
       date: form.date,
       account: form.account.trim() || undefined,
+      attachment,
     };
     if (editingId) {
       updateTransaction(editingId, payload);
@@ -145,6 +164,7 @@ export default function Financials() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-slate-800 dark:text-slate-100">{tx.description}</p>
                   <Badge tone="slate">{tx.category}</Badge>
+                  {tx.attachment && <AttachmentBadge attachment={tx.attachment} />}
                 </div>
                 <p className="mt-0.5 text-xs text-slate-400">
                   {formatDate(tx.date)}
@@ -200,6 +220,7 @@ export default function Financials() {
               required
             />
           </Field>
+          {attachment && <AttachmentField attachment={attachment} onRemove={handleRemoveAttachment} />}
           <div className="grid grid-cols-2 gap-3">
             <Field label="Amount">
               <Input
