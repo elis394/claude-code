@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useAppData } from "../lib/store";
+import LockSettings from "./LockSettings";
 
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -106,6 +107,7 @@ export default function Layout() {
           className="hidden"
           onChange={handleFileChange}
         />
+        <LockSettings />
       </div>
     </>
   );

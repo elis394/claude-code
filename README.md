@@ -30,6 +30,17 @@ On your phone, open the Netlify URL and use "Add to Home Screen" to install it.
 Because data is stored per-browser, your phone and computer keep separate
 data — use the sidebar's Export/Import to move it between devices.
 
+### App lock
+
+Since the app is at a public URL, the sidebar has an "Enable app lock" option
+that gates the whole app behind a 4–8 digit PIN. It's a UI access gate, not
+encryption — the data underneath isn't scrambled, so it protects against
+someone glancing at your unlocked phone or opening the app icon, not a
+compromised device. The app re-locks automatically after being backgrounded
+for ~30 seconds. There's no PIN recovery (nothing is stored anywhere but your
+browser) — forgetting it means using "Forgot PIN? Reset all data" on the lock
+screen, which wipes the browser's data and starts fresh.
+
 ### Sections
 
 - **Dashboard** — overview of what's due across the house
