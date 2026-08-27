@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth-context';
 import { useCreateHousehold, useJoinHousehold } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
@@ -23,25 +24,25 @@ export default function HouseholdSetupScreen() {
 
   async function handleCreate() {
     if (!householdName.trim()) {
-      Alert.alert('Geef je huishouden een naam');
+      showAlert('Geef je huishouden een naam');
       return;
     }
     try {
       await createHousehold.mutateAsync(householdName.trim());
     } catch (error) {
-      Alert.alert('Aanmaken mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Aanmaken mislukt', error instanceof Error ? error.message : 'Onbekende fout');
     }
   }
 
   async function handleJoin() {
     if (!inviteCode.trim()) {
-      Alert.alert('Vul de uitnodigingscode van je partner in');
+      showAlert('Vul de uitnodigingscode van je partner in');
       return;
     }
     try {
       await joinHousehold.mutateAsync(inviteCode.trim());
     } catch (error) {
-      Alert.alert('Joinen mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Joinen mislukt', error instanceof Error ? error.message : 'Onbekende fout');
     }
   }
 

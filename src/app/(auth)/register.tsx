@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
@@ -17,7 +18,7 @@ export default function RegisterScreen() {
 
   async function handleRegister() {
     if (!email.trim() || password.length < 6) {
-      Alert.alert('Vul een e-mailadres in en een wachtwoord van minstens 6 tekens');
+      showAlert('Vul een e-mailadres in en een wachtwoord van minstens 6 tekens');
       return;
     }
     setLoading(true);
@@ -27,7 +28,7 @@ export default function RegisterScreen() {
     });
     setLoading(false);
     if (error) {
-      Alert.alert('Registreren mislukt', error.message);
+      showAlert('Registreren mislukt', error.message);
       return;
     }
     // If email confirmations are disabled in the Supabase project, this

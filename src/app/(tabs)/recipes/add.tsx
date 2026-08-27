@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { useAddRecipe, useExtractRecipe } from '@/lib/queries';
 import type { NewIngredientInput, SourceType } from '@/lib/types';
 import { useCurrentHousehold } from '@/lib/use-current-household';
@@ -45,7 +45,7 @@ export default function AddRecipeScreen() {
 
   async function handleExtract() {
     if (!url.trim()) {
-      Alert.alert('Plak eerst een link');
+      showAlert('Plak eerst een link');
       return;
     }
     try {
@@ -67,13 +67,13 @@ export default function AddRecipeScreen() {
         );
       }
       if (!result.title && result.ingredients.length === 0 && !result.instructions) {
-        Alert.alert(
+        showAlert(
           'Kon niets automatisch ophalen',
           'Vul het recept hieronder handmatig aan. De link blijft bewaard als bron.'
         );
       }
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Ophalen mislukt',
         error instanceof Error ? error.message : 'Vul het recept handmatig in.'
       );
@@ -90,7 +90,7 @@ export default function AddRecipeScreen() {
 
   async function handleSave() {
     if (!title.trim()) {
-      Alert.alert('Geef het recept een titel');
+      showAlert('Geef het recept een titel');
       return;
     }
     if (!householdId) return;
@@ -117,7 +117,7 @@ export default function AddRecipeScreen() {
       });
       router.replace(`/(tabs)/recipes/${recipe.id}`);
     } catch (error) {
-      Alert.alert('Opslaan mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Opslaan mislukt', error instanceof Error ? error.message : 'Onbekende fout');
     }
   }
 

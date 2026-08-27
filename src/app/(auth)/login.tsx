@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
@@ -17,7 +18,7 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email.trim() || !password) {
-      Alert.alert('Vul e-mail en wachtwoord in');
+      showAlert('Vul e-mail en wachtwoord in');
       return;
     }
     setLoading(true);
@@ -27,7 +28,7 @@ export default function LoginScreen() {
     });
     setLoading(false);
     if (error) {
-      Alert.alert('Inloggen mislukt', error.message);
+      showAlert('Inloggen mislukt', error.message);
     }
   }
 

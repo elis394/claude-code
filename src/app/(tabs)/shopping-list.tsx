@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import {
   useAddShoppingListItem,
   useClearShoppingList,
@@ -53,7 +54,7 @@ export default function ShoppingListScreen() {
       .filter(([, selected]) => selected)
       .map(([id]) => id);
     if (ids.length === 0) {
-      Alert.alert('Selecteer eerst één of meer recepten');
+      showAlert('Selecteer eerst één of meer recepten');
       return;
     }
     await generateList.mutateAsync(ids);
@@ -75,7 +76,7 @@ export default function ShoppingListScreen() {
 
   function handleClear() {
     if (!items || items.length === 0) return;
-    Alert.alert('Boodschappenlijst leegmaken?', undefined, [
+    showAlert('Boodschappenlijst leegmaken?', undefined, [
       { text: 'Annuleren', style: 'cancel' },
       { text: 'Leegmaken', style: 'destructive', onPress: () => clearList.mutate() },
     ]);

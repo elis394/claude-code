@@ -1,60 +1,90 @@
 # Setup
 
 Eenmalige stappen om de app draaiende te krijgen. Alles hieronder is gratis
-(Supabase free tier + Expo Go), en er is geen eigen server om te
-onderhouden.
+en werkt **volledig vanaf je telefoon** (via mobiele browsers naar Supabase
+en GitHub) — er is geen eigen server om te onderhouden en geen computer
+nodig.
 
-## 1. Supabase-project aanmaken
+## 1. Supabase-project
 
-1. Ga naar [supabase.com](https://supabase.com) en maak (gratis) een account + nieuw project aan.
-2. Wacht tot het project klaar is, ga dan naar **Project Settings → API** en noteer:
-   - **Project URL**
-   - **anon public key**
-3. Ga naar **Authentication → Providers** en zorg dat "Email" ingeschakeld staat (standaard aan). Voor de MVP kun je onder **Authentication → Settings** *"Confirm email"* uitschakelen, zodat registreren meteen inlogt zonder bevestigingsmail — handig voor een klein huishouden-project.
+Als je dit nog niet deed: ga naar [supabase.com](https://supabase.com), maak
+een gratis account + project aan, en noteer onder **Project Settings → API**
+de **Project URL** en **anon public key**.
+
+Ga naar **Authentication → Sign In / Providers → Email** en zet
+*"Confirm email"* uit, zodat registreren meteen inlogt zonder bevestigingsmail.
 
 ## 2. Databaseschema uitrollen
 
-1. Open in het Supabase dashboard **SQL Editor**.
+1. Open in het Supabase dashboard (werkt prima in de mobiele browser) de
+   **SQL Editor**.
 2. Plak de volledige inhoud van [`supabase/schema.sql`](./supabase/schema.sql) en voer uit.
-   Dit maakt alle tabellen, de `create_household`/`join_household` functies en de Row Level Security-policies aan die ervoor zorgen dat een huishouden alleen zijn eigen data ziet.
+   Dit maakt alle tabellen, de `create_household`/`join_household` functies
+   en de Row Level Security-policies aan die ervoor zorgen dat een
+   huishouden alleen zijn eigen data ziet.
 
-## 3. Edge Function deployen (automatisch recept ophalen via een link)
+## 3. De app hosten via GitHub Pages (dagelijks gebruik, geen computer nodig)
 
-Vereist de [Supabase CLI](https://supabase.com/docs/guides/cli) (`npm install -g supabase`, of `npx supabase`).
+Dit bouwt de app als website en publiceert die gratis via GitHub Pages. Je
+zet hem daarna op je iPhone-beginscherm ("Zet op beginscherm") zodat hij
+aanvoelt als een gewone app — zonder Apple Developer-account.
+
+Eenmalig instellen, in de GitHub-app of mobiele browser op
+`github.com/elis394/claude-code`:
+
+1. **Settings → Secrets and variables → Actions → New repository secret**:
+   - `EXPO_PUBLIC_SUPABASE_URL` = je Project URL
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY` = je anon key
+2. **Settings → Pages** → onder "Build and deployment" → **Source: GitHub Actions**.
+3. Ga naar het tabblad **Actions** → workflow **"Deploy web build to GitHub Pages"** → **Run workflow** (als hij niet al automatisch liep). Wacht tot hij groen is (~2 minuten).
+4. Je app staat nu op `https://elis394.github.io/claude-code/`. Open die
+   link in Safari op je iPhone → deelknop → **"Zet op beginscherm"**.
+
+Elke keer dat er nieuwe code naar de `main`-branch gepusht wordt, herbouwt
+en herpubliceert deze workflow automatisch — jullie hoeven daar zelf niets
+voor te doen.
+
+## 4. Edge Function deployen (optioneel: automatisch recept ophalen via een link)
+
+Zonder deze stap werkt de app volledig, maar moet je elk recept handmatig
+invullen (de "Ophalen"-knop bij een link toevoegen faalt dan) — geen
+blokkerende stap, kun je later doen.
+
+Dit vereist wél een terminal, wat op een iPhone niet gaat. Gratis
+alternatief zonder computer: open
+[github.com/codespaces](https://github.com/codespaces) in je mobiele
+browser, maak een Codespace op deze repo (opent een volledige VS Code +
+terminal in de browser), en draai daar:
 
 ```bash
 npx supabase login
-npx supabase link --project-ref <jouw-project-ref>   # te vinden in de project-URL
+npx supabase link --project-ref uamhwbutmnzculjvacmb
 npx supabase functions deploy extract-recipe
 ```
 
-Zonder deze stap werkt de rest van de app gewoon, maar dan moet elk recept
-handmatig ingevuld worden (de "Ophalen"-knop bij een link toevoegen faalt dan).
+## 5. Huishouden koppelen
 
-## 4. Env-variabelen instellen
+1. Open de app (de GitHub Pages-link) → registreer een account → kies
+   **"Nieuw huishouden"** en geef het een naam.
+2. Ga naar de **Account**-tab en kopieer de uitnodigingscode.
+3. Je partner opent dezelfde link op zijn/haar iPhone → registreert een
+   eigen account → kiest **"Huishouden joinen"** en vult de code in.
 
-```bash
-cp .env.example .env
-```
+Jullie zien vanaf nu dezelfde recepten en boodschappenlijst.
 
-Vul in `.env` de **Project URL** en **anon key** van stap 1 in.
+## Alternatief: testen via Expo Go (met een computer, of via Codespaces)
 
-## 5. App starten
+Voor wie liever de "echte" native app test tijdens ontwikkeling (in plaats
+van de webversie):
 
 ```bash
 npm install
-npx expo start
+npx expo start --tunnel   # --tunnel is nodig als je dit in Codespaces draait
 ```
 
-Scan de QR-code met de [Expo Go](https://expo.dev/go) app op je telefoon (Android: camera of Expo Go zelf; iOS: via de Camera-app). Doe dit op beide telefoons — jullie werken in dezelfde app tegen hetzelfde Supabase-project.
-
-## 6. Huishouden koppelen
-
-1. Registreer een account op de eerste telefoon → kies **"Nieuw huishouden"** en geef het een naam.
-2. Ga naar de **Account**-tab en kopieer de uitnodigingscode.
-3. Registreer op de tweede telefoon een eigen account → kies **"Huishouden joinen"** en vul de code in.
-
-Jullie zien vanaf nu dezelfde recepten en boodschappenlijst.
+Scan de QR-code met de [Expo Go](https://expo.dev/go) app, of kopieer de
+getoonde `exp://...`-link en plak die in Expo Go via "Enter URL manually"
+(handig als je maar één toestel hebt en niet je eigen scherm kan scannen).
 
 ## Kanttekeningen
 
@@ -63,5 +93,7 @@ Jullie zien vanaf nu dezelfde recepten en boodschappenlijst.
   titel + thumbnail + bijschrift — maar is altijd best-effort. Het
   formulier is na het ophalen altijd volledig bewerkbaar.
 - Dit is de MVP: recepten + boodschappenlijst uit geselecteerde recepten. De
-  weekkalender (recepten per dag inplannen) staat gepland als vervolgstap,
-  zie het "Fase 2"-gedeelte in de planningsnotities.
+  weekkalender (recepten per dag inplannen) staat gepland als vervolgstap.
+- De webversie (GitHub Pages) gebruikt dezelfde Supabase-backend als de
+  native app — je kan later alsnog een installeerbare app bouwen (bv. via
+  EAS Build) zonder dat er iets aan de backend verandert.

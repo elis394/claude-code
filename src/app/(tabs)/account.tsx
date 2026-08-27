@@ -1,11 +1,12 @@
 import * as Clipboard from 'expo-clipboard';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { useCurrentHousehold } from '@/lib/use-current-household';
@@ -18,7 +19,7 @@ export default function AccountScreen() {
   async function copyInviteCode() {
     if (!household) return;
     await Clipboard.setStringAsync(household.invite_code);
-    Alert.alert('Gekopieerd', 'Uitnodigingscode staat op je klembord.');
+    showAlert('Gekopieerd', 'Uitnodigingscode staat op je klembord.');
   }
 
   return (

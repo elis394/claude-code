@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { showAlert } from '@/lib/alert';
 import { useDeleteRecipe, useRecipe } from '@/lib/queries';
 import { useCurrentHousehold } from '@/lib/use-current-household';
 
@@ -26,7 +27,7 @@ export default function RecipeDetailScreen() {
 
   function handleDelete() {
     if (!recipe) return;
-    Alert.alert('Recept verwijderen?', recipe.title, [
+    showAlert('Recept verwijderen?', recipe.title, [
       { text: 'Annuleren', style: 'cancel' },
       {
         text: 'Verwijderen',
