@@ -11,11 +11,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// AsyncStorage's web shim touches `window.localStorage` as soon as it's
+// read, which crashes Expo Router's static export (it pre-renders pages in
+// Node, where there is no `window`). A no-op storage on the server is fine:
+// SSR output has no real session anyway, the browser re-checks auth after
+// hydration.
+const isServer = typeof window === 'undefined';
+const noopStorage = {
+  getItem: async () => null,
+  setItem: async () => {},
+  removeItem: async () => {},
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
+    storage: isServer ? noopStorage : AsyncStorage,
+    autoRefreshToken: !isServer,
+    persistSession: !isServer,
     detectSessionInUrl: false,
   },
 });
