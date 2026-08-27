@@ -286,6 +286,59 @@ async function fetchOembed(endpoint: string, url: string): Promise<{ title: stri
   }
 }
 
+// --- Splitting a video caption into title/ingredients/instructions ---------
+//
+// TikTok/Instagram have no separate "title" field — the caption is all
+// there is. Recipe creators often structure it with headers like
+// "Ingredients:" / "Instructions:" (or Dutch equivalents), so we look for
+// those instead of dumping the whole caption into the title.
+
+const INGREDIENT_HEADER = /(ingredi[eë]nten?|ingredients?|you.?ll need|wat heb je nodig|benodigdheden)/i;
+const INSTRUCTION_HEADER = /(instructions?|bereiding(swijze)?|stappen|steps?|method|directions?|zo maak je|how to make)/i;
+
+function isHeaderLine(line: string, pattern: RegExp): boolean {
+  const trimmed = line.trim().replace(/[:：]$/, "");
+  if (trimmed.length === 0 || trimmed.length > 40) return false;
+  return pattern.test(trimmed);
+}
+
+function splitCaptionIntoRecipeParts(caption: string): {
+  title: string;
+  ingredients: ExtractedIngredient[];
+  instructions: string;
+} {
+  const lines = caption.split(/\r?\n/).map((l) => l.trim());
+
+  const firstLine = lines.find((l) => l.length > 0 && !l.startsWith("#")) ?? "";
+  const title = firstLine.length > 80 ? `${firstLine.slice(0, 80).trim()}…` : firstLine;
+
+  const ingredientsStart = lines.findIndex((l) => isHeaderLine(l, INGREDIENT_HEADER));
+  if (ingredientsStart === -1) {
+    // No recognizable structure — keep the full caption as a starting point.
+    return { title, ingredients: [], instructions: caption.trim() };
+  }
+
+  const instructionsStart = lines.findIndex(
+    (l, i) => i > ingredientsStart && isHeaderLine(l, INSTRUCTION_HEADER)
+  );
+  const ingredientsEnd = instructionsStart !== -1 ? instructionsStart : lines.length;
+
+  const ingredients = lines
+    .slice(ingredientsStart + 1, ingredientsEnd)
+    .filter((l) => l.length > 0 && !l.startsWith("#"))
+    .map(parseIngredientLine);
+
+  const instructions =
+    instructionsStart !== -1
+      ? lines
+          .slice(instructionsStart + 1)
+          .filter((l) => l.length > 0 && !l.startsWith("#"))
+          .join("\n")
+      : "";
+
+  return { title, ingredients, instructions };
+}
+
 // --- Host detection ----------------------------------------------------------
 
 function hostOf(url: string): string {
@@ -316,18 +369,22 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
       fetchOembed("https://www.tiktok.com/oembed", url),
       fetchHtml(url),
     ]);
-    if (oembed) {
-      result.title = oembed.title ?? "";
-      result.imageUrl = oembed.thumbnail;
-    }
-    if (html) {
-      const og = extractOpenGraph(html);
-      if (!result.title && og.title) result.title = og.title;
-      if (!result.imageUrl && og.image) result.imageUrl = og.image;
-      if (og.description) {
-        result.rawCaption = og.description;
-        result.instructions = og.description;
-      }
+    if (oembed?.thumbnail) result.imageUrl = oembed.thumbnail;
+
+    const og = html ? extractOpenGraph(html) : null;
+    if (og?.image && !result.imageUrl) result.imageUrl = og.image;
+
+    // TikTok has no real "title" — oEmbed's title and the OG description are
+    // both just the caption. Prefer the (usually fuller) OG description.
+    const caption = og?.description || oembed?.title || "";
+    if (caption) {
+      result.rawCaption = caption;
+      const parsed = splitCaptionIntoRecipeParts(caption);
+      result.title = parsed.title;
+      result.ingredients = parsed.ingredients;
+      result.instructions = parsed.instructions;
+    } else if (oembed?.title) {
+      result.title = oembed.title;
     }
     return result;
   }
@@ -337,11 +394,15 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     const html = await fetchHtml(url);
     if (html) {
       const og = extractOpenGraph(html);
-      result.title = og.title ?? "";
       result.imageUrl = og.image;
       if (og.description) {
         result.rawCaption = og.description;
-        result.instructions = og.description;
+        const parsed = splitCaptionIntoRecipeParts(og.description);
+        result.title = parsed.title;
+        result.ingredients = parsed.ingredients;
+        result.instructions = parsed.instructions;
+      } else if (og.title) {
+        result.title = og.title;
       }
     }
     return result;
