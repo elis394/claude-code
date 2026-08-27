@@ -166,11 +166,72 @@ const UNIT_WORDS = [
   "bosje", "bosjes",
   "plak", "plakken", "plakjes",
   "cup", "cups",
+  "tbsp", "tablespoon", "tablespoons",
+  "tsp", "teaspoon", "teaspoons",
+  "oz", "ounce", "ounces",
+  "lb", "lbs", "pound", "pounds",
+  "pint", "pints",
+  "quart", "quarts",
+  "gallon", "gallons",
 ];
+
+// American units get relabelled/converted to metric + Dutch. These are
+// volume-to-volume or weight-to-weight conversions only (e.g. 1 cup -> 240
+// ml) — converting a volume measure like "cup" to a weight would need a
+// per-ingredient density table, which is out of scope.
+const US_UNIT_CONVERSIONS: Record<string, { factor: number; unit: string }> = {
+  tbsp: { factor: 1, unit: "el" },
+  tablespoon: { factor: 1, unit: "el" },
+  tablespoons: { factor: 1, unit: "el" },
+  tsp: { factor: 1, unit: "tl" },
+  teaspoon: { factor: 1, unit: "tl" },
+  teaspoons: { factor: 1, unit: "tl" },
+  cup: { factor: 240, unit: "ml" },
+  cups: { factor: 240, unit: "ml" },
+  oz: { factor: 28, unit: "g" },
+  ounce: { factor: 28, unit: "g" },
+  ounces: { factor: 28, unit: "g" },
+  lb: { factor: 454, unit: "g" },
+  lbs: { factor: 454, unit: "g" },
+  pound: { factor: 454, unit: "g" },
+  pounds: { factor: 454, unit: "g" },
+  pint: { factor: 470, unit: "ml" },
+  pints: { factor: 470, unit: "ml" },
+  quart: { factor: 950, unit: "ml" },
+  quarts: { factor: 950, unit: "ml" },
+  gallon: { factor: 3785, unit: "ml" },
+  gallons: { factor: 3785, unit: "ml" },
+};
+
+function roundMetricQuantity(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function convertToMetric(ingredient: ExtractedIngredient): ExtractedIngredient {
+  if (!ingredient.unit) return ingredient;
+  const conversion = US_UNIT_CONVERSIONS[ingredient.unit];
+  if (!conversion) return ingredient;
+
+  if (ingredient.quantity === null) {
+    return { ...ingredient, unit: conversion.unit };
+  }
+
+  let quantity = ingredient.quantity * conversion.factor;
+  let unit = conversion.unit;
+  if (unit === "ml" && quantity >= 1000) {
+    quantity /= 1000;
+    unit = "l";
+  } else if (unit === "g" && quantity >= 1000) {
+    quantity /= 1000;
+    unit = "kg";
+  }
+
+  return { ...ingredient, quantity: roundMetricQuantity(quantity), unit };
+}
 
 function parseIngredientLine(line: string): ExtractedIngredient {
   const cleaned = textFromMaybeHtml(line);
-  // e.g. "2 1/2 el olijfolie", "500g kipfilet", "1 ui, gesnipperd"
+  // e.g. "2 1/2 el olijfolie", "500g kipfilet", "1 ui, gesnipperd", "1 cup flour"
   const match = cleaned.match(
     new RegExp(
       `^\\s*([\\d.,/]+(?:\\s+[\\d/]+)?)?\\s*(${UNIT_WORDS.join("|")})?\\.?\\s+(.*)$`,
@@ -180,11 +241,11 @@ function parseIngredientLine(line: string): ExtractedIngredient {
 
   if (match && (match[1] || match[2]) && match[3]) {
     const quantityRaw = match[1]?.trim();
-    return {
+    return convertToMetric({
       name: match[3].trim(),
       quantity: quantityRaw ? parseQuantity(quantityRaw) : null,
       unit: match[2] ? match[2].toLowerCase() : null,
-    };
+    });
   }
 
   return { name: cleaned, quantity: null, unit: null };
@@ -339,6 +400,18 @@ function splitCaptionIntoRecipeParts(caption: string): {
   return { title, ingredients, instructions };
 }
 
+// --- Oven temperature conversion (Fahrenheit -> Celsius) -------------------
+
+function convertFahrenheitInText(text: string): string {
+  if (!text) return text;
+  return text.replace(/(\d+(?:[.,]\d+)?)\s*°?\s*F\b/gi, (match, degrees) => {
+    const f = parseFloat(String(degrees).replace(",", "."));
+    if (isNaN(f)) return match;
+    const c = Math.round(((f - 32) * 5) / 9);
+    return `${c}°C`;
+  });
+}
+
 // --- Host detection ----------------------------------------------------------
 
 function hostOf(url: string): string {
@@ -350,6 +423,11 @@ function hostOf(url: string): string {
 }
 
 async function extractRecipe(url: string): Promise<ExtractResult> {
+  const result = await extractRecipeRaw(url);
+  return { ...result, instructions: convertFahrenheitInText(result.instructions) };
+}
+
+async function extractRecipeRaw(url: string): Promise<ExtractResult> {
   const host = hostOf(url);
   const result = emptyResult();
 
