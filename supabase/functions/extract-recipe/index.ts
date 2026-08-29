@@ -1,11 +1,9 @@
 // Supabase Edge Function: extract-recipe
 //
-// Given a URL (recipe website, YouTube, TikTok or Instagram), tries to
-// pre-fill a recipe: title, image, servings, ingredients and instructions.
-// Extraction is best-effort — the app always shows the result in an
-// editable form, so a partial or empty result is fine.
+// Input: POST JSON { url: string }
+// Output: JSON { title, imageUrl, servings, instructions, ingredients, sourceType, rawCaption }
 //
-// Deploy: supabase functions deploy extract-recipe (see SETUP.md)
+// Extraction is best-effort: partial/empty results are fine.
 
 // deno-lint-ignore-file no-explicit-any
 
@@ -45,6 +43,22 @@ function emptyResult(): ExtractResult {
   };
 }
 
+function normalizeWhitespace(s: string): string {
+  return s.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function stripHtmlTags(value: string): string {
+  return value.replace(/<[^>]*>/g, " ");
+}
+
 async function fetchHtml(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -61,7 +75,15 @@ async function fetchHtml(url: string): Promise<string | null> {
   }
 }
 
-// --- JSON-LD (schema.org/Recipe) -------------------------------------------
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+// -------------------- JSON-LD Recipe parsing -------------------------------
 
 function findRecipeNode(node: any): any | null {
   if (!node) return null;
@@ -86,238 +108,100 @@ function findRecipeNode(node: any): any | null {
   return null;
 }
 
-function extractJsonLdRecipe(html: string): any | null {
+function extractJsonLdRecipes(html: string): any[] {
+  const results: any[] = [];
   const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let match: RegExpExecArray | null;
   while ((match = scriptRegex.exec(html))) {
-    const raw = match[1].trim();
+    const raw = match[1]?.trim();
     if (!raw) continue;
     try {
       const parsed = JSON.parse(raw);
-      const recipe = findRecipeNode(parsed);
-      if (recipe) return recipe;
+      // JSON-LD can be object or array.
+      if (Array.isArray(parsed)) {
+        for (const p of parsed) {
+          const found = findRecipeNode(p);
+          if (found) results.push(found);
+        }
+      } else {
+        const found = findRecipeNode(parsed);
+        if (found) results.push(found);
+      }
     } catch {
-      // Some sites emit invalid/truncated JSON-LD; skip it.
-      continue;
+      // ignore invalid JSON-LD
     }
   }
-  return null;
-}
-
-function textFromMaybeHtml(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function flattenInstructions(value: unknown): string {
-  if (!value) return "";
-  if (typeof value === "string") return textFromMaybeHtml(value);
-  if (Array.isArray(value)) {
-    return value
-      .map((step, index) => {
-        if (typeof step === "string") return `${index + 1}. ${textFromMaybeHtml(step)}`;
-        if (step && typeof step === "object") {
-          if (step["@type"] === "HowToSection" && Array.isArray(step.itemListElement)) {
-            return flattenInstructions(step.itemListElement);
-          }
-          const text = step.text ?? step.name;
-          return `${index + 1}. ${textFromMaybeHtml(text)}`;
-        }
-        return "";
-      })
-      .filter(Boolean)
-      .join("\n");
-  }
-  return "";
+  return results;
 }
 
 function firstImageUrl(value: unknown): string | null {
   if (!value) return null;
   if (typeof value === "string") return value;
   if (Array.isArray(value)) return firstImageUrl(value[0]);
-  if (typeof value === "object" && (value as any).url) return (value as any).url;
+  if (typeof value === "object" && value && (value as any).url) return (value as any).url;
   return null;
 }
 
 function parseServings(value: unknown): number | null {
   if (typeof value === "number") return Math.round(value);
   if (typeof value === "string") {
-    const digits = value.match(/\d+/);
-    if (digits) return parseInt(digits[0], 10);
+    const m = value.match(/\d+/);
+    return m ? parseInt(m[0], 10) : null;
   }
   if (Array.isArray(value)) return parseServings(value[0]);
   return null;
 }
 
-const UNIT_WORDS = [
-  "g", "gram", "kg", "ml", "l", "liter",
-  "el", "eetlepel", "eetlepels", "tl", "theelepel", "theelepels",
-  "stuk", "stuks", "stukje", "stukjes",
-  "teentje", "teentjes",
-  "blikje", "blikjes", "blik",
-  "pot", "potje",
-  "snufje", "snufjes",
-  "handje", "handjes",
-  "bosje", "bosjes",
-  "plak", "plakken", "plakjes",
-  "cup", "cups",
-  "tbsp", "tablespoon", "tablespoons",
-  "tsp", "teaspoon", "teaspoons",
-  "oz", "ounce", "ounces",
-  "lb", "lbs", "pound", "pounds",
-  "pint", "pints",
-  "quart", "quarts",
-  "gallon", "gallons",
-];
-
-// American units get relabelled/converted to metric + Dutch. These are
-// volume-to-volume or weight-to-weight conversions only (e.g. 1 cup -> 240
-// ml) — converting a volume measure like "cup" to a weight would need a
-// per-ingredient density table, which is out of scope.
-const US_UNIT_CONVERSIONS: Record<string, { factor: number; unit: string }> = {
-  tbsp: { factor: 1, unit: "el" },
-  tablespoon: { factor: 1, unit: "el" },
-  tablespoons: { factor: 1, unit: "el" },
-  tsp: { factor: 1, unit: "tl" },
-  teaspoon: { factor: 1, unit: "tl" },
-  teaspoons: { factor: 1, unit: "tl" },
-  cup: { factor: 240, unit: "ml" },
-  cups: { factor: 240, unit: "ml" },
-  oz: { factor: 28, unit: "g" },
-  ounce: { factor: 28, unit: "g" },
-  ounces: { factor: 28, unit: "g" },
-  lb: { factor: 454, unit: "g" },
-  lbs: { factor: 454, unit: "g" },
-  pound: { factor: 454, unit: "g" },
-  pounds: { factor: 454, unit: "g" },
-  pint: { factor: 470, unit: "ml" },
-  pints: { factor: 470, unit: "ml" },
-  quart: { factor: 950, unit: "ml" },
-  quarts: { factor: 950, unit: "ml" },
-  gallon: { factor: 3785, unit: "ml" },
-  gallons: { factor: 3785, unit: "ml" },
-};
-
-function roundMetricQuantity(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-function convertToMetric(ingredient: ExtractedIngredient): ExtractedIngredient {
-  if (!ingredient.unit) return ingredient;
-  const conversion = US_UNIT_CONVERSIONS[ingredient.unit];
-  if (!conversion) return ingredient;
-
-  if (ingredient.quantity === null) {
-    return { ...ingredient, unit: conversion.unit };
-  }
-
-  let quantity = ingredient.quantity * conversion.factor;
-  let unit = conversion.unit;
-  if (unit === "ml" && quantity >= 1000) {
-    quantity /= 1000;
-    unit = "l";
-  } else if (unit === "g" && quantity >= 1000) {
-    quantity /= 1000;
-    unit = "kg";
-  }
-
-  return { ...ingredient, quantity: roundMetricQuantity(quantity), unit };
-}
-
-function parseIngredientLine(line: string): ExtractedIngredient {
-  const cleaned = textFromMaybeHtml(line);
-  // e.g. "2 1/2 el olijfolie", "500g kipfilet", "1 ui, gesnipperd", "1 cup flour"
-  const match = cleaned.match(
-    new RegExp(
-      `^\\s*([\\d.,/]+(?:\\s+[\\d/]+)?)?\\s*(${UNIT_WORDS.join("|")})?\\.?\\s+(.*)$`,
-      "i"
-    )
-  );
-
-  if (match && (match[1] || match[2]) && match[3]) {
-    const quantityRaw = match[1]?.trim();
-    return convertToMetric({
-      name: match[3].trim(),
-      quantity: quantityRaw ? parseQuantity(quantityRaw) : null,
-      unit: match[2] ? match[2].toLowerCase() : null,
-    });
-  }
-
-  return { name: cleaned, quantity: null, unit: null };
-}
-
-function parseQuantity(raw: string): number | null {
-  const parts = raw.split(/\s+/);
-  let total = 0;
-  let found = false;
-  for (const part of parts) {
-    if (part.includes("/")) {
-      const [num, den] = part.split("/").map(Number);
-      if (!isNaN(num) && !isNaN(den) && den !== 0) {
-        total += num / den;
-        found = true;
-      }
-    } else {
-      const n = parseFloat(part.replace(",", "."));
-      if (!isNaN(n)) {
-        total += n;
-        found = true;
+function flattenInstructions(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return normalizeWhitespace(stripHtmlTags(decodeHtmlEntities(value)));
+  if (Array.isArray(value)) {
+    const parts: string[] = [];
+    for (const step of value) {
+      if (typeof step === "string") {
+        const t = normalizeWhitespace(stripHtmlTags(decodeHtmlEntities(step)));
+        if (t) parts.push(t);
+      } else if (step && typeof step === "object") {
+        const maybeText = (step.text ?? step.name);
+        const t = typeof maybeText === "string" ? normalizeWhitespace(stripHtmlTags(decodeHtmlEntities(maybeText))) : "";
+        if (t) parts.push(t);
       }
     }
+    return parts.join("\n");
   }
-  return found ? total : null;
+  // recipeInstructions can be an object with itemListElement, etc.
+  if (typeof value === "object" && value) {
+    const maybe = (value as any).itemListElement;
+    if (maybe) return flattenInstructions(maybe);
+  }
+  return "";
 }
 
-function extractIngredients(value: unknown): ExtractedIngredient[] {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((line) => typeof line === "string" && line.trim().length > 0)
-    .map((line) => parseIngredientLine(line as string));
+function extractJsonLdRecipe(html: string): { node: any; } | null {
+  const recipes = extractJsonLdRecipes(html);
+  if (recipes.length === 0) return null;
+  return { node: recipes[0] };
 }
 
-function recipeFromJsonLd(node: any, url: string): ExtractResult {
-  return {
-    title: textFromMaybeHtml(node.name) || "",
-    imageUrl: firstImageUrl(node.image),
-    servings: parseServings(node.recipeYield),
-    instructions: flattenInstructions(node.recipeInstructions),
-    ingredients: extractIngredients(node.recipeIngredient ?? node.ingredients),
-    sourceType: "website",
-    rawCaption: null,
-  };
-}
-
-// --- Open Graph fallback (Instagram / TikTok / anything else) --------------
+// -------------------- Open Graph fallback --------------------------------
 
 function extractMetaContent(html: string, property: string): string | null {
   const patterns = [
     new RegExp(
       `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']*)["']`,
-      "i"
+      "i",
     ),
     new RegExp(
       `<meta[^>]+content=["']([^"']*)["'][^>]+property=["']${property}["']`,
-      "i"
+      "i",
     ),
   ];
+
   for (const pattern of patterns) {
     const match = html.match(pattern);
-    if (match) return decodeHtmlEntities(match[1]);
+    if (match) return decodeHtmlEntities(match[1] ?? "");
   }
   return null;
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&nbsp;/g, " ");
 }
 
 function extractOpenGraph(html: string): { title: string | null; description: string | null; image: string | null } {
@@ -328,9 +212,9 @@ function extractOpenGraph(html: string): { title: string | null; description: st
   };
 }
 
-// --- oEmbed (YouTube / TikTok) ----------------------------------------------
+// -------------------- oEmbed (YouTube / TikTok) ----------------------------
 
-async function fetchOembed(endpoint: string, url: string): Promise<{ title: string | null; thumbnail: string | null; author: string | null } | null> {
+async function fetchOembed(endpoint: string, url: string): Promise<{ title: string | null; thumbnail: string | null } | null> {
   try {
     const res = await fetch(`${endpoint}?url=${encodeURIComponent(url)}&format=json`, {
       headers: { "User-Agent": BROWSER_USER_AGENT },
@@ -339,98 +223,393 @@ async function fetchOembed(endpoint: string, url: string): Promise<{ title: stri
     const json = await res.json();
     return {
       title: json.title ?? null,
-      thumbnail: json.thumbnail_url ?? null,
-      author: json.author_name ?? null,
+      thumbnail: json.thumbnail_url ?? json.thumbnail ?? null,
     };
   } catch {
     return null;
   }
 }
 
-// --- Splitting a video caption into title/ingredients/instructions ---------
-//
-// TikTok/Instagram have no separate "title" field — the caption is all
-// there is. Recipe creators often structure it with headers like
-// "Ingredients:" / "Instructions:" (or Dutch equivalents), so we look for
-// those instead of dumping the whole caption into the title.
+// -------------------- Caption parsing for TikTok/Instagram ----------------
 
-const INGREDIENT_HEADER = /(ingredi[eë]nten?|ingredients?|you.?ll need|wat heb je nodig|benodigdheden)/i;
-const INSTRUCTION_HEADER = /(instructions?|bereiding(swijze)?|stappen|steps?|method|directions?|zo maak je|how to make)/i;
-
-function isHeaderLine(line: string, pattern: RegExp): boolean {
-  const trimmed = line.trim().replace(/[:：]$/, "");
-  if (trimmed.length === 0 || trimmed.length > 40) return false;
-  return pattern.test(trimmed);
+function normalizeCaption(text: string): string {
+  return normalizeWhitespace(stripHtmlTags(text));
 }
 
-function splitCaptionIntoRecipeParts(caption: string): {
+function deriveTitle(text: string): string {
+  const cleaned = normalizeWhitespace(text);
+  if (!cleaned) return "";
+  // Captions/descriptions with no line breaks would otherwise hand their
+  // entire text to the title field — cap it to a short preview instead.
+  return cleaned.length > 80 ? `${cleaned.slice(0, 80).trim()}…` : cleaned;
+}
+
+function splitTitleIngredientsInstructionsFromCaption(caption: string): {
   title: string;
-  ingredients: ExtractedIngredient[];
-  instructions: string;
+  ingredientsText: string | null;
+  instructionsText: string | null;
 } {
-  const lines = caption.split(/\r?\n/).map((l) => l.trim());
+  const text = caption.replace(/\r\n/g, "\n");
+  const lines = text.split(/\n+/).map((l) => normalizeWhitespace(l)).filter(Boolean);
+  const firstLine = deriveTitle(lines[0] ?? "");
 
-  const firstLine = lines.find((l) => l.length > 0 && !l.startsWith("#")) ?? "";
-  const title = firstLine.length > 80 ? `${firstLine.slice(0, 80).trim()}…` : firstLine;
+  const joined = lines.join("\n");
 
-  const ingredientsStart = lines.findIndex((l) => isHeaderLine(l, INGREDIENT_HEADER));
-  if (ingredientsStart === -1) {
-    // No recognizable structure — keep the full caption as a starting point.
-    return { title, ingredients: [], instructions: caption.trim() };
+  // Find headings (Eng + NL)
+  const ingHeadRe = /(^(?:Ingredients|Ingrediënten)\s*:?)|\n(?:Ingredients|Ingrediënten)\s*:?/i;
+  const instrHeadRe = /(^(?:Instructions|Bereiding|Bereidingswijze)\s*:?)|\n(?:Instructions|Bereiding|Bereidingswijze)\s*:?/i;
+
+  // We do a pragmatic parse by locating substrings.
+  const ingMatch = joined.match(new RegExp("(?:^|\\n)(Ingredients|Ingrediënten)\\s*:?(.*)$", "im"));
+  // The above is not perfect for sectioning; better approach:
+
+  const ingIndex = findHeadingIndex(joined, ["Ingredients", "Ingrediënten"]);
+  const instrIndex = findHeadingIndex(joined, ["Instructions", "Bereiding", "Bereidingswijze"]);
+
+  if (ingIndex !== -1 && instrIndex !== -1 && instrIndex > ingIndex) {
+    const before = joined.slice(0, ingIndex).trim();
+    const ingSection = joined.slice(ingIndex, instrIndex).trim();
+    const instrSection = joined.slice(instrIndex).trim();
+
+    const ingredientsText = stripHeading(ingSection, ["Ingredients", "Ingrediënten"]);
+    const instructionsText = stripHeading(instrSection, ["Instructions", "Bereiding", "Bereidingswijze"]);
+
+    // title: first line of whole caption (as requested)
+    return {
+      title: firstLine,
+      ingredientsText: ingredientsText || null,
+      instructionsText: instructionsText || null,
+    };
   }
 
-  const instructionsStart = lines.findIndex(
-    (l, i) => i > ingredientsStart && isHeaderLine(l, INSTRUCTION_HEADER)
-  );
-  const ingredientsEnd = instructionsStart !== -1 ? instructionsStart : lines.length;
+  if (ingIndex !== -1) {
+    const ingSection = joined.slice(ingIndex).trim();
+    const ingredientsText = stripHeading(ingSection, ["Ingredients", "Ingrediënten"]);
+    return {
+      title: firstLine,
+      ingredientsText: ingredientsText || null,
+      instructionsText: null,
+    };
+  }
 
-  const ingredients = lines
-    .slice(ingredientsStart + 1, ingredientsEnd)
-    .filter((l) => l.length > 0 && !l.startsWith("#"))
-    .map(parseIngredientLine);
+  if (instrIndex !== -1) {
+    const instrSection = joined.slice(instrIndex).trim();
+    const instructionsText = stripHeading(instrSection, ["Instructions", "Bereiding", "Bereidingswijze"]);
+    return {
+      title: firstLine,
+      ingredientsText: null,
+      instructionsText: instructionsText || null,
+    };
+  }
 
-  const instructions =
-    instructionsStart !== -1
-      ? lines
-          .slice(instructionsStart + 1)
-          .filter((l) => l.length > 0 && !l.startsWith("#"))
-          .join("\n")
-      : "";
-
-  return { title, ingredients, instructions };
+  return {
+    title: firstLine,
+    ingredientsText: null,
+    instructionsText: joined,
+  };
 }
 
-// --- Oven temperature conversion (Fahrenheit -> Celsius) -------------------
+function findHeadingIndex(text: string, headings: string[]): number {
+  let best = -1;
+  for (const h of headings) {
+    // Match line starting with heading
+    const re = new RegExp(`(^|\\n)${escapeRegExp(h)}\\s*:`, "i");
+    const m = re.exec(text);
+    if (m && typeof m.index === "number") {
+      if (best === -1 || m.index < best) best = m.index;
+    }
+  }
+  return best;
+}
 
-function convertFahrenheitInText(text: string): string {
-  if (!text) return text;
-  return text.replace(/(\d+(?:[.,]\d+)?)\s*°?\s*F\b/gi, (match, degrees) => {
-    const f = parseFloat(String(degrees).replace(",", "."));
-    if (isNaN(f)) return match;
-    const c = Math.round(((f - 32) * 5) / 9);
-    return `${c}°C`;
+function stripHeading(sectionText: string, headings: string[]): string {
+  let out = sectionText;
+  for (const h of headings) {
+    const re = new RegExp(`(^|\\n)${escapeRegExp(h)}\\s*:`, "i");
+    out = out.replace(re, "");
+  }
+  return normalizeWhitespace(out);
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+}
+
+// -------------------- Ingredient parsing + unit conversion --------------
+
+const METRIC_UNITS: Record<string, string> = {
+  g: "g",
+  gram: "g",
+  kg: "kg",
+  ml: "ml",
+  l: "l",
+  liter: "l",
+  el: "el",
+  eetlepel: "el",
+  eetlepels: "el",
+  tl: "tl",
+  theelepel: "tl",
+  theelepels: "tl",
+  stuk: "stuk",
+  stuks: "stuks",
+  stukjes: "stukjes",
+  stukje: "stukje",
+  teentje: "teentje",
+  teentjes: "teentjes",
+  snufje: "snufje",
+  snufjes: "snufjes",
+  handje: "handje",
+  handjes: "handjes",
+  bosje: "bosje",
+  bosjes: "bosjes",
+  blikje: "blikje",
+  blikjes: "blikjes",
+  potje: "potje",
+  pot: "pot",
+  plak: "plak",
+  plakken: "plakken",
+  plakjes: "plakjes",
+  cup: "cup",
+  cups: "cup",
+  tbsp: "tbsp",
+  tablespoon: "tbsp",
+  tablespoons: "tbsp",
+  tsp: "tsp",
+  teaspoon: "tsp",
+  teaspoons: "tsp",
+  oz: "oz",
+  ounce: "oz",
+  ounces: "oz",
+  lb: "lb",
+  lbs: "lb",
+  pint: "pint",
+  pints: "pint",
+  quart: "quart",
+  quarts: "quart",
+  gallon: "gallon",
+  gallons: "gallon",
+};
+
+function parseNumberMaybe(raw: string): number | null {
+  const t = raw.trim();
+  if (!t) return null;
+  // handle fractions like 1/2
+  if (t.includes("/")) {
+    const [a, b] = t.split("/").map((x) => x.trim());
+    const n = Number(a.replace(",", "."));
+    const d = Number(b.replace(",", "."));
+    if (isFinite(n) && isFinite(d) && d !== 0) return n / d;
+  }
+  const n = Number(t.replace(",", "."));
+  return isFinite(n) ? n : null;
+}
+
+function parseIngredientLine(line: string): ExtractedIngredient | null {
+  const cleaned = normalizeWhitespace(stripHtmlTags(line));
+  if (!cleaned) return null;
+
+  // Quantity can be: "2", "2.5", "2,5", "1/2", "2 1/2"
+  const qtyRe = "(?:\\d+(?:[\\.,]\\d+)?|\\d+\\/\\d+|\\d+(?:[\\.,]\\d+)?(?:\\s+\\d+\\/\\d+)?)";
+
+  // Units (NL + US)
+  const unitWords = [
+    // metric NL
+    "g", "gram", "kg", "ml", "l", "liter",
+    "el", "eetlepel", "eetlepels",
+    "tl", "theelepel", "theelepels",
+    "stuk", "stuks", "stukje", "stukjes",
+    "teentje", "teentjes",
+    "snufje", "snufjes",
+    "handje", "handjes",
+    "bosje", "bosjes",
+    "blikje", "blikjes", "blik",
+    "pot", "potje",
+    "plak", "plakken", "plakjes",
+    // US
+    "cup", "cups",
+    "tbsp", "tablespoon", "tablespoons",
+    "tsp", "teaspoon", "teaspoons",
+    "oz", "ounce", "ounces",
+    "lb", "lbs",
+    "pint", "pints",
+    "quart", "quarts",
+    "gallon", "gallons",
+  ];
+
+  const unitRe = unitWords.map(escapeRegExp).join("|");
+
+  const re = new RegExp(
+    `^\\s*(${qtyRe})?\\s*(${unitRe})?\\s*[-–:]?\\s*(.+?)\\s*$`,
+    "i",
+  );
+
+  const m = cleaned.match(re);
+  if (!m) {
+    return { name: cleaned, quantity: null, unit: null };
+  }
+
+  const qtyRaw = m[1] ?? "";
+  const unitRaw = m[2] ?? "";
+  const nameRaw = (m[3] ?? "").trim();
+
+  if (!nameRaw) return null;
+
+  let quantity: number | null = null;
+  if (qtyRaw) {
+    // handle patterns like "2 1/2"
+    const parts = qtyRaw.trim().split(/\s+/);
+    if (parts.length === 2 && parts[1].includes("/")) {
+      const whole = parseNumberMaybe(parts[0]);
+      const frac = parseNumberMaybe(parts[1]);
+      if (whole !== null && frac !== null) quantity = whole + frac;
+    } else {
+      quantity = parseNumberMaybe(qtyRaw);
+    }
+  }
+
+  const unitNorm = unitRaw ? METRIC_UNITS[unitRaw.toLowerCase()] ?? unitRaw.toLowerCase() : null;
+
+  const converted = convertIngredientQuantity(quantity, unitNorm);
+
+  return {
+    name: nameRaw,
+    quantity: converted.quantity,
+    unit: converted.unit,
+  };
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function convertIngredientQuantity(quantity: number | null, unit: string | null): { quantity: number | null; unit: string | null } {
+  if (quantity === null || unit === null) return { quantity, unit };
+
+  const u = unit.toLowerCase();
+
+  // Conversions requested:
+  // 1 cup = 240 ml, 1 tbsp = 1 el, 1 tsp = 1 tl,
+  // 1 oz = 28 g, 1 lb = 454 g, 1 pint = 470 ml, 1 quart = 950 ml, 1 gallon = 3785 ml.
+  let newQuantity = quantity;
+  let newUnit = unit;
+
+  // volume -> metric
+  if (["cup", "cups"].includes(u)) {
+    newQuantity = quantity * 240;
+    newUnit = "ml";
+  } else if (["tbsp", "tablespoon", "tablespoons"].includes(u)) {
+    newQuantity = quantity; // 1 tbsp = 1 el (labels) as requested
+    newUnit = "el";
+  } else if (["tsp", "teaspoon", "teaspoons"].includes(u)) {
+    newQuantity = quantity;
+    newUnit = "tl";
+  } else if (["oz", "ounce", "ounces"].includes(u)) {
+    newQuantity = quantity * 28;
+    newUnit = "g";
+  } else if (["lb", "lbs"].includes(u)) {
+    newQuantity = quantity * 454;
+    newUnit = "g";
+  } else if (["pint", "pints"].includes(u)) {
+    newQuantity = quantity * 470;
+    newUnit = "ml";
+  } else if (["quart", "quarts"].includes(u)) {
+    newQuantity = quantity * 950;
+    newUnit = "ml";
+  } else if (["gallon", "gallons"].includes(u)) {
+    newQuantity = quantity * 3785;
+    newUnit = "ml";
+  } else {
+    // already metric or NL units; map known label variants
+    newUnit = METRIC_UNITS[u] ?? unit;
+  }
+
+  // Round and apply ml/g thresholds.
+  if (newUnit === "ml") {
+    const ml = newQuantity;
+    if (ml >= 1000) {
+      return { quantity: round1(ml / 1000), unit: "l" };
+    }
+    return { quantity: round1(ml), unit: "ml" };
+  }
+
+  if (newUnit === "g") {
+    const g = newQuantity;
+    if (g >= 1000) {
+      return { quantity: round1(g / 1000), unit: "kg" };
+    }
+    return { quantity: round1(g), unit: "g" };
+  }
+
+  // kg stays kg, l stays l, el/tl, stuk etc: no threshold conversion.
+  return { quantity: round1(newQuantity), unit: newUnit };
+}
+
+function parseIngredientsFromText(ingredientsText: string | null | undefined): ExtractedIngredient[] {
+  if (!ingredientsText) return [];
+  const text = ingredientsText
+    .replace(/\r\n/g, "\n")
+    .replace(/•/g, "\n")
+    .replace(/\t/g, " ");
+
+  // Split by line breaks or commas if it looks like a list.
+  const lines = text
+    .split(/\n+/)
+    .map((l) => normalizeWhitespace(l))
+    .filter(Boolean);
+
+  const out: ExtractedIngredient[] = [];
+  for (const line of lines) {
+    // if line is "- 2 tbsp sugar" or "• 2 tbsp sugar"
+    const candidate = line.replace(/^[-–—•]\s*/g, "");
+    const parsed = parseIngredientLine(candidate);
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
+// -------------------- Fahrenheit to Celsius -------------------------------
+
+function convertFahrenheitToCelsius(text: string): string {
+  // Replace e.g. 350°F or 400 F
+  return text.replace(/(\d+(?:[\.,]\d+)?)\s*°?\s*F\b/gi, (match) => {
+    const m = match.match(/(\d+(?:[\.,]\d+)?)/);
+    if (!m) return match;
+    const f = Number(m[1].replace(",", "."));
+    if (!isFinite(f)) return match;
+    const c = (f - 32) * 5 / 9;
+    const cRounded = Math.round(c * 10) / 10;
+    // Keep original Fahrenheit? We'll output Celsius only.
+    return `${cRounded}°C`;
   });
 }
 
-// --- Host detection ----------------------------------------------------------
+// -------------------- Main extraction ------------------------------------
 
-function hostOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
+function recipeFromJsonLd(node: any): ExtractResult {
+  const title = typeof node.name === "string" ? normalizeWhitespace(stripHtmlTags(node.name)) : "";
+  const imageUrl = firstImageUrl(node.image);
+  const servings = parseServings(node.recipeYield ?? node.yield);
+  const instructions = flattenInstructions(node.recipeInstructions);
+  const ingredientsRaw = node.recipeIngredient ?? node.ingredients;
+  const ingredientsText = Array.isArray(ingredientsRaw) ? ingredientsRaw.map((x: any) => (typeof x === "string" ? x : "")).filter(Boolean).join("\n") : null;
+  const ingredients = parseIngredientsFromText(ingredientsText);
+
+  return {
+    title,
+    imageUrl,
+    servings,
+    instructions: convertFahrenheitToCelsius(instructions),
+    ingredients,
+    sourceType: "website",
+    rawCaption: null,
+  };
 }
 
 async function extractRecipe(url: string): Promise<ExtractResult> {
-  const result = await extractRecipeRaw(url);
-  return { ...result, instructions: convertFahrenheitInText(result.instructions) };
-}
-
-async function extractRecipeRaw(url: string): Promise<ExtractResult> {
   const host = hostOf(url);
   const result = emptyResult();
 
+  // 1) YouTube
   if (host.includes("youtube.com") || host.includes("youtu.be")) {
     result.sourceType = "video";
     const oembed = await fetchOembed("https://www.youtube.com/oembed", url);
@@ -441,68 +620,94 @@ async function extractRecipeRaw(url: string): Promise<ExtractResult> {
     return result;
   }
 
+  // 2) TikTok
   if (host.includes("tiktok.com")) {
     result.sourceType = "video";
+
     const [oembed, html] = await Promise.all([
       fetchOembed("https://www.tiktok.com/oembed", url),
       fetchHtml(url),
     ]);
-    if (oembed?.thumbnail) result.imageUrl = oembed.thumbnail;
 
-    const og = html ? extractOpenGraph(html) : null;
-    if (og?.image && !result.imageUrl) result.imageUrl = og.image;
-
-    // TikTok has no real "title" — oEmbed's title and the OG description are
-    // both just the caption. Prefer the (usually fuller) OG description.
-    const caption = og?.description || oembed?.title || "";
-    if (caption) {
-      result.rawCaption = caption;
-      const parsed = splitCaptionIntoRecipeParts(caption);
-      result.title = parsed.title;
-      result.ingredients = parsed.ingredients;
-      result.instructions = parsed.instructions;
-    } else if (oembed?.title) {
-      result.title = oembed.title;
+    if (oembed) {
+      result.title = oembed.title ?? "";
+      result.imageUrl = oembed.thumbnail;
     }
+
+    if (html) {
+      const og = extractOpenGraph(html);
+      if (og.description) {
+        result.rawCaption = og.description;
+        const caption = normalizeCaption(og.description);
+        const split = splitTitleIngredientsInstructionsFromCaption(caption);
+        result.title = split.title || result.title;
+        if (split.ingredientsText) {
+          result.ingredients = parseIngredientsFromText(split.ingredientsText);
+        }
+        result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
+      } else {
+        // fallback: use title as first line, no instructions
+        result.instructions = "";
+      }
+      if (!result.imageUrl && og.image) result.imageUrl = og.image;
+      if (!result.title && og.title) result.title = og.title;
+    }
+
     return result;
   }
 
+  // 3) Instagram
   if (host.includes("instagram.com")) {
     result.sourceType = "video";
     const html = await fetchHtml(url);
-    if (html) {
-      const og = extractOpenGraph(html);
-      result.imageUrl = og.image;
-      if (og.description) {
-        result.rawCaption = og.description;
-        const parsed = splitCaptionIntoRecipeParts(og.description);
-        result.title = parsed.title;
-        result.ingredients = parsed.ingredients;
-        result.instructions = parsed.instructions;
-      } else if (og.title) {
-        result.title = og.title;
+    if (!html) return result;
+
+    const og = extractOpenGraph(html);
+    if (og.title) result.title = og.title;
+    if (og.image) result.imageUrl = og.image;
+
+    if (og.description) {
+      result.rawCaption = og.description;
+      const caption = normalizeCaption(og.description);
+      const split = splitTitleIngredientsInstructionsFromCaption(caption);
+      result.title = split.title || result.title;
+      if (split.ingredientsText) {
+        result.ingredients = parseIngredientsFromText(split.ingredientsText);
       }
+      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
     }
+
     return result;
   }
 
-  // Generic website: try JSON-LD Recipe first, then fall back to Open Graph.
+  // 4) Recipe websites
   const html = await fetchHtml(url);
   if (!html) return result;
 
-  const recipeNode = extractJsonLdRecipe(html);
-  if (recipeNode) {
-    return recipeFromJsonLd(recipeNode, url);
+  const jsonLd = extractJsonLdRecipe(html);
+  if (jsonLd) {
+    return recipeFromJsonLd(jsonLd.node);
   }
 
+  // fallback Open Graph
   const og = extractOpenGraph(html);
   result.sourceType = "website";
   result.title = og.title ?? "";
   result.imageUrl = og.image;
   if (og.description) {
+    const caption = normalizeCaption(og.description);
+    // For plain websites, we treat og:description as instructions/caption
     result.rawCaption = og.description;
-    result.instructions = og.description;
+    result.instructions = convertFahrenheitToCelsius(caption);
+    // Also try splitting headings to get ingredients/instructions.
+    const split = splitTitleIngredientsInstructionsFromCaption(caption);
+    // A real page <title>/og:title is a proper title — only fall back to a
+    // caption snippet when the site didn't provide one.
+    result.title = result.title || split.title;
+    if (split.ingredientsText) result.ingredients = parseIngredientsFromText(split.ingredientsText);
+    if (split.instructionsText) result.instructions = convertFahrenheitToCelsius(split.instructionsText);
   }
+
   return result;
 }
 
@@ -512,7 +717,16 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { url } = await req.json();
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        status: 405,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+
+    const body = await req.json().catch(() => null);
+    const url = body?.url;
+
     if (!url || typeof url !== "string") {
       return new Response(JSON.stringify({ error: "Missing 'url' in request body" }), {
         status: 400,
@@ -523,12 +737,13 @@ Deno.serve(async (req: Request) => {
     const result = await extractRecipe(url);
 
     return new Response(JSON.stringify(result), {
+      status: 200,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
-    );
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
   }
 });
