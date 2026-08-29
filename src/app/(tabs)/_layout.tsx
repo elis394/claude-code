@@ -12,9 +12,9 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.text,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: { backgroundColor: colors.background },
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
       }}>
       <Tabs.Screen
         name="recipes"

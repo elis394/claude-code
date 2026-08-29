@@ -2,19 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { TextField } from '@/components/ui/text-field';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
 import { useAddRecipe, useExtractRecipe } from '@/lib/queries';
@@ -125,115 +120,94 @@ export default function AddRecipeScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <ThemedText type="small" themeColor="textSecondary">
-            Link van een receptensite, YouTube, TikTok of Instagram
+          <ThemedText type="label" themeColor="textSecondary">
+            Link
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
+            Van een receptensite, YouTube, TikTok of Instagram
           </ThemedText>
           <View style={styles.urlRow}>
-            <TextInput
-              style={[styles.input, styles.urlInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            <TextField
+              style={styles.urlInput}
               placeholder="https://..."
-              placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               keyboardType="url"
               value={url}
               onChangeText={setUrl}
             />
-            <Pressable
-              style={[styles.extractButton, { opacity: extractRecipe.isPending ? 0.6 : 1 }]}
-              disabled={extractRecipe.isPending}
-              onPress={handleExtract}>
-              {extractRecipe.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ThemedText type="smallBold" themeColor="background">
-                  Ophalen
-                </ThemedText>
-              )}
-            </Pressable>
+            <Button onPress={handleExtract} loading={extractRecipe.isPending} style={styles.extractButton}>
+              Ophalen
+            </Button>
           </View>
 
           {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.preview} contentFit="cover" /> : null}
 
-          <ThemedText type="smallBold" style={styles.sectionLabel}>
+          <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
             Titel
           </ThemedText>
-          <TextInput
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-            placeholder="Titel van het recept"
-            placeholderTextColor={theme.textSecondary}
-            value={title}
-            onChangeText={setTitle}
-          />
+          <TextField placeholder="Titel van het recept" value={title} onChangeText={setTitle} />
 
-          <ThemedText type="smallBold" style={styles.sectionLabel}>
+          <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
             Porties
           </ThemedText>
-          <TextInput
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          <TextField
             placeholder="bv. 4"
-            placeholderTextColor={theme.textSecondary}
             keyboardType="number-pad"
             value={servings}
             onChangeText={setServings}
+            style={styles.servingsInput}
           />
 
-          <ThemedText type="smallBold" style={styles.sectionLabel}>
+          <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
             Ingrediënten
           </ThemedText>
-          {ingredientRows.map((row) => (
-            <View key={row.key} style={styles.ingredientRow}>
-              <TextInput
-                style={[styles.input, styles.qtyInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-                placeholder="Aantal"
-                placeholderTextColor={theme.textSecondary}
-                value={row.quantity}
-                onChangeText={(value) => updateRow(row.key, { quantity: value })}
-                keyboardType="numbers-and-punctuation"
-              />
-              <TextInput
-                style={[styles.input, styles.unitInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-                placeholder="Eenheid"
-                placeholderTextColor={theme.textSecondary}
-                value={row.unit}
-                onChangeText={(value) => updateRow(row.key, { unit: value })}
-              />
-              <TextInput
-                style={[styles.input, styles.nameInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-                placeholder="Ingrediënt"
-                placeholderTextColor={theme.textSecondary}
-                value={row.name}
-                onChangeText={(value) => updateRow(row.key, { name: value })}
-              />
-              <Pressable onPress={() => removeRow(row.key)} style={styles.removeButton}>
-                <Ionicons name="close-circle" size={22} color={theme.textSecondary} />
-              </Pressable>
-            </View>
-          ))}
+          <View style={styles.ingredientList}>
+            {ingredientRows.map((row) => (
+              <View key={row.key} style={styles.ingredientRow}>
+                <TextField
+                  style={styles.qtyInput}
+                  placeholder="Aantal"
+                  value={row.quantity}
+                  onChangeText={(value) => updateRow(row.key, { quantity: value })}
+                  keyboardType="numbers-and-punctuation"
+                />
+                <TextField
+                  style={styles.unitInput}
+                  placeholder="Eenheid"
+                  value={row.unit}
+                  onChangeText={(value) => updateRow(row.key, { unit: value })}
+                />
+                <TextField
+                  style={styles.nameInput}
+                  placeholder="Ingrediënt"
+                  value={row.name}
+                  onChangeText={(value) => updateRow(row.key, { name: value })}
+                />
+                <Pressable onPress={() => removeRow(row.key)} style={styles.removeButton} hitSlop={8}>
+                  <Ionicons name="close-circle" size={22} color={theme.textSecondary} />
+                </Pressable>
+              </View>
+            ))}
+          </View>
           <Pressable style={styles.addRowButton} onPress={() => setIngredientRows((rows) => [...rows, newRow()])}>
-            <Ionicons name="add-circle-outline" size={20} color={theme.text} />
-            <ThemedText type="link">Ingrediënt toevoegen</ThemedText>
+            <Ionicons name="add-circle-outline" size={20} color={theme.primary} />
+            <ThemedText type="linkPrimary">Ingrediënt toevoegen</ThemedText>
           </Pressable>
 
-          <ThemedText type="smallBold" style={styles.sectionLabel}>
+          <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
             Bereidingswijze
           </ThemedText>
-          <TextInput
-            style={[styles.input, styles.multiline, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          <TextField
+            style={styles.multiline}
             placeholder="Stappen, of ruwe tekst uit een bijschrift die je zelf verder ordent..."
-            placeholderTextColor={theme.textSecondary}
             multiline
             value={instructions}
             onChangeText={setInstructions}
           />
 
-          <Pressable
-            style={[styles.saveButton, { opacity: addRecipe.isPending ? 0.6 : 1 }]}
-            disabled={addRecipe.isPending}
-            onPress={handleSave}>
-            <ThemedText type="smallBold" themeColor="background">
-              {addRecipe.isPending ? 'Opslaan...' : 'Recept opslaan'}
-            </ThemedText>
-          </Pressable>
+          <Button onPress={handleSave} loading={addRecipe.isPending} style={styles.saveButton}>
+            Recept opslaan
+          </Button>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -243,41 +217,26 @@ export default function AddRecipeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  scroll: { padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.six },
+  scroll: { padding: Spacing.four, paddingBottom: Spacing.six },
+  hint: { marginTop: Spacing.half, marginBottom: Spacing.two },
   urlRow: { flexDirection: 'row', gap: Spacing.two },
-  urlInput: { flex: 1 },
-  extractButton: {
-    backgroundColor: '#3c87f7',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  preview: { width: '100%', height: 180, borderRadius: Spacing.three, marginTop: Spacing.two },
-  sectionLabel: { marginTop: Spacing.three },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  multiline: { minHeight: 140, textAlignVertical: 'top' },
-  ingredientRow: { flexDirection: 'row', gap: Spacing.one, alignItems: 'center' },
-  qtyInput: { width: 64 },
-  unitInput: { width: 72 },
-  nameInput: { flex: 1 },
+  urlInput: { flex: 1, minWidth: 0 },
+  extractButton: { paddingHorizontal: Spacing.four },
+  preview: { width: '100%', height: 190, borderRadius: Radius.lg, marginTop: Spacing.three },
+  sectionLabel: { marginTop: Spacing.five, marginBottom: Spacing.two },
+  servingsInput: { alignSelf: 'flex-start', minWidth: 96 },
+  ingredientList: { gap: Spacing.two },
+  ingredientRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
+  qtyInput: { width: 68, paddingHorizontal: Spacing.two },
+  unitInput: { width: 76, paddingHorizontal: Spacing.two },
+  nameInput: { flex: 1, minWidth: 0 },
   removeButton: { padding: Spacing.one },
   addRowButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
-    marginTop: Spacing.one,
+    marginTop: Spacing.three,
   },
-  saveButton: {
-    backgroundColor: '#3c87f7',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.four,
-  },
+  multiline: { minHeight: 140, textAlignVertical: 'top' },
+  saveButton: { marginTop: Spacing.five },
 });

@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { TextField } from '@/components/ui/text-field';
+import { Radius, Shadow, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
 import {
@@ -95,7 +97,7 @@ export default function ShoppingListScreen() {
                 <ThemedText type="title">Boodschappen</ThemedText>
                 {items && items.length > 0 && (
                   <Pressable onPress={handleClear}>
-                    <ThemedText type="link" themeColor="textSecondary">
+                    <ThemedText type="link" themeColor="danger">
                       Leegmaken
                     </ThemedText>
                   </Pressable>
@@ -103,16 +105,27 @@ export default function ShoppingListScreen() {
               </View>
 
               <Pressable
-                style={[styles.pickerToggle, { backgroundColor: theme.backgroundElement }]}
+                style={[
+                  styles.pickerToggle,
+                  Shadow.sm,
+                  { backgroundColor: theme.surface, borderColor: theme.border },
+                ]}
                 onPress={() => setPickerOpen((open) => !open)}>
-                <ThemedText type="smallBold">
-                  Recepten kiezen{selectedCount > 0 ? ` (${selectedCount})` : ''}
-                </ThemedText>
-                <Ionicons name={pickerOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.text} />
+                <View style={styles.pickerToggleLeft}>
+                  <Ionicons name="restaurant-outline" size={18} color={theme.primary} />
+                  <ThemedText type="smallBold">
+                    Recepten kiezen{selectedCount > 0 ? ` (${selectedCount})` : ''}
+                  </ThemedText>
+                </View>
+                <Ionicons
+                  name={pickerOpen ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={theme.textSecondary}
+                />
               </Pressable>
 
               {pickerOpen && (
-                <View style={[styles.picker, { backgroundColor: theme.backgroundElement }]}>
+                <View style={[styles.picker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                   {(recipes ?? []).length === 0 ? (
                     <ThemedText type="small" themeColor="textSecondary">
                       Voeg eerst recepten toe in de Recepten-tab.
@@ -126,48 +139,40 @@ export default function ShoppingListScreen() {
                         <Ionicons
                           name={selectedIds[recipe.id] ? 'checkbox' : 'square-outline'}
                           size={20}
-                          color={theme.text}
+                          color={selectedIds[recipe.id] ? theme.primary : theme.textSecondary}
                         />
                         <ThemedText style={styles.pickerRowText}>{recipe.title}</ThemedText>
                       </Pressable>
                     ))
                   )}
-                  <Pressable
-                    style={[styles.generateButton, { opacity: generateList.isPending ? 0.6 : 1 }]}
-                    disabled={generateList.isPending}
-                    onPress={handleGenerate}>
-                    <ThemedText type="smallBold" themeColor="background">
-                      {generateList.isPending ? 'Bezig...' : 'Genereer lijst'}
-                    </ThemedText>
-                  </Pressable>
+                  <Button onPress={handleGenerate} loading={generateList.isPending} style={styles.generateButton}>
+                    Genereer lijst
+                  </Button>
                 </View>
               )}
 
               <View style={styles.manualRow}>
-                <TextInput
-                  style={[styles.input, styles.qtyInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+                <TextField
+                  style={styles.qtyInput}
                   placeholder="#"
-                  placeholderTextColor={theme.textSecondary}
                   value={manualQty}
                   onChangeText={setManualQty}
                 />
-                <TextInput
-                  style={[styles.input, styles.unitInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+                <TextField
+                  style={styles.unitInput}
                   placeholder="Eenh."
-                  placeholderTextColor={theme.textSecondary}
                   value={manualUnit}
                   onChangeText={setManualUnit}
                 />
-                <TextInput
-                  style={[styles.input, styles.nameInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+                <TextField
+                  style={styles.nameInput}
                   placeholder="Item toevoegen..."
-                  placeholderTextColor={theme.textSecondary}
                   value={manualName}
                   onChangeText={setManualName}
                   onSubmitEditing={handleAddManual}
                 />
                 <Pressable onPress={handleAddManual} style={styles.addButton}>
-                  <Ionicons name="add-circle" size={30} color={theme.text} />
+                  <Ionicons name="add-circle" size={32} color={theme.primary} />
                 </Pressable>
               </View>
 
@@ -203,12 +208,17 @@ function ShoppingRow({
   const theme = useTheme();
   const line = [item.quantity, item.unit, item.name].filter(Boolean).join(' ');
   return (
-    <View style={[styles.itemRow, { backgroundColor: theme.backgroundElement }]}>
+    <View
+      style={[
+        styles.itemRow,
+        Shadow.sm,
+        { backgroundColor: item.checked ? theme.secondarySoft : theme.surface },
+      ]}>
       <Pressable style={styles.itemLeft} onPress={onToggle}>
         <Ionicons
           name={item.checked ? 'checkbox' : 'square-outline'}
           size={20}
-          color={item.checked ? theme.textSecondary : theme.text}
+          color={item.checked ? theme.secondary : theme.primary}
         />
         <ThemedText
           style={[styles.itemText, item.checked && styles.itemTextChecked]}
@@ -216,7 +226,7 @@ function ShoppingRow({
           {line}
         </ThemedText>
       </Pressable>
-      <Pressable onPress={onDelete}>
+      <Pressable onPress={onDelete} hitSlop={8}>
         <Ionicons name="close" size={18} color={theme.textSecondary} />
       </Pressable>
     </View>
@@ -225,53 +235,48 @@ function ShoppingRow({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, paddingHorizontal: Spacing.three },
-  list: { paddingBottom: Spacing.six, gap: Spacing.one },
+  safeArea: { flex: 1, paddingHorizontal: Spacing.four },
+  list: { paddingBottom: Spacing.six, gap: Spacing.two },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.two,
-    marginBottom: Spacing.three,
+    marginTop: Spacing.three,
+    marginBottom: Spacing.four,
   },
   pickerToggle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
   },
+  pickerToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   picker: {
-    marginTop: Spacing.one,
-    borderRadius: Spacing.two,
+    marginTop: Spacing.two,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   pickerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   pickerRowText: { flex: 1 },
-  generateButton: {
-    backgroundColor: '#3c87f7',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two,
-    alignItems: 'center',
-    marginTop: Spacing.one,
-  },
-  manualRow: { flexDirection: 'row', gap: Spacing.one, marginTop: Spacing.three, alignItems: 'center' },
-  input: { borderRadius: Spacing.two, paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, fontSize: 15 },
-  qtyInput: { width: 44 },
-  unitInput: { width: 60 },
-  nameInput: { flex: 1 },
-  addButton: { paddingLeft: Spacing.one },
-  emptyText: { marginTop: Spacing.four, textAlign: 'center' },
+  generateButton: { marginTop: Spacing.one },
+  manualRow: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.four, alignItems: 'center' },
+  qtyInput: { width: 52, paddingHorizontal: Spacing.two },
+  unitInput: { width: 72, paddingHorizontal: Spacing.two },
+  nameInput: { flex: 1, minWidth: 0 },
+  addButton: { paddingLeft: Spacing.half },
+  emptyText: { marginTop: Spacing.five, textAlign: 'center' },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    marginTop: Spacing.two,
   },
   itemLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flex: 1 },
   itemText: { flex: 1 },

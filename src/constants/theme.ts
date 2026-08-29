@@ -1,6 +1,8 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens for the app: color palette (light/dark), type scale fonts,
+ * spacing scale, corner radii, and shadows. Every screen should style itself
+ * from these tokens rather than hardcoding colors/numbers, so the app reads
+ * as one consistent, considered design system.
  */
 
 import '@/global.css';
@@ -9,18 +11,34 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#241A12',
+    textSecondary: '#8A7A68',
+    background: '#FBF6EF',
+    surface: '#FFFFFF',
+    surfaceSelected: '#F2E4D1',
+    border: '#ECE0CD',
+    primary: '#D9552E',
+    onPrimary: '#FFFFFF',
+    primarySoft: '#FBE3D2',
+    secondary: '#4F7A5B',
+    secondarySoft: '#E3EEE6',
+    danger: '#C13F2C',
+    dangerSoft: '#FAE1D9',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F5EBE0',
+    textSecondary: '#B0A18E',
+    background: '#18130F',
+    surface: '#241C16',
+    surfaceSelected: '#352A20',
+    border: '#352A20',
+    primary: '#E97A4E',
+    onPrimary: '#1B120B',
+    primarySoft: '#3B2519',
+    secondary: '#7CAE87',
+    secondarySoft: '#213027',
+    danger: '#E97158',
+    dangerSoft: '#3B2119',
   },
 } as const;
 
@@ -59,6 +77,30 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radius = {
+  sm: 8,
+  md: 14,
+  lg: 20,
+  pill: 999,
+} as const;
+
+export const Shadow = {
+  sm: {
+    shadowColor: '#28170A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#28170A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 5,
+  },
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

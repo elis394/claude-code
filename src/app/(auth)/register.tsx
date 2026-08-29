@@ -1,10 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Button } from '@/components/ui/button';
+import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
@@ -41,39 +44,36 @@ export default function RegisterScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.form}>
+          <View style={[styles.logo, { backgroundColor: theme.primarySoft }]}>
+            <Ionicons name="restaurant" size={28} color={theme.primary} />
+          </View>
+
           <ThemedText type="title" style={styles.title}>
             Account maken
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText themeColor="textSecondary" style={styles.subtitle}>
             Maak een account aan, en koppel het daarna aan jullie huishouden.
           </ThemedText>
 
-          <TextInput
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-            placeholder="E-mailadres"
-            placeholderTextColor={theme.textSecondary}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-            placeholder="Wachtwoord (min. 6 tekens)"
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.fields}>
+            <TextField
+              placeholder="E-mailadres"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextField
+              placeholder="Wachtwoord (min. 6 tekens)"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
 
-          <Pressable
-            style={[styles.button, { opacity: loading ? 0.6 : 1 }]}
-            disabled={loading}
-            onPress={handleRegister}>
-            <ThemedText type="smallBold" themeColor="background">
-              {loading ? 'Bezig...' : 'Registreren'}
-            </ThemedText>
-          </Pressable>
+          <Button onPress={handleRegister} loading={loading} style={styles.submit}>
+            Registreren
+          </Button>
 
           <Pressable style={styles.linkRow} onPress={() => router.push('/(auth)/login')}>
             <ThemedText type="link" themeColor="textSecondary">
@@ -89,20 +89,18 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.four },
-  form: { gap: Spacing.three },
-  title: { marginBottom: Spacing.one },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#3c87f7',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
+  form: {},
+  logo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
-    marginTop: Spacing.two,
+    justifyContent: 'center',
+    marginBottom: Spacing.three,
   },
-  linkRow: { alignItems: 'center', marginTop: Spacing.two },
+  title: { marginBottom: Spacing.one },
+  subtitle: { marginBottom: Spacing.five },
+  fields: { gap: Spacing.three },
+  submit: { marginTop: Spacing.four },
+  linkRow: { alignItems: 'center', marginTop: Spacing.four },
 });

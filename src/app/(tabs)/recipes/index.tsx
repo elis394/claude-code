@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { TextField } from '@/components/ui/text-field';
+import { Radius, Shadow, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useRecipes } from '@/lib/queries';
 import type { RecipeWithIngredients } from '@/lib/types';
@@ -30,29 +31,35 @@ export default function RecipesScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <ThemedText type="title" style={styles.title}>
-            Recepten
-          </ThemedText>
+          <ThemedText type="title">Recepten</ThemedText>
           <Pressable
-            style={[styles.addButton, { backgroundColor: theme.backgroundElement }]}
+            style={({ pressed }) => [
+              styles.addButton,
+              Shadow.sm,
+              { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
+            ]}
             onPress={() => router.push('/(tabs)/recipes/add')}>
-            <Ionicons name="add" size={26} color={theme.text} />
+            <Ionicons name="add" size={26} color={theme.onPrimary} />
           </Pressable>
         </View>
 
-        <TextInput
-          style={[styles.search, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        <TextField
+          style={styles.search}
           placeholder="Zoek recepten..."
-          placeholderTextColor={theme.textSecondary}
           value={search}
           onChangeText={setSearch}
         />
 
         {!isLoading && filtered.length === 0 ? (
           <View style={styles.emptyState}>
+            <View style={[styles.emptyIcon, { backgroundColor: theme.primarySoft }]}>
+              <Ionicons name="restaurant" size={30} color={theme.primary} />
+            </View>
+            <ThemedText type="subtitle" style={styles.emptyTitle}>
+              Nog geen recepten
+            </ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-              Nog geen recepten. Tik op + om je eerste recept toe te voegen via een link of
-              handmatig.
+              Tik op + om je eerste recept toe te voegen via een link of handmatig.
             </ThemedText>
           </View>
         ) : (
@@ -73,13 +80,17 @@ function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
   const theme = useTheme();
   return (
     <Pressable
-      style={[styles.card, { backgroundColor: theme.backgroundElement }]}
+      style={({ pressed }) => [
+        styles.card,
+        Shadow.sm,
+        { backgroundColor: theme.surface, opacity: pressed ? 0.9 : 1 },
+      ]}
       onPress={() => router.push(`/(tabs)/recipes/${recipe.id}`)}>
       {recipe.image_url ? (
         <Image source={{ uri: recipe.image_url }} style={styles.cardImage} contentFit="cover" />
       ) : (
-        <View style={[styles.cardImage, styles.cardImagePlaceholder, { backgroundColor: theme.backgroundSelected }]}>
-          <Ionicons name="restaurant-outline" size={28} color={theme.textSecondary} />
+        <View style={[styles.cardImage, styles.cardImagePlaceholder, { backgroundColor: theme.primarySoft }]}>
+          <Ionicons name="restaurant-outline" size={28} color={theme.primary} />
         </View>
       )}
       <View style={styles.cardBody}>
@@ -97,38 +108,39 @@ function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, paddingHorizontal: Spacing.three },
+  safeArea: { flex: 1, paddingHorizontal: Spacing.four },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: Spacing.two,
+    marginTop: Spacing.three,
   },
-  title: {},
   addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  search: {
-    marginTop: Spacing.three,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontSize: 16,
-  },
-  list: { paddingVertical: Spacing.three, gap: Spacing.two },
+  search: { marginTop: Spacing.four },
+  list: { paddingTop: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.three },
   card: {
     flexDirection: 'row',
-    borderRadius: Spacing.three,
+    borderRadius: Radius.lg,
     overflow: 'hidden',
-    marginBottom: Spacing.two,
   },
-  cardImage: { width: 88, height: 88 },
+  cardImage: { width: 96, height: 96 },
   cardImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1, padding: Spacing.three, gap: Spacing.one, justifyContent: 'center' },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.four },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.three,
+  },
+  emptyTitle: { marginBottom: Spacing.one },
   emptyText: { textAlign: 'center' },
 });

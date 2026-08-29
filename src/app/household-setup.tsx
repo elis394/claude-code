@@ -1,10 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { TextField } from '@/components/ui/text-field';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth-context';
@@ -52,64 +55,58 @@ export default function HouseholdSetupScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.form}>
+          <View style={[styles.logo, { backgroundColor: theme.primarySoft }]}>
+            <Ionicons name="home" size={28} color={theme.primary} />
+          </View>
+
           <ThemedText type="title" style={styles.title}>
             Huishouden
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText themeColor="textSecondary" style={styles.subtitle}>
             Ingelogd als {session?.user.email}. Maak een nieuw huishouden aan, of join dat van je
             partner met een uitnodigingscode.
           </ThemedText>
 
-          <ThemedView type="backgroundElement" style={styles.tabRow}>
+          <View style={[styles.tabRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <Pressable
-              style={[styles.tabButton, mode === 'create' && { backgroundColor: theme.backgroundSelected }]}
+              style={[styles.tabButton, mode === 'create' && { backgroundColor: theme.primarySoft }]}
               onPress={() => setMode('create')}>
-              <ThemedText type="smallBold">Nieuw huishouden</ThemedText>
+              <ThemedText type="smallBold" themeColor={mode === 'create' ? 'primary' : 'text'}>
+                Nieuw huishouden
+              </ThemedText>
             </Pressable>
             <Pressable
-              style={[styles.tabButton, mode === 'join' && { backgroundColor: theme.backgroundSelected }]}
+              style={[styles.tabButton, mode === 'join' && { backgroundColor: theme.primarySoft }]}
               onPress={() => setMode('join')}>
-              <ThemedText type="smallBold">Huishouden joinen</ThemedText>
+              <ThemedText type="smallBold" themeColor={mode === 'join' ? 'primary' : 'text'}>
+                Huishouden joinen
+              </ThemedText>
             </Pressable>
-          </ThemedView>
+          </View>
 
           {mode === 'create' ? (
-            <>
-              <TextInput
-                style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            <View style={styles.fields}>
+              <TextField
                 placeholder="Naam huishouden (bv. 'Thuis')"
-                placeholderTextColor={theme.textSecondary}
                 value={householdName}
                 onChangeText={setHouseholdName}
               />
-              <Pressable
-                style={[styles.button, { opacity: busy ? 0.6 : 1 }]}
-                disabled={busy}
-                onPress={handleCreate}>
-                <ThemedText type="smallBold" themeColor="background">
-                  {busy ? 'Bezig...' : 'Aanmaken'}
-                </ThemedText>
-              </Pressable>
-            </>
+              <Button onPress={handleCreate} loading={busy}>
+                Aanmaken
+              </Button>
+            </View>
           ) : (
-            <>
-              <TextInput
-                style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            <View style={styles.fields}>
+              <TextField
                 placeholder="Uitnodigingscode"
-                placeholderTextColor={theme.textSecondary}
                 autoCapitalize="characters"
                 value={inviteCode}
                 onChangeText={setInviteCode}
               />
-              <Pressable
-                style={[styles.button, { opacity: busy ? 0.6 : 1 }]}
-                disabled={busy}
-                onPress={handleJoin}>
-                <ThemedText type="smallBold" themeColor="background">
-                  {busy ? 'Bezig...' : 'Joinen'}
-                </ThemedText>
-              </Pressable>
-            </>
+              <Button onPress={handleJoin} loading={busy}>
+                Joinen
+              </Button>
+            </View>
           )}
 
           <Pressable style={styles.linkRow} onPress={() => supabase.auth.signOut()}>
@@ -126,31 +123,30 @@ export default function HouseholdSetupScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.four },
-  form: { gap: Spacing.three },
+  form: {},
+  logo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.three,
+  },
   title: { marginBottom: Spacing.one },
+  subtitle: { marginBottom: Spacing.five },
   tabRow: {
     flexDirection: 'row',
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.half,
+    marginBottom: Spacing.four,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.sm,
   },
-  input: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#3c87f7',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.two,
-  },
-  linkRow: { alignItems: 'center', marginTop: Spacing.two },
+  fields: { gap: Spacing.three },
+  linkRow: { alignItems: 'center', marginTop: Spacing.four },
 });

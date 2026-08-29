@@ -25,6 +25,17 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
         />
 
+        {/* The app's type scale (see constants/theme.ts) references these
+            families via the --font-display CSS variable in global.css —
+            without loading them, web silently falls back to the system
+            font and the app loses its typographic identity. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        />
+
         {/*
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.
           However, body scrolling is often nice to have for mobile web. If you want to enable it, remove this line.
@@ -38,7 +49,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Receptenplanner" />
-        <meta name="theme-color" content="#208AEF" />
+        <meta name="theme-color" content="#D9552E" />
 
         {headNodes}
 
