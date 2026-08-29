@@ -19,7 +19,7 @@ export const TextField = forwardRef<TextInput, TextInputProps>(function TextFiel
         {
           color: theme.text,
           backgroundColor: theme.surface,
-          borderColor: focused ? theme.primary : theme.border,
+          borderColor: focused ? theme.primary : 'transparent',
         },
         style,
       ]}
@@ -40,10 +40,11 @@ export const TextField = forwardRef<TextInput, TextInputProps>(function TextFiel
 const styles = StyleSheet.create({
   input: {
     borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderCurve: 'continuous',
+    borderWidth: 2,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: Fonts.sans,
   },
 });

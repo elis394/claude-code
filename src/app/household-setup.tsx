@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
-import { Radius, Spacing } from '@/constants/theme';
+import { Radius, Shadow, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth-context';
@@ -67,18 +67,24 @@ export default function HouseholdSetupScreen() {
             partner met een uitnodigingscode.
           </ThemedText>
 
-          <View style={[styles.tabRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.tabRow, { backgroundColor: theme.surfaceSelected }]}>
             <Pressable
-              style={[styles.tabButton, mode === 'create' && { backgroundColor: theme.primarySoft }]}
+              style={[
+                styles.tabButton,
+                mode === 'create' && [styles.tabButtonActive, Shadow.sm, { backgroundColor: theme.surface }],
+              ]}
               onPress={() => setMode('create')}>
-              <ThemedText type="smallBold" themeColor={mode === 'create' ? 'primary' : 'text'}>
+              <ThemedText type="smallBold" themeColor={mode === 'create' ? 'primary' : 'textSecondary'}>
                 Nieuw huishouden
               </ThemedText>
             </Pressable>
             <Pressable
-              style={[styles.tabButton, mode === 'join' && { backgroundColor: theme.primarySoft }]}
+              style={[
+                styles.tabButton,
+                mode === 'join' && [styles.tabButtonActive, Shadow.sm, { backgroundColor: theme.surface }],
+              ]}
               onPress={() => setMode('join')}>
-              <ThemedText type="smallBold" themeColor={mode === 'join' ? 'primary' : 'text'}>
+              <ThemedText type="smallBold" themeColor={mode === 'join' ? 'primary' : 'textSecondary'}>
                 Huishouden joinen
               </ThemedText>
             </Pressable>
@@ -136,8 +142,7 @@ const styles = StyleSheet.create({
   subtitle: { marginBottom: Spacing.five },
   tabRow: {
     flexDirection: 'row',
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.sm,
     padding: Spacing.half,
     marginBottom: Spacing.four,
   },
@@ -145,7 +150,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: Spacing.two,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.sm - 2,
+  },
+  tabButtonActive: {
+    borderCurve: 'continuous',
   },
   fields: { gap: Spacing.three },
   linkRow: { alignItems: 'center', marginTop: Spacing.four },

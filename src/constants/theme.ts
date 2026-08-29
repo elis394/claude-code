@@ -1,8 +1,10 @@
 /**
- * Design tokens for the app: color palette (light/dark), type scale fonts,
- * spacing scale, corner radii, and shadows. Every screen should style itself
- * from these tokens rather than hardcoding colors/numbers, so the app reads
- * as one consistent, considered design system.
+ * Design tokens for the app, modeled on Apple's Human Interface Guidelines:
+ * the iOS system color palette (systemBlue accent, systemGray neutrals,
+ * grouped-table backgrounds), the SF system font (see global.css), and iOS's
+ * flat, color-led grouped-list style rather than heavy shadows/elevation.
+ * Every screen should style itself from these tokens rather than
+ * hardcoding colors/numbers, so the app reads as one consistent system.
  */
 
 import '@/global.css';
@@ -11,34 +13,34 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#241A12',
-    textSecondary: '#8A7A68',
-    background: '#FBF6EF',
+    text: '#000000',
+    textSecondary: '#6C6C70',
+    background: '#F2F2F7',
     surface: '#FFFFFF',
-    surfaceSelected: '#F2E4D1',
-    border: '#ECE0CD',
-    primary: '#D9552E',
+    surfaceSelected: '#E5E5EA',
+    border: '#D1D1D6',
+    primary: '#007AFF',
     onPrimary: '#FFFFFF',
-    primarySoft: '#FBE3D2',
-    secondary: '#4F7A5B',
-    secondarySoft: '#E3EEE6',
-    danger: '#C13F2C',
-    dangerSoft: '#FAE1D9',
+    primarySoft: '#E8F1FF',
+    secondary: '#34C759',
+    secondarySoft: '#E7F9EC',
+    danger: '#FF3B30',
+    dangerSoft: '#FFEBEA',
   },
   dark: {
-    text: '#F5EBE0',
-    textSecondary: '#B0A18E',
-    background: '#18130F',
-    surface: '#241C16',
-    surfaceSelected: '#352A20',
-    border: '#352A20',
-    primary: '#E97A4E',
-    onPrimary: '#1B120B',
-    primarySoft: '#3B2519',
-    secondary: '#7CAE87',
-    secondarySoft: '#213027',
-    danger: '#E97158',
-    dangerSoft: '#3B2119',
+    text: '#FFFFFF',
+    textSecondary: '#98989D',
+    background: '#000000',
+    surface: '#1C1C1E',
+    surfaceSelected: '#2C2C2E',
+    border: '#38383A',
+    primary: '#0A84FF',
+    onPrimary: '#FFFFFF',
+    primarySoft: '#0F2C4C',
+    secondary: '#30D158',
+    secondarySoft: '#123420',
+    danger: '#FF453A',
+    dangerSoft: '#3A1512',
   },
 } as const;
 
@@ -79,27 +81,30 @@ export const Spacing = {
   six: 64,
 } as const;
 
+/** iOS corner radii: 10 for controls/inputs, 14 for grouped cards. */
 export const Radius = {
   sm: 8,
-  md: 14,
-  lg: 20,
+  md: 10,
+  lg: 14,
   pill: 999,
 } as const;
 
+/** iOS's grouped-list style is flat — hierarchy comes from background-color
+ * contrast, not elevation. Reserve shadow for floating elements only. */
 export const Shadow = {
   sm: {
-    shadowColor: '#28170A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
   },
   md: {
-    shadowColor: '#28170A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
   },
 } as const;
 

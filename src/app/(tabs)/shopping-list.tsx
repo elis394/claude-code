@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
-import { Radius, Shadow, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
 import {
@@ -105,11 +105,7 @@ export default function ShoppingListScreen() {
               </View>
 
               <Pressable
-                style={[
-                  styles.pickerToggle,
-                  Shadow.sm,
-                  { backgroundColor: theme.surface, borderColor: theme.border },
-                ]}
+                style={[styles.pickerToggle, { backgroundColor: theme.surface }]}
                 onPress={() => setPickerOpen((open) => !open)}>
                 <View style={styles.pickerToggleLeft}>
                   <Ionicons name="restaurant-outline" size={18} color={theme.primary} />
@@ -125,7 +121,7 @@ export default function ShoppingListScreen() {
               </Pressable>
 
               {pickerOpen && (
-                <View style={[styles.picker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <View style={[styles.picker, { backgroundColor: theme.surface }]}>
                   {(recipes ?? []).length === 0 ? (
                     <ThemedText type="small" themeColor="textSecondary">
                       Voeg eerst recepten toe in de Recepten-tab.
@@ -209,11 +205,7 @@ function ShoppingRow({
   const line = [item.quantity, item.unit, item.name].filter(Boolean).join(' ');
   return (
     <View
-      style={[
-        styles.itemRow,
-        Shadow.sm,
-        { backgroundColor: item.checked ? theme.secondarySoft : theme.surface },
-      ]}>
+      style={[styles.itemRow, { backgroundColor: item.checked ? theme.secondarySoft : theme.surface }]}>
       <Pressable style={styles.itemLeft} onPress={onToggle}>
         <Ionicons
           name={item.checked ? 'checkbox' : 'square-outline'}
@@ -249,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderCurve: 'continuous',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
   },
@@ -257,7 +249,7 @@ const styles = StyleSheet.create({
   picker: {
     marginTop: Spacing.two,
     borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderCurve: 'continuous',
     padding: Spacing.three,
     gap: Spacing.three,
   },
@@ -275,6 +267,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderRadius: Radius.md,
+    borderCurve: 'continuous',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
   },

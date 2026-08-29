@@ -42,49 +42,50 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
   );
 }
 
+// Roughly follows Apple's Dynamic Type scale (Large Title / Title 2 /
+// Headline / Body / Subheadline / Footnote / Caption).
 const styles = StyleSheet.create({
   small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: 400,
   },
   smallBold: {
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 20,
-    fontWeight: 700,
+    fontWeight: 600,
   },
   default: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: 400,
   },
   title: {
     fontSize: 34,
-    fontWeight: 800,
-    lineHeight: 38,
-    letterSpacing: -0.4,
+    fontWeight: 700,
+    lineHeight: 41,
+    letterSpacing: 0.4,
   },
   subtitle: {
     fontSize: 22,
     lineHeight: 28,
     fontWeight: 700,
-    letterSpacing: -0.2,
   },
   label: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: 700,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
   },
   link: {
-    lineHeight: 30,
-    fontSize: 14,
+    lineHeight: 22,
+    fontSize: 17,
   },
   linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
-    fontWeight: 700,
+    lineHeight: 22,
+    fontSize: 17,
+    fontWeight: 600,
   },
   code: {
     fontWeight: Platform.select({ android: 700 }) ?? 500,

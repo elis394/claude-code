@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Shadow, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'ghost';
@@ -30,12 +30,13 @@ export function Button({
     variant === 'primary'
       ? theme.primary
       : variant === 'destructive'
-        ? theme.danger
+        ? theme.dangerSoft
         : variant === 'secondary'
           ? theme.surfaceSelected
           : 'transparent';
 
-  const textColor = variant === 'primary' || variant === 'destructive' ? theme.onPrimary : theme.text;
+  const textColor =
+    variant === 'primary' ? theme.onPrimary : variant === 'destructive' ? theme.danger : theme.primary;
 
   return (
     <Pressable
@@ -43,14 +44,13 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        variant !== 'ghost' && Shadow.sm,
-        { backgroundColor, opacity: isDisabled ? 0.55 : pressed ? 0.85 : 1 },
+        { backgroundColor, opacity: isDisabled ? 0.4 : pressed ? 0.7 : 1 },
         style,
       ]}>
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
-        <ThemedText type="smallBold" style={{ color: textColor }}>
+        <ThemedText type="smallBold" style={{ color: textColor, fontWeight: '600' }}>
           {children}
         </ThemedText>
       )}
@@ -61,6 +61,7 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     borderRadius: Radius.md,
+    borderCurve: 'continuous',
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.four,
     alignItems: 'center',

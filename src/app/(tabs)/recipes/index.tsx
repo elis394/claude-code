@@ -82,8 +82,7 @@ function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        Shadow.sm,
-        { backgroundColor: theme.surface, opacity: pressed ? 0.9 : 1 },
+        { backgroundColor: theme.surface, opacity: pressed ? 0.7 : 1 },
       ]}
       onPress={() => router.push(`/(tabs)/recipes/${recipe.id}`)}>
       {recipe.image_url ? (
@@ -102,6 +101,7 @@ function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
           {recipe.servings ? ` · ${recipe.servings} porties` : ''}
         </ThemedText>
       </View>
+      <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} style={styles.chevron} />
     </Pressable>
   );
 }
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
   cardImage: { width: 96, height: 96 },
   cardImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1, padding: Spacing.three, gap: Spacing.one, justifyContent: 'center' },
+  chevron: { marginRight: Spacing.three },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.four },
   emptyIcon: {
     width: 72,
