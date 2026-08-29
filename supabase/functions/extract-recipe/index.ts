@@ -162,6 +162,13 @@ function flattenInstructions(value: unknown): string {
         const t = normalizeWhitespace(stripHtmlTags(decodeHtmlEntities(step)));
         if (t) parts.push(t);
       } else if (step && typeof step === "object") {
+        if (step.itemListElement) {
+          // HowToSection: recurse into its steps rather than using the
+          // section's own name as if it were a step.
+          const nested = flattenInstructions(step.itemListElement);
+          if (nested) parts.push(nested);
+          continue;
+        }
         const maybeText = (step.text ?? step.name);
         const t = typeof maybeText === "string" ? normalizeWhitespace(stripHtmlTags(decodeHtmlEntities(maybeText))) : "";
         if (t) parts.push(t);
@@ -372,9 +379,11 @@ const METRIC_UNITS: Record<string, string> = {
   cup: "cup",
   cups: "cup",
   tbsp: "tbsp",
+  tbsps: "tbsp",
   tablespoon: "tbsp",
   tablespoons: "tbsp",
   tsp: "tsp",
+  tsps: "tsp",
   teaspoon: "tsp",
   teaspoons: "tsp",
   oz: "oz",
@@ -408,8 +417,10 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
   const cleaned = normalizeWhitespace(stripHtmlTags(line));
   if (!cleaned) return null;
 
-  // Quantity can be: "2", "2.5", "2,5", "1/2", "2 1/2"
-  const qtyRe = "(?:\\d+(?:[\\.,]\\d+)?|\\d+\\/\\d+|\\d+(?:[\\.,]\\d+)?(?:\\s+\\d+\\/\\d+)?)";
+  // Quantity can be: "2", "2.5", "2,5", "1/2", "2 1/2" — mixed and plain
+  // fractions must be tried before the plain-integer alternative, or the
+  // regex engine settles for matching just the "2" in "2 1/2".
+  const qtyRe = "(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[\\.,]\\d+)?)";
 
   // Units (NL + US)
   const unitWords = [
@@ -427,8 +438,8 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
     "plak", "plakken", "plakjes",
     // US
     "cup", "cups",
-    "tbsp", "tablespoon", "tablespoons",
-    "tsp", "teaspoon", "teaspoons",
+    "tbsp", "tbsps", "tablespoon", "tablespoons",
+    "tsp", "tsps", "teaspoon", "teaspoons",
     "oz", "ounce", "ounces",
     "lb", "lbs",
     "pint", "pints",
@@ -439,7 +450,7 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
   const unitRe = unitWords.map(escapeRegExp).join("|");
 
   const re = new RegExp(
-    `^\\s*(${qtyRe})?\\s*(${unitRe})?\\s*[-–:]?\\s*(.+?)\\s*$`,
+    `^\\s*(${qtyRe})?\\s*((?:${unitRe})(?![a-zA-Z]))?\\s*[-–:]?\\s*(.+?)\\s*$`,
     "i",
   );
 
