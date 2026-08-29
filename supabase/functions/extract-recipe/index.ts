@@ -262,30 +262,27 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
 
   const joined = lines.join("\n");
 
-  // Find headings (Eng + NL)
-  const ingHeadRe = /(^(?:Ingredients|Ingrediënten)\s*:?)|\n(?:Ingredients|Ingrediënten)\s*:?/i;
-  const instrHeadRe = /(^(?:Instructions|Bereiding|Bereidingswijze)\s*:?)|\n(?:Instructions|Bereiding|Bereidingswijze)\s*:?/i;
-
-  // We do a pragmatic parse by locating substrings.
-  const ingMatch = joined.match(new RegExp("(?:^|\\n)(Ingredients|Ingrediënten)\\s*:?(.*)$", "im"));
-  // The above is not perfect for sectioning; better approach:
-
   const ingIndex = findHeadingIndex(joined, ["Ingredients", "Ingrediënten"]);
   const instrIndex = findHeadingIndex(joined, ["Instructions", "Bereiding", "Bereidingswijze"]);
 
+  // Steps are often written as "- step one - step two" instead of one per
+  // line — split those into separate lines so they read as actual steps.
+  const formatInstructions = (value: string): string | null => {
+    const stepped = splitBulletItems(value).join("\n");
+    return stepped || null;
+  };
+
   if (ingIndex !== -1 && instrIndex !== -1 && instrIndex > ingIndex) {
-    const before = joined.slice(0, ingIndex).trim();
     const ingSection = joined.slice(ingIndex, instrIndex).trim();
     const instrSection = joined.slice(instrIndex).trim();
 
     const ingredientsText = stripHeading(ingSection, ["Ingredients", "Ingrediënten"]);
     const instructionsText = stripHeading(instrSection, ["Instructions", "Bereiding", "Bereidingswijze"]);
 
-    // title: first line of whole caption (as requested)
     return {
       title: firstLine,
       ingredientsText: ingredientsText || null,
-      instructionsText: instructionsText || null,
+      instructionsText: formatInstructions(instructionsText),
     };
   }
 
@@ -305,22 +302,25 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
     return {
       title: firstLine,
       ingredientsText: null,
-      instructionsText: instructionsText || null,
+      instructionsText: formatInstructions(instructionsText),
     };
   }
 
   return {
     title: firstLine,
     ingredientsText: null,
-    instructionsText: joined,
+    instructionsText: formatInstructions(joined),
   };
 }
 
 function findHeadingIndex(text: string, headings: string[]): number {
   let best = -1;
   for (const h of headings) {
-    // Match line starting with heading
-    const re = new RegExp(`(^|\\n)${escapeRegExp(h)}\\s*:`, "i");
+    // Match the heading wherever it stands as its own word — not just at
+    // the start of a line. Social captions commonly prefix it with an
+    // emoji/checkmark instead of a real line break, and don't always
+    // follow it with a colon.
+    const re = new RegExp(`(?<![\\p{L}])${escapeRegExp(h)}\\b\\s*:?`, "iu");
     const m = re.exec(text);
     if (m && typeof m.index === "number") {
       if (best === -1 || m.index < best) best = m.index;
@@ -329,13 +329,24 @@ function findHeadingIndex(text: string, headings: string[]): number {
   return best;
 }
 
+// normalizeWhitespace collapses newlines too, which would flatten a
+// properly line-broken ingredient/step list into one unsplittable blob —
+// clean each line individually instead, keeping the line breaks intact.
+function normalizeWhitespacePreservingLines(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => normalizeWhitespace(line))
+    .filter(Boolean)
+    .join("\n");
+}
+
 function stripHeading(sectionText: string, headings: string[]): string {
   let out = sectionText;
   for (const h of headings) {
-    const re = new RegExp(`(^|\\n)${escapeRegExp(h)}\\s*:`, "i");
+    const re = new RegExp(`(?<![\\p{L}])${escapeRegExp(h)}\\b\\s*:?`, "iu");
     out = out.replace(re, "");
   }
-  return normalizeWhitespace(out);
+  return normalizeWhitespacePreservingLines(out);
 }
 
 function escapeRegExp(s: string): string {
@@ -555,18 +566,42 @@ function convertIngredientQuantity(quantity: number | null, unit: string | null)
   return { quantity: round1(newQuantity), unit: newUnit };
 }
 
-function parseIngredientsFromText(ingredientsText: string | null | undefined): ExtractedIngredient[] {
-  if (!ingredientsText) return [];
-  const text = ingredientsText
+// Strips markdown bold markers and common decorative emoji social captions
+// use as inline separators/bullets, which otherwise stick to the item text.
+function stripDecorations(text: string): string {
+  return normalizeWhitespace(text.replace(/\*\*/g, "").replace(/[✅⭐☑️✔️👉📌]/gu, ""));
+}
+
+function splitBulletItems(text: string): string[] {
+  const normalized = text
     .replace(/\r\n/g, "\n")
     .replace(/•/g, "\n")
     .replace(/\t/g, " ");
 
-  // Split by line breaks or commas if it looks like a list.
-  const lines = text
+  let lines = normalized
     .split(/\n+/)
     .map((l) => normalizeWhitespace(l))
     .filter(Boolean);
+
+  // Social captions frequently flatten their line breaks into spaces and
+  // use " - " as a bullet separator instead — if we only found one blob,
+  // split on that so each item/step still ends up on its own line.
+  if (lines.length === 1) {
+    const stripped = lines[0].replace(/^[-–—]\s*/, "");
+    if (/\s[-–—]\s/.test(stripped)) {
+      lines = stripped
+        .split(/\s[-–—]\s+/)
+        .map((l) => normalizeWhitespace(l))
+        .filter(Boolean);
+    }
+  }
+
+  return lines.map(stripDecorations).filter(Boolean);
+}
+
+function parseIngredientsFromText(ingredientsText: string | null | undefined): ExtractedIngredient[] {
+  if (!ingredientsText) return [];
+  const lines = splitBulletItems(ingredientsText);
 
   const out: ExtractedIngredient[] = [];
   for (const line of lines) {
