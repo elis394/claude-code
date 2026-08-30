@@ -683,28 +683,28 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
       fetchHtml(url),
     ]);
 
-    if (oembed) {
-      result.title = oembed.title ?? "";
-      result.imageUrl = oembed.thumbnail;
-    }
+    if (oembed?.thumbnail) result.imageUrl = oembed.thumbnail;
 
-    if (html) {
-      const og = extractOpenGraph(html);
-      if (og.description) {
-        result.rawCaption = og.description;
-        const caption = normalizeCaption(og.description);
-        const split = splitTitleIngredientsInstructionsFromCaption(caption);
-        result.title = split.title || result.title;
-        if (split.ingredientsText) {
-          result.ingredients = parseIngredientsFromText(split.ingredientsText);
-        }
-        result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
-      } else {
-        // fallback: use title as first line, no instructions
-        result.instructions = "";
+    const og = html ? extractOpenGraph(html) : null;
+    if (og?.image && !result.imageUrl) result.imageUrl = og.image;
+
+    // TikTok's oEmbed "title" is actually the full caption (TikTok has no
+    // separate title field), same content og:description would carry — so
+    // treat whichever is available as the caption source and always run it
+    // through the same split/cap pipeline. Scraping the page for
+    // og:description often gets blocked (TikTok's bot protection), and
+    // previously that silently left the raw, unsplit oEmbed caption in the
+    // title field whenever that happened.
+    const rawCaption = og?.description || oembed?.title || "";
+    if (rawCaption) {
+      result.rawCaption = rawCaption;
+      const caption = normalizeCaption(rawCaption);
+      const split = splitTitleIngredientsInstructionsFromCaption(caption);
+      result.title = split.title;
+      if (split.ingredientsText) {
+        result.ingredients = parseIngredientsFromText(split.ingredientsText);
       }
-      if (!result.imageUrl && og.image) result.imageUrl = og.image;
-      if (!result.title && og.title) result.title = og.title;
+      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
     }
 
     return result;
