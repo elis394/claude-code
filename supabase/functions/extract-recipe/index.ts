@@ -254,14 +254,52 @@ function deriveTitle(text: string): string {
   return cleaned.length > 80 ? `${cleaned.slice(0, 80).trim()}…` : cleaned;
 }
 
+// Recognizes a line as a bullet-list item ("- 250 ml milk", "• 2 eggs").
+function isBulletLine(line: string): boolean {
+  return /^[-–—•]\s*\S/.test(line);
+}
+
+// Many captions never label their ingredients at all ("Recipe for 8 buns:"
+// followed directly by a "- item" list, then plain prose for the method) —
+// find the ingredient block by its bullet-list shape instead of a heading.
+function findBulletRun(lines: string[]): { start: number; end: number } | null {
+  const start = lines.findIndex(isBulletLine);
+  if (start === -1) return null;
+  let end = start;
+  while (end + 1 < lines.length && isBulletLine(lines[end + 1])) end++;
+  // Require at least two bullet lines so a single stray "-" elsewhere in
+  // the caption doesn't get mistaken for an ingredient list.
+  return end > start ? { start, end } : null;
+}
+
+function parseServingsFromText(text: string): number | null {
+  const patterns = [
+    /\bfor\s+(\d+)(?:\s*[-–]\s*\d+)?\s+(?:people|persons|servings|buns|rolls|pieces|portions)\b/i,
+    /\bserves?\s+(\d+)/i,
+    /\byields?\s+(\d+)/i,
+    /\bvoor\s+(\d+)(?:\s*[-–]\s*\d+)?\s+(?:personen|porties)\b/i,
+    /(\d+)(?:\s*[-–]\s*\d+)?\s+porties\b/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (isFinite(n) && n > 0) return n;
+    }
+  }
+  return null;
+}
+
 function splitTitleIngredientsInstructionsFromCaption(caption: string): {
   title: string;
   ingredientsText: string | null;
   instructionsText: string | null;
+  servings: number | null;
 } {
   const text = caption.replace(/\r\n/g, "\n");
   const lines = text.split(/\n+/).map((l) => normalizeWhitespace(l)).filter(Boolean);
   const firstLine = deriveTitle(lines[0] ?? "");
+  const servings = parseServingsFromText(text);
 
   const joined = lines.join("\n");
 
@@ -286,6 +324,7 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
       title: firstLine,
       ingredientsText: ingredientsText || null,
       instructionsText: formatInstructions(instructionsText),
+      servings,
     };
   }
 
@@ -296,6 +335,7 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
       title: firstLine,
       ingredientsText: ingredientsText || null,
       instructionsText: null,
+      servings,
     };
   }
 
@@ -306,6 +346,21 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
       title: firstLine,
       ingredientsText: null,
       instructionsText: formatInstructions(instructionsText),
+      servings,
+    };
+  }
+
+  // No explicit headings at all — fall back to locating the ingredient
+  // list by its bullet shape.
+  const bulletRun = findBulletRun(lines);
+  if (bulletRun) {
+    const ingredientsText = lines.slice(bulletRun.start, bulletRun.end + 1).join("\n");
+    const instructionsText = lines.slice(bulletRun.end + 1).join("\n");
+    return {
+      title: firstLine,
+      ingredientsText: ingredientsText || null,
+      instructionsText: formatInstructions(instructionsText),
+      servings,
     };
   }
 
@@ -313,6 +368,7 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
     title: firstLine,
     ingredientsText: null,
     instructionsText: formatInstructions(joined),
+    servings,
   };
 }
 
@@ -604,6 +660,9 @@ function splitBulletItems(text: string): string[] {
   return lines
     .map((l) => l.replace(/^[-–—•]\s*/, ""))
     .map(stripDecorations)
+    // Drop trailing hashtag-spam lines TikTok/Instagram captions commonly
+    // end with (e.g. "##baking #recipe#dinner") — not part of the recipe.
+    .filter((l) => !/^(#\S+\s*)+$/.test(l))
     .filter(Boolean);
 }
 
@@ -701,6 +760,7 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
       const caption = normalizeCaption(rawCaption);
       const split = splitTitleIngredientsInstructionsFromCaption(caption);
       result.title = split.title;
+      if (split.servings) result.servings = split.servings;
       if (split.ingredientsText) {
         result.ingredients = parseIngredientsFromText(split.ingredientsText);
       }
@@ -725,6 +785,7 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
       const caption = normalizeCaption(og.description);
       const split = splitTitleIngredientsInstructionsFromCaption(caption);
       result.title = split.title || result.title;
+      if (split.servings) result.servings = split.servings;
       if (split.ingredientsText) {
         result.ingredients = parseIngredientsFromText(split.ingredientsText);
       }
@@ -758,6 +819,7 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     // A real page <title>/og:title is a proper title — only fall back to a
     // caption snippet when the site didn't provide one.
     result.title = result.title || split.title;
+    if (split.servings) result.servings = split.servings;
     if (split.ingredientsText) result.ingredients = parseIngredientsFromText(split.ingredientsText);
     if (split.instructionsText) result.instructions = convertFahrenheitToCelsius(split.instructionsText);
   }
