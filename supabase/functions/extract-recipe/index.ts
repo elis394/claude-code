@@ -240,7 +240,10 @@ async function fetchOembed(endpoint: string, url: string): Promise<{ title: stri
 // -------------------- Caption parsing for TikTok/Instagram ----------------
 
 function normalizeCaption(text: string): string {
-  return normalizeWhitespace(stripHtmlTags(text));
+  // Keep line breaks intact — normalizeWhitespace alone collapses them,
+  // which would flatten a caption's real structure before anything
+  // downstream ever gets a chance to split on it.
+  return normalizeWhitespacePreservingLines(stripHtmlTags(text));
 }
 
 function deriveTitle(text: string): string {
@@ -596,7 +599,12 @@ function splitBulletItems(text: string): string[] {
     }
   }
 
-  return lines.map(stripDecorations).filter(Boolean);
+  // Strip a leading bullet marker on every line, real newlines or not, so
+  // items/steps read cleanly instead of keeping a redundant "- " prefix.
+  return lines
+    .map((l) => l.replace(/^[-–—•]\s*/, ""))
+    .map(stripDecorations)
+    .filter(Boolean);
 }
 
 function parseIngredientsFromText(ingredientsText: string | null | undefined): ExtractedIngredient[] {
