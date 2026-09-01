@@ -290,6 +290,74 @@ function parseServingsFromText(text: string): number | null {
   return null;
 }
 
+// Shared quantity pattern: "2", "2.5", "2,5", "1/2", "2 1/2" — mixed and
+// plain fractions must be tried before the plain-integer alternative, or the
+// regex engine settles for matching just the "2" in "2 1/2". Hoisted to
+// module scope so both `parseIngredientLine` and the run-on-caption helpers
+// below share one definition.
+const QTY_RE_SOURCE = "(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[\\.,]\\d+)?)";
+
+// Some captions have no headings and no bullet list at all — just
+// "quantity unit name" tokens run together with plain spaces, e.g.
+// "25 g unsalted butter 20 ml sunflower oil 600 g chicken thighs...".
+// Locate where that run starts: the first quantity token standing alone
+// between whitespace. Everything before it (title, hashtags, an intro
+// section label) is discarded, same as the other fallback tiers.
+function findFirstQuantityIndex(text: string): number {
+  const re = new RegExp(`(?<=^|\\s)${QTY_RE_SOURCE}(?=\\s)`, "u");
+  const m = re.exec(text);
+  return m ? m.index : -1;
+}
+
+// Common instruction-step verbs (EN + NL). Used to detect where a run-on
+// ingredient list turns into prose instructions: ingredients are short,
+// period-free phrases, instruction steps are full sentences that typically
+// open with one of these.
+const INSTRUCTION_VERBS = [
+  "Heat", "Add", "Mix", "Combine", "Bake", "Preheat", "Cook", "Stir", "Place", "Pour",
+  "Fry", "Cover", "Let", "Remove", "Serve", "Whisk", "Chop", "Cut", "Slice", "Roll",
+  "Knead", "Spread", "Melt", "Boil", "Simmer", "Season", "Sprinkle", "Drizzle",
+  "Transfer", "Set", "Repeat", "Divide", "Shape", "Chill", "Refrigerate", "Warm",
+  "Beat", "Fold", "Garnish", "Top", "Assemble", "Layer", "Bring", "Reduce", "Grease",
+  "Line", "Arrange", "Rest", "Start", "Meanwhile",
+  "Verwarm", "Voeg", "Meng", "Bak", "Kook", "Roer", "Snijd", "Giet", "Laat", "Serveer",
+  "Bestrooi", "Verdeel", "Kneed", "Rol", "Smelt", "Breng", "Haal", "Doe", "Zet",
+];
+
+function findProseInstructionStart(text: string, fromIndex: number): number {
+  const verbAlt = INSTRUCTION_VERBS.map(escapeRegExp).join("|");
+  const re = new RegExp(`(?:^|[.!?]\\s|\\s)(${verbAlt})\\b[^.?!]{10,}?[.?!]`, "gu");
+  re.lastIndex = fromIndex;
+  const m = re.exec(text);
+  if (!m) return -1;
+  return m.index + m[0].indexOf(m[1]);
+}
+
+// Turns a run-on ingredient blob ("25 g unsalted butter 20 ml sunflower
+// oil ... DOUGH 350 g all-purpose flour ...") into one ingredient per line.
+function splitRunOnIngredientBlob(blob: string): string {
+  // Drop parenthetical asides ("(1⅔ tsp)") — usually a redundant unit
+  // conversion for a quantity already captured before the parens.
+  let text = blob.replace(/\([^)]*\)/g, " ");
+
+  // Isolate short ALL-CAPS section labels ("DOUGH", "EXTRA", "CHICKEN
+  // MIXTURE") on their own line so they don't glue onto the ingredient
+  // before or after them; they get dropped entirely below.
+  text = text.replace(/(?<![A-Z])([A-Z]{2,}(?:\s+[A-Z]{2,}){0,2})(?![A-Za-z])/g, "\n$1\n");
+
+  // Break before every remaining quantity token so each ingredient gets
+  // its own line.
+  const qtyBoundary = new RegExp(`(?<=\\s)(?=${QTY_RE_SOURCE}(?:\\s|$))`, "g");
+  text = text.replace(qtyBoundary, "\n");
+
+  const lines = text
+    .split("\n")
+    .map((l) => normalizeWhitespace(l))
+    .filter((l) => l && !/^[A-Z]{2,}(?:\s+[A-Z]{2,}){0,2}$/.test(l));
+
+  return lines.join("\n");
+}
+
 function splitTitleIngredientsInstructionsFromCaption(caption: string): {
   title: string;
   ingredientsText: string | null;
@@ -362,6 +430,24 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
       instructionsText: formatInstructions(instructionsText),
       servings,
     };
+  }
+
+  // No headings, no bullets — ingredients may be a run-on "quantity unit
+  // name" sequence with plain spaces instead of any delimiter. Find where
+  // that run starts and where prose instructions take over.
+  const ingStart = findFirstQuantityIndex(joined);
+  if (ingStart !== -1) {
+    const proseStart = findProseInstructionStart(joined, ingStart);
+    if (proseStart > ingStart) {
+      const ingredientsText = splitRunOnIngredientBlob(joined.slice(ingStart, proseStart));
+      const instructionsText = joined.slice(proseStart).trim();
+      return {
+        title: firstLine,
+        ingredientsText: ingredientsText || null,
+        instructionsText: formatInstructions(instructionsText),
+        servings,
+      };
+    }
   }
 
   return {
@@ -487,11 +573,6 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
   const cleaned = normalizeWhitespace(stripHtmlTags(line));
   if (!cleaned) return null;
 
-  // Quantity can be: "2", "2.5", "2,5", "1/2", "2 1/2" — mixed and plain
-  // fractions must be tried before the plain-integer alternative, or the
-  // regex engine settles for matching just the "2" in "2 1/2".
-  const qtyRe = "(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[\\.,]\\d+)?)";
-
   // Units (NL + US)
   const unitWords = [
     // metric NL
@@ -520,7 +601,7 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
   const unitRe = unitWords.map(escapeRegExp).join("|");
 
   const re = new RegExp(
-    `^\\s*(${qtyRe})?\\s*((?:${unitRe})(?![a-zA-Z]))?\\s*[-–:]?\\s*(.+?)\\s*$`,
+    `^\\s*(${QTY_RE_SOURCE})?\\s*((?:${unitRe})(?![a-zA-Z]))?\\s*[-–:]?\\s*(.+?)\\s*$`,
     "i",
   );
 
