@@ -1,0 +1,12 @@
+:root {
+  /* Apple's design system leans on the OS's own San Francisco font rather
+     than a custom webfont — -apple-system/BlinkMacSystemFont resolve to SF
+     on Mac/iOS Safari, with sane fallbacks elsewhere. */
+  --font-display:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, ui-sans-serif,
+    system-ui, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+  --font-rounded: 'SF Pro Rounded', ui-rounded, -apple-system, sans-serif;
+  --font-serif: 'New York', ui-serif, Georgia, 'Times New Roman', serif;
+}
