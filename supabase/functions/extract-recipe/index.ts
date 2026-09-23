@@ -59,17 +59,92 @@ function stripHtmlTags(value: string): string {
   return value.replace(/<[^>]*>/g, " ");
 }
 
-async function fetchHtml(url: string): Promise<string | null> {
+// Blocks server-side requests to non-public network destinations (loopback,
+// RFC1918 private ranges, link-local incl. cloud metadata endpoints like
+// 169.254.169.254). Checked both on the literal hostname/IP and, after DNS
+// resolution, on the resolved address — a public hostname can still point at
+// a private IP.
+function isDisallowedIp(ip: string): boolean {
+  const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+  if (v4) {
+    const a = Number(v4[1]);
+    const b = Number(v4[2]);
+    if (a === 127 || a === 10 || a === 0 || a >= 224) return true; // loopback / private / reserved / multicast
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 169 && b === 254) return true; // link-local, incl. cloud metadata
+    return false;
+  }
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "::") return true; // loopback / unspecified
+  if (lower.startsWith("fe8") || lower.startsWith("fe9") || lower.startsWith("fea") || lower.startsWith("feb")) {
+    return true; // fe80::/10 link-local
+  }
+  if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7 unique local
+  const mapped = lower.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (mapped) return isDisallowedIp(mapped[1]);
+  return false;
+}
+
+async function resolveHostnameIps(hostname: string): Promise<string[]> {
+  const ips: string[] = [];
+  for (const recordType of ["A", "AAAA"] as const) {
+    try {
+      ips.push(...(await Deno.resolveDns(hostname, recordType)));
+    } catch {
+      // no records of this type, or DNS unavailable — ignore
+    }
+  }
+  return ips;
+}
+
+async function isSafeFetchTarget(url: string): Promise<boolean> {
+  let parsed: URL;
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": BROWSER_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml",
-      },
-      redirect: "follow",
-    });
-    if (!res.ok) return null;
-    return await res.text();
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) return false;
+  if (isDisallowedIp(hostname)) return false; // literal IP given directly
+
+  const ips = await resolveHostnameIps(hostname);
+  if (ips.length === 0) return false; // couldn't resolve — fail closed
+  if (ips.some(isDisallowedIp)) return false;
+
+  return true;
+}
+
+const MAX_REDIRECTS = 5;
+
+async function fetchHtml(url: string): Promise<string | null> {
+  let current = url;
+  try {
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      if (!(await isSafeFetchTarget(current))) return null;
+
+      const res = await fetch(current, {
+        headers: {
+          "User-Agent": BROWSER_USER_AGENT,
+          Accept: "text/html,application/xhtml+xml",
+        },
+        redirect: "manual",
+      });
+
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get("location");
+        if (!location) return null;
+        current = new URL(location, current).toString();
+        continue;
+      }
+
+      if (!res.ok) return null;
+      return await res.text();
+    }
+    return null;
   } catch {
     return null;
   }
