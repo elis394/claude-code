@@ -97,10 +97,7 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  -- 10 hex chars (40 bits) from a CSPRNG, not the 6-char/24-bit md5(random())
-  -- code this used to generate — that keyspace (~16.7M) was brute-forceable
-  -- via repeated join_household calls, and random()/clock_timestamp() aren't
-  -- cryptographically secure to begin with.
+  -- 10 hex chars (40 bits, CSPRNG) instead of the old 6-char/24-bit code.
   new_code := upper(encode(gen_random_bytes(5), 'hex'));
 
   insert into households (name, invite_code)
