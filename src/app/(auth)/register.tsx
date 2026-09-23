@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -8,13 +8,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
-  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,9 +42,10 @@ export default function RegisterScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.form}>
-          <View style={[styles.logo, { backgroundColor: theme.primarySoft }]}>
-            <Ionicons name="restaurant" size={28} color={theme.primary} />
-          </View>
+          <Image source={require('@/assets/images/icon.png')} style={styles.logo} contentFit="cover" />
+          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.brand}>
+            Flora Food
+          </ThemedText>
 
           <ThemedText type="title" style={styles.title}>
             Account maken
@@ -91,13 +90,12 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.four },
   form: {},
   logo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.three,
+    width: 72,
+    height: 72,
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.two,
   },
+  brand: { textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.four },
   title: { marginBottom: Spacing.one },
   subtitle: { marginBottom: Spacing.five },
   fields: { gap: Spacing.three },
