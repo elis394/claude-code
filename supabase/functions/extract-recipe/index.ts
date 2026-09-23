@@ -183,7 +183,13 @@ async function decodeBody(body: Uint8Array, contentEncoding: string | undefined)
 async function connectPinned(hostname: string, ip: string, port: number, isHttps: boolean): Promise<Deno.Conn> {
   const tcp = await Deno.connect({ hostname: ip, port, transport: "tcp" });
   if (!isHttps) return tcp;
-  return await Deno.startTls(tcp, { hostname });
+  // Force HTTP/1.1 over ALPN: this client only speaks HTTP/1.1 text framing
+  // (see fetchOnceViaPinnedIp below). Without pinning this, a server that
+  // supports HTTP/2 (Instagram/Facebook's CDN, notably) can negotiate h2,
+  // and the response comes back as binary frames our text-based status
+  // line/header parser can't read at all - the request silently returns
+  // nothing rather than erroring.
+  return await Deno.startTls(tcp, { hostname, alpnProtocols: ["http/1.1"] });
 }
 
 const CONNECT_TIMEOUT_MS = 10_000;
