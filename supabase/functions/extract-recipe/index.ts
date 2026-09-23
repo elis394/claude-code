@@ -98,6 +98,15 @@ async function resolveHostnameIps(hostname: string): Promise<string[]> {
   return ips;
 }
 
+// Known residual gap: this resolves the hostname itself to check it, but the
+// fetch() call right after re-resolves the same hostname independently — an
+// attacker controlling DNS for the submitted domain could answer the two
+// lookups differently (DNS rebinding) and slip a disallowed IP past this
+// check. Closing that fully needs a raw socket client that connects to the
+// IP validated here while keeping correct TLS/SNI for the real hostname;
+// Deno's fetch() has no IP-pinning option to do this safely. Re-checking on
+// every redirect hop (below) keeps the attack window as small as this gap
+// allows without that rewrite.
 async function isSafeFetchTarget(url: string): Promise<boolean> {
   let parsed: URL;
   try {

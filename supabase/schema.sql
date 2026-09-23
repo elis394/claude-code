@@ -97,7 +97,11 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  new_code := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+  -- 10 hex chars (40 bits) from a CSPRNG, not the 6-char/24-bit md5(random())
+  -- code this used to generate — that keyspace (~16.7M) was brute-forceable
+  -- via repeated join_household calls, and random()/clock_timestamp() aren't
+  -- cryptographically secure to begin with.
+  new_code := upper(encode(gen_random_bytes(5), 'hex'));
 
   insert into households (name, invite_code)
   values (nullif(trim(household_name), ''), new_code)
