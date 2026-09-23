@@ -1,6 +1,6 @@
 {
-  "name": "Receptenplanner",
-  "short_name": "Receptenplanner",
+  "name": "Flora Food",
+  "short_name": "Flora Food",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

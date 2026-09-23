@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Receptenplanner",
-    "slug": "receptenplanner",
+    "name": "Flora Food",
+    "slug": "flora-food",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "receptenplanner",
+    "scheme": "florafood",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

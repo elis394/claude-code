@@ -1,4 +1,4 @@
-# Receptenplanner
+# Flora Food
 
 Een mobiele app (Expo/React Native) om recepten bij te houden — van
 receptenwebsites, YouTube, TikTok of Instagram — en er samen met je
