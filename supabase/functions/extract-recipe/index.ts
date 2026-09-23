@@ -98,65 +98,219 @@ async function resolveHostnameIps(hostname: string): Promise<string[]> {
   return ips;
 }
 
-// Known residual gap: this resolves the hostname itself to check it, but the
-// fetch() call right after re-resolves the same hostname independently — an
-// attacker controlling DNS for the submitted domain could answer the two
-// lookups differently (DNS rebinding) and slip a disallowed IP past this
-// check. Closing that fully needs a raw socket client that connects to the
-// IP validated here while keeping correct TLS/SNI for the real hostname;
-// Deno's fetch() has no IP-pinning option to do this safely. Re-checking on
-// every redirect hop (below) keeps the attack window as small as this gap
-// allows without that rewrite.
-async function isSafeFetchTarget(url: string): Promise<boolean> {
+function isIpLiteral(hostname: string): boolean {
+  return /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) || hostname.includes(":");
+}
+
+function concatUint8Arrays(chunks: Uint8Array[]): Uint8Array {
+  const total = chunks.reduce((sum, c) => sum + c.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  return out;
+}
+
+function findHeaderBodySeparator(bytes: Uint8Array): number {
+  for (let i = 0; i < bytes.length - 3; i++) {
+    if (bytes[i] === 0x0d && bytes[i + 1] === 0x0a && bytes[i + 2] === 0x0d && bytes[i + 3] === 0x0a) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function parseHttpHeaders(headerText: string): { status: number; headers: Record<string, string> } {
+  const lines = headerText.split("\r\n").filter(Boolean);
+  const statusLine = lines[0] ?? "";
+  const statusMatch = statusLine.match(/^HTTP\/\d\.\d\s+(\d{3})/);
+  const status = statusMatch ? Number(statusMatch[1]) : 0;
+  const headers: Record<string, string> = {};
+  for (const line of lines.slice(1)) {
+    const idx = line.indexOf(":");
+    if (idx === -1) continue;
+    const key = line.slice(0, idx).trim().toLowerCase();
+    const value = line.slice(idx + 1).trim();
+    headers[key] = value;
+  }
+  return { status, headers };
+}
+
+function dechunk(body: Uint8Array): Uint8Array {
+  const out: Uint8Array[] = [];
+  let offset = 0;
+  const decoder = new TextDecoder();
+  while (offset < body.length) {
+    let lineEnd = -1;
+    for (let i = offset; i < body.length - 1; i++) {
+      if (body[i] === 0x0d && body[i + 1] === 0x0a) {
+        lineEnd = i;
+        break;
+      }
+    }
+    if (lineEnd === -1) break;
+    const sizeLine = decoder.decode(body.subarray(offset, lineEnd)).split(";")[0].trim();
+    const size = parseInt(sizeLine, 16);
+    if (!isFinite(size)) break;
+    if (size === 0) break; // terminating 0-length chunk
+    const chunkStart = lineEnd + 2;
+    const chunkEnd = chunkStart + size;
+    out.push(body.subarray(chunkStart, chunkEnd));
+    offset = chunkEnd + 2; // skip the chunk's trailing CRLF
+  }
+  return concatUint8Arrays(out);
+}
+
+async function decodeBody(body: Uint8Array, contentEncoding: string | undefined): Promise<string> {
+  let bytes = body;
+  const enc = (contentEncoding ?? "").toLowerCase();
+  if (enc === "gzip" || enc === "x-gzip" || enc === "deflate") {
+    const format = enc === "deflate" ? "deflate" : "gzip";
+    const stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream(format));
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+}
+
+// Connects directly to a DNS-validated IP (never re-resolves the hostname),
+// then performs the TLS handshake with the real hostname as SNI so
+// certificate validation still checks the right name. This is what actually
+// closes the DNS-rebinding gap a plain validate-then-fetch() approach has:
+// there is only ever one DNS lookup, and the socket never touches whatever
+// the attacker's nameserver might answer on a second query.
+async function connectPinned(hostname: string, ip: string, port: number, isHttps: boolean): Promise<Deno.Conn> {
+  const tcp = await Deno.connect({ hostname: ip, port, transport: "tcp" });
+  if (!isHttps) return tcp;
+  return await Deno.startTls(tcp, { hostname });
+}
+
+const CONNECT_TIMEOUT_MS = 10_000;
+const MAX_RESPONSE_BYTES = 10_000_000;
+
+type FetchOnceResult =
+  | { kind: "redirect"; location: string }
+  | { kind: "response"; status: number; headers: Record<string, string>; body: Uint8Array }
+  | { kind: "error" };
+
+async function fetchOnceViaPinnedIp(url: string): Promise<FetchOnceResult> {
   let parsed: URL;
   try {
     parsed = new URL(url);
   } catch {
-    return false;
+    return { kind: "error" };
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return { kind: "error" };
 
   const hostname = parsed.hostname.toLowerCase();
-  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) return false;
-  if (isDisallowedIp(hostname)) return false; // literal IP given directly
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
+    return { kind: "error" };
+  }
 
-  const ips = await resolveHostnameIps(hostname);
-  if (ips.length === 0) return false; // couldn't resolve — fail closed
-  if (ips.some(isDisallowedIp)) return false;
+  let ip: string;
+  if (isIpLiteral(hostname)) {
+    if (isDisallowedIp(hostname)) return { kind: "error" };
+    ip = hostname;
+  } else {
+    const ips = await resolveHostnameIps(hostname);
+    if (ips.length === 0 || ips.some(isDisallowedIp)) return { kind: "error" }; // fail closed
+    ip = ips[0];
+  }
 
-  return true;
+  const isHttps = parsed.protocol === "https:";
+  const port = parsed.port ? Number(parsed.port) : isHttps ? 443 : 80;
+  const path = (parsed.pathname || "/") + parsed.search;
+
+  let conn: Deno.Conn | null = null;
+  const timeout = setTimeout(() => {
+    try {
+      conn?.close();
+    } catch {
+      // already closed
+    }
+  }, CONNECT_TIMEOUT_MS);
+
+  try {
+    conn = await connectPinned(hostname, ip, port, isHttps);
+
+    const request =
+      `GET ${path} HTTP/1.1\r\n` +
+      `Host: ${hostname}\r\n` +
+      `User-Agent: ${BROWSER_USER_AGENT}\r\n` +
+      `Accept: text/html,application/xhtml+xml\r\n` +
+      `Accept-Encoding: gzip, deflate\r\n` +
+      `Connection: close\r\n\r\n`;
+
+    const writer = conn.writable.getWriter();
+    await writer.write(new TextEncoder().encode(request));
+    writer.releaseLock();
+
+    const reader = conn.readable.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        total += value.length;
+        if (total > MAX_RESPONSE_BYTES) break;
+      }
+    }
+    reader.releaseLock();
+
+    const raw = concatUint8Arrays(chunks);
+    const separator = findHeaderBodySeparator(raw);
+    if (separator === -1) return { kind: "error" };
+
+    const headerText = new TextDecoder().decode(raw.subarray(0, separator));
+    const { status, headers } = parseHttpHeaders(headerText);
+    let body = raw.subarray(separator + 4);
+
+    if ((headers["transfer-encoding"] ?? "").toLowerCase().includes("chunked")) {
+      body = dechunk(body);
+    }
+
+    if (status >= 300 && status < 400 && headers["location"]) {
+      return { kind: "redirect", location: headers["location"] };
+    }
+
+    return { kind: "response", status, headers, body };
+  } catch {
+    return { kind: "error" };
+  } finally {
+    clearTimeout(timeout);
+    try {
+      conn?.close();
+    } catch {
+      // already closed
+    }
+  }
 }
 
 const MAX_REDIRECTS = 5;
 
 async function fetchHtml(url: string): Promise<string | null> {
   let current = url;
-  try {
-    for (let i = 0; i <= MAX_REDIRECTS; i++) {
-      if (!(await isSafeFetchTarget(current))) return null;
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    const result = await fetchOnceViaPinnedIp(current);
 
-      const res = await fetch(current, {
-        headers: {
-          "User-Agent": BROWSER_USER_AGENT,
-          Accept: "text/html,application/xhtml+xml",
-        },
-        redirect: "manual",
-      });
+    if (result.kind === "error") return null;
 
-      if (res.status >= 300 && res.status < 400) {
-        const location = res.headers.get("location");
-        if (!location) return null;
-        current = new URL(location, current).toString();
-        continue;
+    if (result.kind === "redirect") {
+      try {
+        current = new URL(result.location, current).toString();
+      } catch {
+        return null;
       }
-
-      if (!res.ok) return null;
-      return await res.text();
+      continue;
     }
-    return null;
-  } catch {
-    return null;
+
+    if (result.status < 200 || result.status >= 300) return null;
+    return await decodeBody(result.body, result.headers["content-encoding"]);
   }
+  return null;
 }
 
 function hostOf(url: string): string {
