@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,12 +19,46 @@ function formatQuantity(quantity: number | null) {
   return Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(2).replace(/\.?0+$/, '');
 }
 
+type InstructionItem =
+  | { kind: 'step'; number: number; text: string }
+  | { kind: 'tip'; text: string };
+
+const TIP_PREFIX = /^tip:?\s*/i;
+
+function parseInstructionItems(instructions: string): InstructionItem[] {
+  let stepNumber = 0;
+  return instructions
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      if (TIP_PREFIX.test(line)) {
+        return { kind: 'tip', text: line.replace(TIP_PREFIX, '') };
+      }
+      stepNumber += 1;
+      return { kind: 'step', number: stepNumber, text: line };
+    });
+}
+
 export default function RecipeDetailScreen() {
   const theme = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { householdId } = useCurrentHousehold();
   const { data: recipe, isLoading } = useRecipe(id);
   const deleteRecipe = useDeleteRecipe(householdId);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+
+  function toggleIngredient(ingredientId: string) {
+    setCheckedIngredients((prev) => {
+      const next = new Set(prev);
+      if (next.has(ingredientId)) {
+        next.delete(ingredientId);
+      } else {
+        next.add(ingredientId);
+      }
+      return next;
+    });
+  }
 
   function handleDelete() {
     if (!recipe) return;
@@ -74,9 +109,9 @@ export default function RecipeDetailScreen() {
 
             {recipe.source_url ? (
               <ExternalLink href={recipe.source_url as `${string}:${string}`}>
-                <View style={[styles.pill, { backgroundColor: theme.primarySoft }]}>
-                  <Ionicons name="link" size={14} color={theme.primary} />
-                  <ThemedText type="small" themeColor="primary">
+                <View style={styles.sourceLink}>
+                  <Ionicons name="link" size={13} color={theme.textSecondary} />
+                  <ThemedText type="small" themeColor="textSecondary">
                     Bron
                   </ThemedText>
                 </View>
@@ -90,16 +125,31 @@ export default function RecipeDetailScreen() {
                 Ingrediënten
               </ThemedText>
               <View style={styles.ingredientList}>
-                {ingredients.map((ingredient) => (
-                  <View key={ingredient.id} style={styles.ingredientRow}>
-                    <View style={[styles.dot, { backgroundColor: theme.secondary }]} />
-                    <ThemedText style={styles.ingredientLine}>
-                      {[formatQuantity(ingredient.quantity), ingredient.unit, ingredient.name]
-                        .filter(Boolean)
-                        .join(' ')}
-                    </ThemedText>
-                  </View>
-                ))}
+                {ingredients.map((ingredient) => {
+                  const checked = checkedIngredients.has(ingredient.id);
+                  return (
+                    <Pressable
+                      key={ingredient.id}
+                      style={styles.ingredientRow}
+                      onPress={() => toggleIngredient(ingredient.id)}>
+                      <Ionicons
+                        name={checked ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={22}
+                        color={checked ? theme.secondary : theme.textSecondary}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.ingredientLine,
+                          checked && styles.ingredientLineChecked,
+                          checked && { color: theme.textSecondary },
+                        ]}>
+                        {[formatQuantity(ingredient.quantity), ingredient.unit, ingredient.name]
+                          .filter(Boolean)
+                          .join(' ')}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           )}
@@ -109,7 +159,27 @@ export default function RecipeDetailScreen() {
               <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
                 Bereidingswijze
               </ThemedText>
-              <ThemedText style={styles.instructions}>{recipe.instructions}</ThemedText>
+              <View style={styles.instructionList}>
+                {parseInstructionItems(recipe.instructions).map((item, index) =>
+                  item.kind === 'tip' ? (
+                    <View key={index} style={[styles.tipRow, { backgroundColor: theme.secondarySoft }]}>
+                      <Ionicons name="bulb-outline" size={16} color={theme.secondary} />
+                      <ThemedText type="small" style={styles.tipText}>
+                        {item.text}
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    <View key={index} style={styles.stepRow}>
+                      <View style={[styles.stepNumber, { backgroundColor: theme.surfaceSelected }]}>
+                        <ThemedText type="smallBold" themeColor="textSecondary">
+                          {item.number}
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={styles.stepText}>{item.text}</ThemedText>
+                    </View>
+                  )
+                )}
+              </View>
             </View>
           ) : null}
 
@@ -143,11 +213,30 @@ const styles = StyleSheet.create({
   },
   section: { marginTop: Spacing.five },
   sectionLabel: { marginBottom: Spacing.two },
-  ingredientList: { gap: Spacing.two },
-  ingredientRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  ingredientLine: { lineHeight: 24 },
-  instructions: { lineHeight: 26 },
+  sourceLink: { flexDirection: 'row', alignItems: 'center', gap: Spacing.half, paddingVertical: Spacing.one },
+  ingredientList: { gap: Spacing.one },
+  ingredientRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.one },
+  ingredientLine: { lineHeight: 24, flex: 1 },
+  ingredientLineChecked: { textDecorationLine: 'line-through' },
+  instructionList: { gap: Spacing.three },
+  stepRow: { flexDirection: 'row', gap: Spacing.three },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  stepText: { flex: 1, lineHeight: 26 },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+    borderRadius: Radius.md,
+    padding: Spacing.three,
+  },
+  tipText: { flex: 1, fontStyle: 'italic', lineHeight: 20 },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
