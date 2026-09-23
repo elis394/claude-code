@@ -81,6 +81,9 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Household create/join (SECURITY DEFINER: households/household_members have
 -- no direct client-side insert policies, so this is the only way in)
+--
+-- create_household's invite code: 10 hex chars (40 bits, CSPRNG) instead of
+-- the old 6-char/24-bit code.
 -- ---------------------------------------------------------------------------
 
 create or replace function create_household(household_name text)
@@ -97,7 +100,6 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  -- 10 hex chars (40 bits, CSPRNG) instead of the old 6-char/24-bit code.
   new_code := upper(encode(gen_random_bytes(5), 'hex'));
 
   insert into households (name, invite_code)
