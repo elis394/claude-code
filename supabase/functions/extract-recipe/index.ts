@@ -196,33 +196,28 @@ type FetchOnceResult =
   | { kind: "response"; status: number; headers: Record<string, string>; body: Uint8Array }
   | { kind: "error" };
 
-function debugFail(reason: string): { kind: "error" } {
-  console.error(`[extract-recipe] fetchOnceViaPinnedIp failed: ${reason}`);
-  return { kind: "error" };
-}
-
 async function fetchOnceViaPinnedIp(url: string): Promise<FetchOnceResult> {
   let parsed: URL;
   try {
     parsed = new URL(url);
   } catch {
-    return debugFail(`bad URL ${url}`);
+    return { kind: "error" };
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return debugFail(`protocol ${parsed.protocol}`);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return { kind: "error" };
 
   const hostname = parsed.hostname.toLowerCase();
   if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
-    return debugFail(`local hostname ${hostname}`);
+    return { kind: "error" };
   }
 
   let ip: string;
   if (isIpLiteral(hostname)) {
-    if (isDisallowedIp(hostname)) return debugFail(`disallowed IP literal ${hostname}`);
+    if (isDisallowedIp(hostname)) return { kind: "error" };
     ip = hostname;
   } else {
     const ips = await resolveHostnameIps(hostname);
-    if (ips.length === 0) return debugFail(`no DNS records for ${hostname}`);
-    if (ips.some(isDisallowedIp)) return debugFail(`disallowed resolved IP for ${hostname}: ${ips.join(",")}`);
+    if (ips.length === 0) return { kind: "error" }; // no DNS records
+    if (ips.some(isDisallowedIp)) return { kind: "error" }; // fail closed
     ip = ips[0];
   }
 
@@ -270,7 +265,7 @@ async function fetchOnceViaPinnedIp(url: string): Promise<FetchOnceResult> {
 
     const raw = concatUint8Arrays(chunks);
     const separator = findHeaderBodySeparator(raw);
-    if (separator === -1) return debugFail(`no header/body separator, got ${raw.length} bytes`);
+    if (separator === -1) return { kind: "error" };
 
     const headerText = new TextDecoder().decode(raw.subarray(0, separator));
     const { status, headers } = parseHttpHeaders(headerText);
@@ -284,10 +279,9 @@ async function fetchOnceViaPinnedIp(url: string): Promise<FetchOnceResult> {
       return { kind: "redirect", location: headers["location"] };
     }
 
-    console.error(`[extract-recipe] ${hostname} -> status ${status}, ${body.length} body bytes, encoding=${headers["content-encoding"] ?? "identity"}`);
     return { kind: "response", status, headers, body };
-  } catch (e) {
-    return debugFail(`exception: ${e instanceof Error ? e.message : String(e)}`);
+  } catch {
+    return { kind: "error" };
   } finally {
     clearTimeout(timeout);
     try {
@@ -321,7 +315,6 @@ async function fetchHtml(url: string): Promise<string | null> {
     if (result.kind === "error") return null;
 
     if (result.kind === "redirect") {
-      console.error(`[extract-recipe] redirect ${i}: ${current} -> ${result.location}`);
       try {
         current = new URL(result.location, current).toString();
       } catch {
@@ -330,10 +323,7 @@ async function fetchHtml(url: string): Promise<string | null> {
       continue;
     }
 
-    if (result.status < 200 || result.status >= 300) {
-      console.error(`[extract-recipe] fetchHtml: non-2xx status ${result.status} for ${current}`);
-      return null;
-    }
+    if (result.status < 200 || result.status >= 300) return null;
     return await decodeBody(result.body, result.headers["content-encoding"]);
   }
   return null;
