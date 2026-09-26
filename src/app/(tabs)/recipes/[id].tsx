@@ -14,9 +14,11 @@ import { showAlert } from '@/lib/alert';
 import { useDeleteRecipe, useRecipe } from '@/lib/queries';
 import { useCurrentHousehold } from '@/lib/use-current-household';
 
+const quantityFormatter = new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 2 });
+
 function formatQuantity(quantity: number | null) {
   if (quantity === null) return '';
-  return Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(2).replace(/\.?0+$/, '');
+  return quantityFormatter.format(quantity);
 }
 
 type InstructionItem =

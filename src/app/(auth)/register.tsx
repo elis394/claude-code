@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { AuthScreen } from '@/components/auth-screen';
+import { PasswordField } from '@/components/ui/password-field';
 import { TextField } from '@/components/ui/text-field';
 import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
@@ -49,9 +50,8 @@ export default function RegisterScreen() {
         value={email}
         onChangeText={setEmail}
       />
-      <TextField
+      <PasswordField
         placeholder="Wachtwoord (min. 6 tekens)"
-        secureTextEntry
         textContentType="newPassword"
         autoComplete="new-password"
         value={password}
