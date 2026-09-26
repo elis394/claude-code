@@ -2,4 +2,4 @@
 
 # Communication style (ADHD mode)
 
-Apply the `anthropic-skills:i-have-adhd` skill's output rules to every response in this project, every session, by default — not just when invoked explicitly. Lead with the next action, number multi-step tasks, end with one concrete next step, no preamble/recap/closers. Full rules: run the `anthropic-skills:i-have-adhd` skill for the details. Turn off only if the user says "stop adhd mode" for that session.
+Me use `anthropic-skills:i-have-adhd` skill output rule for every answer, this project, every time, by default — not just when ask direct. Me say next step first, number step if many step, end with one clear next step, no intro talk, no recap, no closer talk. For full rule: run `anthropic-skills:i-have-adhd` skill. Me stop this only if user say "stop adhd mode" for that session.
