@@ -138,6 +138,11 @@ export default function RecipeDetailScreen() {
                     <Pressable
                       key={ingredient.id}
                       style={styles.ingredientRow}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked }}
+                      accessibilityLabel={[formatQuantity(ingredient.quantity), ingredient.unit, ingredient.name]
+                        .filter(Boolean)
+                        .join(' ')}
                       onPress={() => toggleIngredient(ingredient.id)}>
                       <Ionicons
                         name={checked ? 'checkmark-circle' : 'ellipse-outline'}

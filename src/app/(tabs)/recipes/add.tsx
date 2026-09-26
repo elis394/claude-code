@@ -235,7 +235,11 @@ export default function AddRecipeScreen() {
                   value={row.name}
                   onChangeText={(value) => updateRow(row.key, { name: value })}
                 />
-                <Pressable onPress={() => removeRow(row.key)} style={styles.removeButton} hitSlop={8}>
+                <Pressable
+                  onPress={() => removeRow(row.key)}
+                  style={styles.removeButton}
+                  hitSlop={8}
+                  accessibilityLabel="Ingrediënt verwijderen">
                   <Ionicons name="close-circle" size={22} color={theme.textSecondary} />
                 </Pressable>
               </View>
@@ -251,7 +255,7 @@ export default function AddRecipeScreen() {
           </ThemedText>
           <TextField
             style={styles.multiline}
-            placeholder="Stappen, of ruwe tekst uit een bijschrift die je zelf verder ordent..."
+            placeholder="Stappen van het recept..."
             multiline
             value={instructions}
             onChangeText={setInstructions}

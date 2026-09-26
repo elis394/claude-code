@@ -38,6 +38,7 @@ export default function RecipesScreen() {
         <View style={styles.header}>
           <ThemedText type="title">Recepten</ThemedText>
           <Pressable
+            accessibilityLabel="Recept toevoegen"
             style={({ pressed }) => [
               styles.addButton,
               Shadow.sm,

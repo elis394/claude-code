@@ -139,6 +139,9 @@ export default function ShoppingListScreen() {
                       <Pressable
                         key={recipe.id}
                         style={styles.pickerRow}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: Boolean(selectedIds[recipe.id]) }}
+                        accessibilityLabel={recipe.title}
                         onPress={() => toggleSelected(recipe.id)}>
                         <Ionicons
                           name={selectedIds[recipe.id] ? 'checkbox' : 'square-outline'}
@@ -175,7 +178,10 @@ export default function ShoppingListScreen() {
                   onChangeText={setManualName}
                   onSubmitEditing={handleAddManual}
                 />
-                <Pressable onPress={handleAddManual} style={styles.addButton}>
+                <Pressable
+                  onPress={handleAddManual}
+                  style={styles.addButton}
+                  accessibilityLabel="Item toevoegen">
                   <Ionicons name="add-circle" size={32} color={theme.primary} />
                 </Pressable>
               </View>
@@ -210,6 +216,9 @@ const ShoppingRow = memo(function ShoppingRow({
       style={[styles.itemRow, { backgroundColor: item.checked ? theme.secondarySoft : theme.surface }]}>
       <Pressable
         style={styles.itemLeft}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: item.checked }}
+        accessibilityLabel={line}
         onPress={() => onToggle({ id: item.id, checked: !item.checked })}>
         <Ionicons
           name={item.checked ? 'checkbox' : 'square-outline'}
@@ -222,7 +231,7 @@ const ShoppingRow = memo(function ShoppingRow({
           {line}
         </ThemedText>
       </Pressable>
-      <Pressable onPress={() => onDelete(item.id)} hitSlop={8}>
+      <Pressable onPress={() => onDelete(item.id)} hitSlop={8} accessibilityLabel={`${line} verwijderen`}>
         <Ionicons name="close" size={18} color={theme.textSecondary} />
       </Pressable>
     </View>

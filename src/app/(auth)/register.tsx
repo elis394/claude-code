@@ -44,12 +44,16 @@ export default function RegisterScreen() {
         placeholder="E-mailadres"
         autoCapitalize="none"
         keyboardType="email-address"
+        textContentType="emailAddress"
+        autoComplete="email"
         value={email}
         onChangeText={setEmail}
       />
       <TextField
         placeholder="Wachtwoord (min. 6 tekens)"
         secureTextEntry
+        textContentType="newPassword"
+        autoComplete="new-password"
         value={password}
         onChangeText={setPassword}
       />

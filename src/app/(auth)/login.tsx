@@ -41,10 +41,19 @@ export default function LoginScreen() {
         placeholder="E-mailadres"
         autoCapitalize="none"
         keyboardType="email-address"
+        textContentType="emailAddress"
+        autoComplete="email"
         value={email}
         onChangeText={setEmail}
       />
-      <TextField placeholder="Wachtwoord" secureTextEntry value={password} onChangeText={setPassword} />
+      <TextField
+        placeholder="Wachtwoord"
+        secureTextEntry
+        textContentType="password"
+        autoComplete="current-password"
+        value={password}
+        onChangeText={setPassword}
+      />
     </AuthScreen>
   );
 }
