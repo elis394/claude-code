@@ -90,12 +90,8 @@ async function resolveHostnameIps(hostname: string): Promise<string[]> {
   const results = await Promise.allSettled(
     (["A", "AAAA"] as const).map((recordType) => Deno.resolveDns(hostname, recordType))
   );
-  const ips: string[] = [];
-  for (const result of results) {
-    // no records of this type, or DNS unavailable — ignore
-    if (result.status === "fulfilled") ips.push(...result.value);
-  }
-  return ips;
+  // no records of this type, or DNS unavailable — ignore
+  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }
 
 function isIpLiteral(hostname: string): boolean {
@@ -488,6 +484,15 @@ function normalizeCaption(text: string): string {
   // which would flatten a caption's real structure before anything
   // downstream ever gets a chance to split on it.
   return normalizeWhitespacePreservingLines(stripHtmlTags(text));
+}
+
+// Instagram's og:description, for an unauthenticated request, is never the
+// raw caption — it's "<likes> likes, <comments> comments - <user> on <date>:
+// "<caption>"", and the platform itself truncates the caption short. Strip
+// the wrapper so that metadata doesn't leak into the parsed title/
+// instructions; the truncation itself can't be fixed from here.
+function stripInstagramMetaPrefix(text: string): string {
+  return text.replace(/^[\d,]+\s+likes?,\s+[\d,]+\s+comments?\s+-\s+.+?\s+on\s+.+?:\s*/i, "");
 }
 
 function deriveTitle(text: string): string {
@@ -998,22 +1003,18 @@ function convertFahrenheitToCelsius(text: string): string {
   });
 }
 
-// Parses a caption/description into title/servings/ingredients/instructions
-// and merges it into `result` — shared by the TikTok, Instagram, and website
-// og:description fallback branches below, which all do the same thing to
-// whatever raw caption text they found.
-function applyCaptionSplit(
-  result: ExtractResult,
-  rawCaption: string,
-  options: { preferExistingTitle?: boolean; instructionsFallback?: string } = {},
-): void {
+// Normalizes a caption/description, splits it into title/servings/
+// ingredients/instructions, and merges the servings/ingredients into
+// `result` — shared by the TikTok, Instagram, and website og:description
+// fallback branches below, which all do this same mechanical parsing but
+// each apply their own title/instructions precedence to the result.
+function applyCaptionSplit(result: ExtractResult, rawCaption: string) {
   result.rawCaption = rawCaption;
   const caption = normalizeCaption(rawCaption);
   const split = splitTitleIngredientsInstructionsFromCaption(caption);
-  result.title = options.preferExistingTitle ? result.title || split.title : split.title || result.title;
   if (split.servings) result.servings = split.servings;
   if (split.ingredientsText) result.ingredients = parseIngredientsFromText(split.ingredientsText);
-  result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? options.instructionsFallback ?? "");
+  return { ...split, caption };
 }
 
 // -------------------- Main extraction ------------------------------------
@@ -1075,7 +1076,11 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     // previously that silently left the raw, unsplit oEmbed caption in the
     // title field whenever that happened.
     const rawCaption = og?.description || oembed?.title || "";
-    if (rawCaption) applyCaptionSplit(result, rawCaption);
+    if (rawCaption) {
+      const split = applyCaptionSplit(result, rawCaption);
+      result.title = split.title || result.title;
+      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
+    }
 
     return result;
   }
@@ -1090,7 +1095,11 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     if (og.title) result.title = og.title;
     if (og.image) result.imageUrl = og.image;
 
-    if (og.description) applyCaptionSplit(result, og.description);
+    if (og.description) {
+      const split = applyCaptionSplit(result, stripInstagramMetaPrefix(og.description));
+      result.title = split.title || result.title;
+      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
+    }
 
     return result;
   }
@@ -1113,10 +1122,9 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     // A real page <title>/og:title is a proper title — only fall back to a
     // caption snippet when the site didn't provide one. Absent a heading
     // split, the whole (converted) description doubles as instructions.
-    applyCaptionSplit(result, og.description, {
-      preferExistingTitle: true,
-      instructionsFallback: normalizeCaption(og.description),
-    });
+    const split = applyCaptionSplit(result, og.description);
+    result.title = result.title || split.title;
+    result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? split.caption);
   }
 
   return result;
