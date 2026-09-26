@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
@@ -87,7 +87,11 @@ export default function RecipeDetailScreen() {
   );
 
   if (isLoading || !recipe) {
-    return <ThemedView style={styles.container} />;
+    return (
+      <ThemedView style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator color={theme.primary} />
+      </ThemedView>
+    );
   }
 
   return (
@@ -211,6 +215,7 @@ export default function RecipeDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  loadingContainer: { alignItems: 'center', justifyContent: 'center' },
   safeArea: { flex: 1 },
   scroll: { padding: Spacing.four, paddingBottom: Spacing.six },
   image: { width: '100%', height: 230, borderRadius: Radius.lg, marginBottom: Spacing.four },

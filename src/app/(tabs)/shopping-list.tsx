@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -27,7 +27,7 @@ export default function ShoppingListScreen() {
   const theme = useTheme();
   const { householdId } = useCurrentHousehold();
   const { data: recipes } = useRecipes(householdId);
-  const { data: items } = useShoppingList(householdId);
+  const { data: items, isLoading } = useShoppingList(householdId);
 
   const generateList = useGenerateShoppingList(householdId);
   const toggleItem = useToggleShoppingListItem(householdId);
@@ -186,11 +186,23 @@ export default function ShoppingListScreen() {
                 </Pressable>
               </View>
 
-              {sortedItems.length === 0 && (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-                  Nog geen items. Kies recepten hierboven, of voeg zelf iets toe.
-                </ThemedText>
-              )}
+              {isLoading ? (
+                <View style={styles.loadingState}>
+                  <ActivityIndicator color={theme.primary} />
+                </View>
+              ) : sortedItems.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={[styles.emptyIcon, { backgroundColor: theme.primarySoft }]}>
+                    <Ionicons name="cart-outline" size={30} color={theme.primary} />
+                  </View>
+                  <ThemedText type="subtitle" style={styles.emptyTitle}>
+                    Nog geen items
+                  </ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.emptyText}>
+                    Kies recepten hierboven, of voeg zelf iets toe.
+                  </ThemedText>
+                </View>
+              ) : null}
             </View>
           }
           renderItem={renderItem}
@@ -274,7 +286,18 @@ const styles = StyleSheet.create({
   unitInput: { width: 72, paddingHorizontal: Spacing.two },
   nameInput: { flex: 1, minWidth: 0 },
   addButton: { paddingLeft: Spacing.half },
-  emptyText: { marginTop: Spacing.five, textAlign: 'center' },
+  loadingState: { alignItems: 'center', marginTop: Spacing.five },
+  emptyState: { alignItems: 'center', marginTop: Spacing.five, paddingHorizontal: Spacing.four },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.three,
+  },
+  emptyTitle: { marginBottom: Spacing.one },
+  emptyText: { textAlign: 'center' },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
