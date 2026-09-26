@@ -31,3 +31,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+/** Every Supabase call returns `{ data, error }` and every call site needs to
+ * throw on `error` before using `data` - this collapses that pair into one
+ * awaited expression. `T` is asserted by the caller (as the previous
+ * `data as T` casts were) rather than inferred from the promise itself:
+ * inferring it from the promise lets it leak into Supabase's own generic
+ * builder methods (e.g. `.single()`), corrupting their result types. */
+export async function unwrap<T>(
+  promise: PromiseLike<{ data: unknown; error: { message: string } | null }>
+): Promise<T> {
+  const { data, error } = await promise;
+  if (error) throw error;
+  return data as T;
+}

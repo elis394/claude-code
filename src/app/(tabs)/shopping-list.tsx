@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,6 +10,7 @@ import { TextField } from '@/components/ui/text-field';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { showAlert } from '@/lib/alert';
+import { parseQuantityInput } from '@/lib/format';
 import {
   useAddShoppingListItem,
   useClearShoppingList,
@@ -68,7 +69,7 @@ export default function ShoppingListScreen() {
     if (!manualName.trim()) return;
     await addManualItem.mutateAsync({
       name: manualName,
-      quantity: manualQty.trim() ? parseFloat(manualQty.replace(',', '.')) : null,
+      quantity: parseQuantityInput(manualQty),
       unit: manualUnit.trim() ? manualUnit.trim() : null,
     });
     setManualName('');
@@ -83,6 +84,13 @@ export default function ShoppingListScreen() {
       { text: 'Leegmaken', style: 'destructive', onPress: () => clearList.mutate() },
     ]);
   }
+
+  const renderItem = useCallback(
+    ({ item }: { item: ShoppingListItem }) => (
+      <ShoppingRow item={item} onToggle={toggleItem.mutate} onDelete={deleteItem.mutate} />
+    ),
+    [toggleItem.mutate, deleteItem.mutate]
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -179,34 +187,30 @@ export default function ShoppingListScreen() {
               )}
             </View>
           }
-          renderItem={({ item }) => (
-            <ShoppingRow
-              item={item}
-              onToggle={() => toggleItem.mutate({ id: item.id, checked: !item.checked })}
-              onDelete={() => deleteItem.mutate(item.id)}
-            />
-          )}
+          renderItem={renderItem}
         />
       </SafeAreaView>
     </ThemedView>
   );
 }
 
-function ShoppingRow({
+const ShoppingRow = memo(function ShoppingRow({
   item,
   onToggle,
   onDelete,
 }: {
   item: ShoppingListItem;
-  onToggle: () => void;
-  onDelete: () => void;
+  onToggle: (input: { id: string; checked: boolean }) => void;
+  onDelete: (id: string) => void;
 }) {
   const theme = useTheme();
   const line = [item.quantity, item.unit, item.name].filter(Boolean).join(' ');
   return (
     <View
       style={[styles.itemRow, { backgroundColor: item.checked ? theme.secondarySoft : theme.surface }]}>
-      <Pressable style={styles.itemLeft} onPress={onToggle}>
+      <Pressable
+        style={styles.itemLeft}
+        onPress={() => onToggle({ id: item.id, checked: !item.checked })}>
         <Ionicons
           name={item.checked ? 'checkbox' : 'square-outline'}
           size={20}
@@ -218,12 +222,12 @@ function ShoppingRow({
           {line}
         </ThemedText>
       </Pressable>
-      <Pressable onPress={onDelete} hitSlop={8}>
+      <Pressable onPress={() => onDelete(item.id)} hitSlop={8}>
         <Ionicons name="close" size={18} color={theme.textSecondary} />
       </Pressable>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

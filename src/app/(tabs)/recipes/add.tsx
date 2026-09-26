@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { showAlert } from '@/lib/alert';
+import { getErrorMessage, showAlert } from '@/lib/alert';
+import { parseQuantityInput } from '@/lib/format';
 import { useAddRecipe, useExtractRecipe } from '@/lib/queries';
 import type { NewIngredientInput, SourceType } from '@/lib/types';
 import { useCurrentHousehold } from '@/lib/use-current-household';
@@ -68,10 +69,7 @@ export default function AddRecipeScreen() {
         );
       }
     } catch (error) {
-      showAlert(
-        'Ophalen mislukt',
-        error instanceof Error ? error.message : 'Vul het recept handmatig in.'
-      );
+      showAlert('Ophalen mislukt', getErrorMessage(error, 'Vul het recept handmatig in.'));
     }
   }
 
@@ -94,7 +92,7 @@ export default function AddRecipeScreen() {
       .filter((row) => row.name.trim().length > 0)
       .map((row) => ({
         name: row.name.trim(),
-        quantity: row.quantity.trim() ? parseFloat(row.quantity.replace(',', '.')) : null,
+        quantity: parseQuantityInput(row.quantity),
         unit: row.unit.trim() ? row.unit.trim() : null,
       }));
 
@@ -112,7 +110,7 @@ export default function AddRecipeScreen() {
       });
       router.replace(`/(tabs)/recipes/${recipe.id}`);
     } catch (error) {
-      showAlert('Opslaan mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Opslaan mislukt', getErrorMessage(error, 'Onbekende fout'));
     }
   }
 

@@ -1,14 +1,8 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Button } from '@/components/ui/button';
+import { AuthScreen } from '@/components/auth-screen';
 import { TextField } from '@/components/ui/text-field';
-import { Radius, Spacing } from '@/constants/theme';
 import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 
@@ -37,68 +31,28 @@ export default function RegisterScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.form}>
-          <Image source={require('@/assets/images/icon.png')} style={styles.logo} contentFit="cover" />
-          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.brand}>
-            Flora Food
-          </ThemedText>
-
-          <ThemedText type="title" style={styles.title}>
-            Account maken
-          </ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-            Maak een account aan, en koppel het daarna aan jullie huishouden.
-          </ThemedText>
-
-          <View style={styles.fields}>
-            <TextField
-              placeholder="E-mailadres"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextField
-              placeholder="Wachtwoord (min. 6 tekens)"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
-
-          <Button onPress={handleRegister} loading={loading} style={styles.submit}>
-            Registreren
-          </Button>
-
-          <Pressable style={styles.linkRow} onPress={() => router.push('/(auth)/login')}>
-            <ThemedText type="link" themeColor="textSecondary">
-              Al een account? <ThemedText type="linkPrimary">Log in</ThemedText>
-            </ThemedText>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ThemedView>
+    <AuthScreen
+      title="Account maken"
+      subtitle="Maak een account aan, en koppel het daarna aan jullie huishouden."
+      submitLabel="Registreren"
+      loading={loading}
+      onSubmit={handleRegister}
+      linkPrompt="Al een account?"
+      linkActionLabel="Log in"
+      onLinkPress={() => router.push('/(auth)/login')}>
+      <TextField
+        placeholder="E-mailadres"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextField
+        placeholder="Wachtwoord (min. 6 tekens)"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.four },
-  form: {},
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.lg,
-    marginBottom: Spacing.two,
-  },
-  brand: { textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.four },
-  title: { marginBottom: Spacing.one },
-  subtitle: { marginBottom: Spacing.five },
-  fields: { gap: Spacing.three },
-  submit: { marginTop: Spacing.four },
-  linkRow: { alignItems: 'center', marginTop: Spacing.four },
-});

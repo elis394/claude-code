@@ -4,17 +4,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { AuthProvider, useAuth } from '@/lib/auth-context';
-import { useHousehold } from '@/lib/queries';
+import { AuthProvider } from '@/lib/auth-context';
+import { useAppGate } from '@/lib/use-app-gate';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
 function RootNavigator() {
-  const { session, initializing } = useAuth();
-  const { data: household, isLoading: householdLoading } = useHousehold(session?.user.id);
-  const ready = !initializing && (!session || !householdLoading);
+  const gate = useAppGate();
+  const ready = gate.status !== 'loading';
 
   useEffect(() => {
     if (ready) {
@@ -29,13 +28,13 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Protected guard={!session}>
+      <Stack.Protected guard={gate.status === 'auth'}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={!!session && !household}>
+      <Stack.Protected guard={gate.status === 'household-setup'}>
         <Stack.Screen name="household-setup" />
       </Stack.Protected>
-      <Stack.Protected guard={!!session && !!household}>
+      <Stack.Protected guard={gate.status === 'ready'}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>
     </Stack>

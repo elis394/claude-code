@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
 import { Radius, Shadow, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { showAlert } from '@/lib/alert';
+import { getErrorMessage, showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth-context';
 import { useCreateHousehold, useJoinHousehold } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
@@ -33,7 +33,7 @@ export default function HouseholdSetupScreen() {
     try {
       await createHousehold.mutateAsync(householdName.trim());
     } catch (error) {
-      showAlert('Aanmaken mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Aanmaken mislukt', getErrorMessage(error, 'Onbekende fout'));
     }
   }
 
@@ -45,7 +45,7 @@ export default function HouseholdSetupScreen() {
     try {
       await joinHousehold.mutateAsync(inviteCode.trim());
     } catch (error) {
-      showAlert('Joinen mislukt', error instanceof Error ? error.message : 'Onbekende fout');
+      showAlert('Joinen mislukt', getErrorMessage(error, 'Onbekende fout'));
     }
   }
 

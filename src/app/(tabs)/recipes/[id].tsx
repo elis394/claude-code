@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -75,11 +75,18 @@ export default function RecipeDetailScreen() {
     ]);
   }
 
+  const ingredients = useMemo(
+    () => [...(recipe?.recipe_ingredients ?? [])].sort((a, b) => a.position - b.position),
+    [recipe?.recipe_ingredients]
+  );
+  const instructionItems = useMemo(
+    () => (recipe?.instructions ? parseInstructionItems(recipe.instructions) : []),
+    [recipe?.instructions]
+  );
+
   if (isLoading || !recipe) {
     return <ThemedView style={styles.container} />;
   }
-
-  const ingredients = [...recipe.recipe_ingredients].sort((a, b) => a.position - b.position);
 
   return (
     <ThemedView style={styles.container}>
@@ -160,7 +167,7 @@ export default function RecipeDetailScreen() {
                 Bereidingswijze
               </ThemedText>
               <View style={styles.instructionList}>
-                {parseInstructionItems(recipe.instructions).map((item, index) =>
+                {instructionItems.map((item, index) =>
                   item.kind === 'tip' ? (
                     <View key={index} style={[styles.tipRow, { backgroundColor: theme.secondarySoft }]}>
                       <Ionicons name="bulb-outline" size={16} color={theme.secondary} />

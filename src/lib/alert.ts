@@ -34,3 +34,7 @@ export function showAlert(title: string, message?: string, buttons?: AlertButton
     cancelButton?.onPress?.();
   }
 }
+
+export function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}

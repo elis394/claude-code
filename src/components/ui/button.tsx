@@ -4,39 +4,17 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'ghost';
-
 export type ButtonProps = {
   children: string;
   onPress: () => void;
-  variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
 };
 
-export function Button({
-  children,
-  onPress,
-  variant = 'primary',
-  loading = false,
-  disabled = false,
-  style,
-}: ButtonProps) {
+export function Button({ children, onPress, loading = false, disabled = false, style }: ButtonProps) {
   const theme = useTheme();
   const isDisabled = disabled || loading;
-
-  const backgroundColor =
-    variant === 'primary'
-      ? theme.primary
-      : variant === 'destructive'
-        ? theme.dangerSoft
-        : variant === 'secondary'
-          ? theme.surfaceSelected
-          : 'transparent';
-
-  const textColor =
-    variant === 'primary' ? theme.onPrimary : variant === 'destructive' ? theme.danger : theme.primary;
 
   return (
     <Pressable
@@ -44,13 +22,13 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor, opacity: isDisabled ? 0.4 : pressed ? 0.7 : 1 },
+        { backgroundColor: theme.primary, opacity: isDisabled ? 0.4 : pressed ? 0.7 : 1 },
         style,
       ]}>
       {loading ? (
-        <ActivityIndicator color={textColor} />
+        <ActivityIndicator color={theme.onPrimary} />
       ) : (
-        <ThemedText type="smallBold" style={{ color: textColor, fontWeight: '600' }}>
+        <ThemedText type="smallBold" style={{ color: theme.onPrimary, fontWeight: '600' }}>
           {children}
         </ThemedText>
       )}

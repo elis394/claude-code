@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,6 +26,11 @@ export default function RecipesScreen() {
     if (!query) return recipes;
     return recipes.filter((recipe) => recipe.title.toLowerCase().includes(query));
   }, [recipes, search]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: RecipeWithIngredients }) => <RecipeCard recipe={item} />,
+    []
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -68,7 +73,7 @@ export default function RecipesScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-            renderItem={({ item }) => <RecipeCard recipe={item} />}
+            renderItem={renderItem}
           />
         )}
       </SafeAreaView>
@@ -76,7 +81,7 @@ export default function RecipesScreen() {
   );
 }
 
-function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
+const RecipeCard = memo(function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
   const theme = useTheme();
   return (
     <Pressable
@@ -104,7 +109,7 @@ function RecipeCard({ recipe }: { recipe: RecipeWithIngredients }) {
       <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} style={styles.chevron} />
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
