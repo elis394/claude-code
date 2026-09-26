@@ -87,13 +87,13 @@ function isDisallowedIp(ip: string): boolean {
 }
 
 async function resolveHostnameIps(hostname: string): Promise<string[]> {
+  const results = await Promise.allSettled(
+    (["A", "AAAA"] as const).map((recordType) => Deno.resolveDns(hostname, recordType))
+  );
   const ips: string[] = [];
-  for (const recordType of ["A", "AAAA"] as const) {
-    try {
-      ips.push(...(await Deno.resolveDns(hostname, recordType)));
-    } catch {
-      // no records of this type, or DNS unavailable — ignore
-    }
+  for (const result of results) {
+    // no records of this type, or DNS unavailable — ignore
+    if (result.status === "fulfilled") ips.push(...result.value);
   }
   return ips;
 }
@@ -769,6 +769,7 @@ const METRIC_UNITS: Record<string, string> = {
   handjes: "handjes",
   bosje: "bosje",
   bosjes: "bosjes",
+  blik: "blik",
   blikje: "blikje",
   blikjes: "blikjes",
   potje: "potje",
@@ -817,32 +818,8 @@ function parseIngredientLine(line: string): ExtractedIngredient | null {
   const cleaned = normalizeWhitespace(stripHtmlTags(line));
   if (!cleaned) return null;
 
-  // Units (NL + US)
-  const unitWords = [
-    // metric NL
-    "g", "gram", "kg", "ml", "l", "liter",
-    "el", "eetlepel", "eetlepels",
-    "tl", "theelepel", "theelepels",
-    "stuk", "stuks", "stukje", "stukjes",
-    "teentje", "teentjes",
-    "snufje", "snufjes",
-    "handje", "handjes",
-    "bosje", "bosjes",
-    "blikje", "blikjes", "blik",
-    "pot", "potje",
-    "plak", "plakken", "plakjes",
-    // US
-    "cup", "cups",
-    "tbsp", "tbsps", "tablespoon", "tablespoons",
-    "tsp", "tsps", "teaspoon", "teaspoons",
-    "oz", "ounce", "ounces",
-    "lb", "lbs",
-    "pint", "pints",
-    "quart", "quarts",
-    "gallon", "gallons",
-  ];
-
-  const unitRe = unitWords.map(escapeRegExp).join("|");
+  // Units (NL + US) — every recognized unit word has a METRIC_UNITS entry.
+  const unitRe = Object.keys(METRIC_UNITS).map(escapeRegExp).join("|");
 
   const re = new RegExp(
     `^\\s*(${QTY_RE_SOURCE})?\\s*((?:${unitRe})(?![a-zA-Z]))?\\s*[-–:]?\\s*(.+?)\\s*$`,
@@ -1021,6 +998,24 @@ function convertFahrenheitToCelsius(text: string): string {
   });
 }
 
+// Parses a caption/description into title/servings/ingredients/instructions
+// and merges it into `result` — shared by the TikTok, Instagram, and website
+// og:description fallback branches below, which all do the same thing to
+// whatever raw caption text they found.
+function applyCaptionSplit(
+  result: ExtractResult,
+  rawCaption: string,
+  options: { preferExistingTitle?: boolean; instructionsFallback?: string } = {},
+): void {
+  result.rawCaption = rawCaption;
+  const caption = normalizeCaption(rawCaption);
+  const split = splitTitleIngredientsInstructionsFromCaption(caption);
+  result.title = options.preferExistingTitle ? result.title || split.title : split.title || result.title;
+  if (split.servings) result.servings = split.servings;
+  if (split.ingredientsText) result.ingredients = parseIngredientsFromText(split.ingredientsText);
+  result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? options.instructionsFallback ?? "");
+}
+
 // -------------------- Main extraction ------------------------------------
 
 function recipeFromJsonLd(node: any): ExtractResult {
@@ -1080,17 +1075,7 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     // previously that silently left the raw, unsplit oEmbed caption in the
     // title field whenever that happened.
     const rawCaption = og?.description || oembed?.title || "";
-    if (rawCaption) {
-      result.rawCaption = rawCaption;
-      const caption = normalizeCaption(rawCaption);
-      const split = splitTitleIngredientsInstructionsFromCaption(caption);
-      result.title = split.title;
-      if (split.servings) result.servings = split.servings;
-      if (split.ingredientsText) {
-        result.ingredients = parseIngredientsFromText(split.ingredientsText);
-      }
-      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
-    }
+    if (rawCaption) applyCaptionSplit(result, rawCaption);
 
     return result;
   }
@@ -1105,17 +1090,7 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
     if (og.title) result.title = og.title;
     if (og.image) result.imageUrl = og.image;
 
-    if (og.description) {
-      result.rawCaption = og.description;
-      const caption = normalizeCaption(og.description);
-      const split = splitTitleIngredientsInstructionsFromCaption(caption);
-      result.title = split.title || result.title;
-      if (split.servings) result.servings = split.servings;
-      if (split.ingredientsText) {
-        result.ingredients = parseIngredientsFromText(split.ingredientsText);
-      }
-      result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
-    }
+    if (og.description) applyCaptionSplit(result, og.description);
 
     return result;
   }
@@ -1135,18 +1110,13 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
   result.title = og.title ?? "";
   result.imageUrl = og.image;
   if (og.description) {
-    const caption = normalizeCaption(og.description);
-    // For plain websites, we treat og:description as instructions/caption
-    result.rawCaption = og.description;
-    result.instructions = convertFahrenheitToCelsius(caption);
-    // Also try splitting headings to get ingredients/instructions.
-    const split = splitTitleIngredientsInstructionsFromCaption(caption);
     // A real page <title>/og:title is a proper title — only fall back to a
-    // caption snippet when the site didn't provide one.
-    result.title = result.title || split.title;
-    if (split.servings) result.servings = split.servings;
-    if (split.ingredientsText) result.ingredients = parseIngredientsFromText(split.ingredientsText);
-    if (split.instructionsText) result.instructions = convertFahrenheitToCelsius(split.instructionsText);
+    // caption snippet when the site didn't provide one. Absent a heading
+    // split, the whole (converted) description doubles as instructions.
+    applyCaptionSplit(result, og.description, {
+      preferExistingTitle: true,
+      instructionsFallback: normalizeCaption(og.description),
+    });
   }
 
   return result;
