@@ -1154,6 +1154,20 @@ async function extractRecipe(url: string): Promise<ExtractResult> {
   return result;
 }
 
+// Parses a caption the client already obtained itself (device-side fetch of
+// a page the server's IP gets blocked on, or a caption the user pasted by
+// hand) — no network fetch here, just the same split/ingredient pipeline
+// every other source funnels through.
+function extractFromRawCaption(rawCaption: string, sourceType: ExtractResult["sourceType"], imageUrl: string | null): ExtractResult {
+  const result = emptyResult();
+  result.sourceType = sourceType;
+  result.imageUrl = imageUrl;
+  const split = applyCaptionSplit(result, stripInstagramMetaPrefix(rawCaption));
+  result.title = split.title;
+  result.instructions = convertFahrenheitToCelsius(split.instructionsText ?? "");
+  return result;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -1169,9 +1183,20 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json().catch(() => null);
     const url = body?.url;
+    const rawCaption = body?.rawCaption;
+
+    if (typeof rawCaption === "string" && rawCaption.trim()) {
+      const sourceType = typeof url === "string" && url ? "video" : "manual";
+      const imageUrl = typeof body?.imageUrl === "string" ? body.imageUrl : null;
+      const result = extractFromRawCaption(rawCaption, sourceType, imageUrl);
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
 
     if (!url || typeof url !== "string") {
-      return new Response(JSON.stringify({ error: "Missing 'url' in request body" }), {
+      return new Response(JSON.stringify({ error: "Missing 'url' or 'rawCaption' in request body" }), {
         status: 400,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });

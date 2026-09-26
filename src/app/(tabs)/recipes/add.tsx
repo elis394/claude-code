@@ -13,8 +13,9 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getErrorMessage, showAlert } from '@/lib/alert';
 import { parseQuantityInput } from '@/lib/format';
+import { tryFetchInstagramCaption } from '@/lib/instagram-fetch';
 import { useAddRecipe, useExtractRecipe } from '@/lib/queries';
-import type { NewIngredientInput, SourceType } from '@/lib/types';
+import type { ExtractRecipeResult, NewIngredientInput, SourceType } from '@/lib/types';
 import { useCurrentHousehold } from '@/lib/use-current-household';
 
 type IngredientRow = { key: string; name: string; quantity: string; unit: string };
@@ -32,6 +33,7 @@ export default function AddRecipeScreen() {
   const addRecipe = useAddRecipe();
 
   const [url, setUrl] = useState('');
+  const [caption, setCaption] = useState('');
   const [sourceType, setSourceType] = useState<SourceType>('manual');
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -39,37 +41,69 @@ export default function AddRecipeScreen() {
   const [instructions, setInstructions] = useState('');
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>([newRow()]);
 
+  function applyExtractResult(result: ExtractRecipeResult) {
+    setSourceType(result.sourceType);
+    if (result.title) setTitle(result.title);
+    if (result.imageUrl) setImageUrl(result.imageUrl);
+    if (result.servings) setServings(String(result.servings));
+    if (result.instructions) setInstructions(result.instructions);
+    if (result.ingredients.length > 0) {
+      setIngredientRows(
+        result.ingredients.map((ing) =>
+          newRow({
+            name: ing.name,
+            quantity: ing.quantity !== null ? String(ing.quantity) : '',
+            unit: ing.unit ?? '',
+          })
+        )
+      );
+    }
+    return Boolean(result.title || result.ingredients.length > 0 || result.instructions);
+  }
+
   async function handleExtract() {
-    if (!url.trim()) {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) {
       showAlert('Plak eerst een link');
       return;
     }
     try {
-      const result = await extractRecipe.mutateAsync(url.trim());
-      setSourceType(result.sourceType);
-      if (result.title) setTitle(result.title);
-      if (result.imageUrl) setImageUrl(result.imageUrl);
-      if (result.servings) setServings(String(result.servings));
-      if (result.instructions) setInstructions(result.instructions);
-      if (result.ingredients.length > 0) {
-        setIngredientRows(
-          result.ingredients.map((ing) =>
-            newRow({
-              name: ing.name,
-              quantity: ing.quantity !== null ? String(ing.quantity) : '',
-              unit: ing.unit ?? '',
-            })
-          )
-        );
-      }
-      if (!result.title && result.ingredients.length === 0 && !result.instructions) {
+      // Instagram blocks the server's own fetch (datacenter IP) — try
+      // fetching from this device first, which works like any browser.
+      // Native only: browsers can't (CORS), so this just returns null there.
+      const instagramCaption = trimmedUrl.includes('instagram.com')
+        ? await tryFetchInstagramCaption(trimmedUrl)
+        : null;
+
+      const result = await extractRecipe.mutateAsync(
+        instagramCaption
+          ? { url: trimmedUrl, rawCaption: instagramCaption.rawCaption, imageUrl: instagramCaption.imageUrl }
+          : trimmedUrl
+      );
+      const gotSomething = applyExtractResult(result);
+      if (!gotSomething) {
         showAlert(
           'Kon niets automatisch ophalen',
-          'Vul het recept hieronder handmatig aan. De link blijft bewaard als bron.'
+          'Vul het recept hieronder handmatig aan, of plak het bijschrift bij "Bijschrift plakken". De link blijft bewaard als bron.'
         );
       }
     } catch (error) {
       showAlert('Ophalen mislukt', getErrorMessage(error, 'Vul het recept handmatig in.'));
+    }
+  }
+
+  async function handleExtractCaption() {
+    const trimmedCaption = caption.trim();
+    if (!trimmedCaption) {
+      showAlert('Plak eerst een bijschrift');
+      return;
+    }
+    try {
+      const result = await extractRecipe.mutateAsync({ rawCaption: trimmedCaption });
+      applyExtractResult(result);
+      setCaption('');
+    } catch (error) {
+      showAlert('Verwerken mislukt', getErrorMessage(error, 'Vul het recept handmatig in.'));
     }
   }
 
@@ -139,6 +173,26 @@ export default function AddRecipeScreen() {
           </View>
 
           {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.preview} contentFit="cover" /> : null}
+
+          <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
+            Bijschrift plakken
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
+            Werkt "Ophalen" niet (bv. Instagram toont geen volledig bijschrift)? Kopieer het
+            bijschrift zelf uit de Instagram-app en plak het hier.
+          </ThemedText>
+          <View style={styles.urlRow}>
+            <TextField
+              style={styles.urlInput}
+              placeholder="Geplakt bijschrift..."
+              multiline
+              value={caption}
+              onChangeText={setCaption}
+            />
+            <Button onPress={handleExtractCaption} loading={extractRecipe.isPending} style={styles.extractButton}>
+              Verwerken
+            </Button>
+          </View>
 
           <ThemedText type="label" themeColor="textSecondary" style={styles.sectionLabel}>
             Titel

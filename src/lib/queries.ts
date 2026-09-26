@@ -137,10 +137,14 @@ export function useDeleteRecipe(householdId: string | undefined) {
   });
 }
 
+export type ExtractRecipeInput = { url?: string; rawCaption?: string; imageUrl?: string | null };
+
 export function useExtractRecipe() {
   return useMutation({
-    mutationFn: (url: string) =>
-      unwrap<ExtractRecipeResult>(supabase.functions.invoke('extract-recipe', { body: { url } })),
+    mutationFn: (input: string | ExtractRecipeInput) =>
+      unwrap<ExtractRecipeResult>(
+        supabase.functions.invoke('extract-recipe', { body: typeof input === 'string' ? { url: input } : input })
+      ),
   });
 }
 
