@@ -683,9 +683,17 @@ function splitTitleIngredientsInstructionsFromCaption(caption: string): {
   if (instrIndex !== -1) {
     const instrSection = joined.slice(instrIndex).trim();
     const instructionsText = stripHeading(instrSection, ["Instructions", "Bereiding", "Bereidingswijze"]);
+    // No "Ingredients" heading, but there may still be an unlabeled bullet
+    // list before the "Instructions" heading — same shape findBulletRun
+    // handles below when there are no headings at all.
+    const preInstrLines = joined.slice(0, instrIndex).split("\n").map((l) => normalizeWhitespace(l)).filter(Boolean);
+    const bulletRun = findBulletRun(preInstrLines);
+    const ingredientsText = bulletRun
+      ? preInstrLines.slice(bulletRun.start, bulletRun.end + 1).join("\n")
+      : null;
     return {
       title: firstLine,
-      ingredientsText: null,
+      ingredientsText,
       instructionsText: formatInstructions(instructionsText),
       servings,
     };
