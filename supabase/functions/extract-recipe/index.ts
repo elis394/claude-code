@@ -300,10 +300,23 @@ async function fetchOnceViaPinnedIp(url: string): Promise<FetchOnceResult> {
 
 const MAX_REDIRECTS = 5;
 
+// Some CDNs (Instagram/Facebook's, notably) intermittently reset the
+// connection against this client's non-browser TLS fingerprint — not every
+// attempt, so one retry recovers a real fraction of otherwise-empty results.
+const CONNECT_RETRIES = 1;
+
+async function fetchOnceWithRetry(url: string): Promise<FetchOnceResult> {
+  let result = await fetchOnceViaPinnedIp(url);
+  for (let attempt = 0; result.kind === "error" && attempt < CONNECT_RETRIES; attempt++) {
+    result = await fetchOnceViaPinnedIp(url);
+  }
+  return result;
+}
+
 async function fetchHtml(url: string): Promise<string | null> {
   let current = url;
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
-    const result = await fetchOnceViaPinnedIp(current);
+    const result = await fetchOnceWithRetry(current);
 
     if (result.kind === "error") return null;
 
