@@ -1,0 +1,4 @@
+node_modules/
+out/still-*.png
+out/*.wav
+out/reel-master.mp4
