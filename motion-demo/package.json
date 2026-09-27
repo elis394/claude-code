@@ -1,0 +1,13 @@
+{
+  "name": "motion-reel",
+  "private": true,
+  "description": "A 15-second motion graphics reel rendered entirely from code.",
+  "scripts": {
+    "audio": "node audio.cjs",
+    "render": "node render.cjs",
+    "build": "node audio.cjs && node render.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

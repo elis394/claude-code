@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion Reel</title>
+<style>
+  @font-face { font-family: 'Inter'; font-weight: 900; src: url(fonts/inter-latin-900-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'JB'; font-weight: 500; src: url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'JB'; font-weight: 800; src: url(fonts/jetbrains-mono-latin-800-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Serif'; font-style: italic; font-weight: 400; src: url(fonts/instrument-serif-latin-400-italic.woff2) format('woff2'); }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body { display: grid; place-items: center; }
+  canvas { display: block; width: min(100vw, 177.78vh); height: min(56.25vw, 100vh); }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script src="reel.js"></script>
+</body>
+</html>
