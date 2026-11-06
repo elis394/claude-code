@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>De Reiger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500;75..100,800&family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* Layout: links een nagebootste telefoon (het speelveld), rechts het recherchedossier; op mobiel wordt het dossier een uitschuifpaneel. */
+:root{
+  --bg:#D9E0E6; --panel:#F4F6F8; --ink:#142033; --muted:#596577; --line:#C2CBD5;
+  --accent:#A86F08; --accent-soft:#F3E3C2; --stamp:#B3261E; --ok:#2B7A4D;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1220; --panel:#151D2D; --ink:#E2E8F0; --muted:#97A3B6; --line:#2A3549;
+  --accent:#E3A93E; --accent-soft:#3A2E17; --stamp:#F06B61; --ok:#5EC08B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1220; --panel:#151D2D; --ink:#E2E8F0; --muted:#97A3B6; --line:#2A3549;
+  --accent:#E3A93E; --accent-soft:#3A2E17; --stamp:#F06B61; --ok:#5EC08B; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.layout{min-height:100%;display:grid;grid-template-columns:390px minmax(0,440px);gap:40px;justify-content:center;align-items:start;
+  padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* ---------- Telefoon (eigen, vaste look: dit is een apparaat) ---------- */
+.phone{width:390px;max-width:100%;height:min(812px,calc(100dvh - 56px));min-height:600px;background:#0b0b0d;border-radius:52px;padding:12px;
+  box-shadow:0 0 0 2px #2b2b30,0 30px 60px -20px rgba(0,0,0,.45);position:sticky;top:28px}
+.screen{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;background:#f2f2f7;color:#111;font-family:var(--f-ui);font-size:15px;line-height:1.35;display:flex;flex-direction:column}
+.sbar{position:absolute;inset:0 0 auto;height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:600;font-size:14px;z-index:5;pointer-events:none}
+.sbar.light{color:#fff}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;border-radius:20px;background:#000;z-index:6}
+.homebar{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:rgba(0,0,0,.75);border:0;padding:0;z-index:8}
+.homebar.light{background:rgba(255,255,255,.85)}
+.homebar::after{content:"";position:absolute;inset:-10px -10px}
+
+/* vergrendelscherm */
+.lock{position:absolute;inset:0;color:#fff;display:flex;flex-direction:column;align-items:center}
+.lock .wall{position:absolute;inset:0}
+.lock .wall svg{width:100%;height:100%;display:block}
+.lock .veil{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,0) 40%,rgba(0,0,0,.55))}
+.lock>*:not(.wall):not(.veil){position:relative}
+.ldate{margin-top:62px;font-size:17px;font-weight:500;opacity:.9}
+.ltime{font-size:84px;font-weight:600;letter-spacing:-2px;line-height:1}
+.notifs{width:calc(100% - 24px);display:grid;gap:8px;margin-top:18px}
+.notif{background:rgba(245,245,250,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#111;border-radius:18px;padding:10px 14px;font-size:14px}
+.notif b{display:flex;justify-content:space-between;font-size:13px}
+.notif b small{font-weight:400;color:#555}
+.notif p{margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lockbottom{margin-top:auto;margin-bottom:26px;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.dots{display:flex;gap:14px;margin-bottom:4px}
+.dots i{width:13px;height:13px;border-radius:50%;border:1.5px solid #fff}
+.dots i.f{background:#fff}
+.dots.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.pad{display:grid;grid-template-columns:repeat(3,64px);gap:12px 22px}
+.pad button{width:64px;height:64px;border-radius:50%;border:0;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font-size:26px;font-family:var(--f-ui)}
+.pad button.txt{background:none;font-size:15px}
+.lockhint{font-size:13px;opacity:.9;display:flex;gap:10px;align-items:center}
+.lockhint button{border:0;background:rgba(255,255,255,.22);color:#fff;border-radius:14px;padding:4px 10px;font-size:12px;font-family:var(--f-ui)}
+
+/* beginscherm */
+.home{position:absolute;inset:0;background:linear-gradient(160deg,#25324a,#0e1626 55%,#3b2a1a);padding:64px 18px 0;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 8px}
+.ico{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:5px;color:#fff;font-size:11.5px;font-family:var(--f-ui)}
+.ico span.i{width:60px;height:60px;border-radius:15px;display:grid;place-items:center;font-size:29px;position:relative;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.ico .badge{position:absolute;top:-6px;right:-6px;background:#ff3b30;color:#fff;font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:11px;display:grid;place-items:center;padding:0 5px}
+.cal{background:#fff;color:#111;flex-direction:column;line-height:1}
+.cal small{color:#ff3b30;font-size:10px;font-weight:600}
+.cal b{font-size:26px;font-weight:400}
+
+/* apps */
+.app{position:absolute;inset:0;display:flex;flex-direction:column;background:#f2f2f7}
+.ah{padding:50px 12px 8px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:rgba(249,249,251,.95);border-bottom:1px solid #d9d9de;min-height:92px}
+.ah .back{border:0;background:none;color:#0a7aff;font-size:16px;justify-self:start;padding:6px 4px;font-family:var(--f-ui)}
+.ah b{font-size:16px;text-align:center}
+.ah .big{grid-column:1/-1;font-size:30px;font-weight:700;padding:2px 6px 0}
+.body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:30px}
+.list{background:#fff;margin:14px 14px 0;border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border:0;background:none;width:100%;text-align:left;border-bottom:1px solid #e7e7ec;font-family:var(--f-ui);font-size:15px;color:#111}
+.row:last-child{border-bottom:0}
+.row .grow{flex:1;min-width:0}
+.row .sub{color:#6b6b72;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta{color:#8e8e93;font-size:13px;white-space:nowrap}
+.row .chev{color:#c4c4c8}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;flex:none}
+.unread{width:9px;height:9px;border-radius:50%;background:#0a7aff;flex:none}
+.sect{margin:18px 28px 6px;color:#6b6b72;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+.note{margin:8px 28px;color:#8e8e93;font-size:12.5px}
+
+/* chat */
+.chat{padding:10px 12px 30px;display:flex;flex-direction:column;gap:4px;background:#fff;min-height:100%}
+.day{align-self:center;color:#8e8e93;font-size:12px;margin:12px 0 4px}
+.msg{max-width:78%;display:flex;align-items:flex-end;gap:6px}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.bub{padding:8px 12px;border-radius:18px;background:#e9e9eb;color:#111;font-size:15px;position:relative}
+.msg.me .bub{background:#0a7aff;color:#fff}
+.bub small{display:block;font-size:11px;opacity:.65;margin-top:2px}
+.bub .who{display:block;font-size:11.5px;font-weight:600;color:#7a4fd0;margin-bottom:1px}
+.bub.del{background:none;border:1px solid #d0d0d5;color:#8e8e93;font-style:italic}
+.msg.me .bub.del{background:none;color:#8e8e93}
+
+/* vastpinnen */
+.pin{border:0;background:none;font-size:15px;opacity:.35;padding:4px;filter:grayscale(1);flex:none;line-height:1}
+.pin.on{opacity:1;filter:none}
+.pin:hover{opacity:.8}
+
+/* mail */
+.mailv{background:#fff;min-height:100%;padding:16px 18px 30px}
+.mailv h3{margin:0 0 10px;font-size:20px}
+.mailv .from{display:flex;gap:10px;align-items:center;margin-bottom:14px;font-size:14px}
+.mailv .from small{color:#8e8e93;display:block}
+.mailv p{margin:0 0 12px;font-size:15.5px;line-height:1.45}
+.attach{border:1px solid #e0e0e5;border-radius:12px;padding:12px 14px;background:#fafafc;font-size:14px}
+.attach h4{margin:0 0 6px;font-size:14px}
+.status{color:#2b8a3e;font-size:13px;margin-top:6px}
+
+/* foto's */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#fff}
+.pgrid button{border:0;padding:0;aspect-ratio:1;overflow:hidden;background:#ddd;display:block}
+.pgrid svg{width:100%;height:100%;display:block}
+.viewer{position:absolute;inset:0;background:#000;z-index:20;display:flex;flex-direction:column;color:#fff}
+.viewer .vh{padding:50px 14px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.viewer .vh button{border:0;background:none;color:#4da3ff;font-size:16px;font-family:var(--f-ui)}
+.viewer .vh div{text-align:center;font-size:13px;line-height:1.3}
+.viewer .vh small{color:#aaa}
+.zoomwrap{flex:1;overflow:hidden;display:grid;place-items:center;cursor:zoom-in;touch-action:manipulation}
+.zoomwrap.z{cursor:zoom-out}
+.zoomwrap .img{width:100%;transition:transform .3s ease}
+.zoomwrap .img svg{width:100%;height:auto;display:block}
+.vfoot{padding:10px 16px 28px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#ccc;gap:10px}
+.vfoot .pin{font-size:20px;filter:grayscale(1) brightness(2)}
+.vfoot .pin.on{filter:none}
+
+/* overige app-onderdelen */
+.card{background:#fff;margin:14px;border-radius:14px;padding:14px}
+.card h4{margin:0 0 4px;font-size:15px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eee;font-size:14.5px}
+.kv:last-child{border-bottom:0}
+.kv .t{font-variant-numeric:tabular-nums;color:#6b6b72;font-size:13.5px;flex:none;width:44px}
+.kv .grow{flex:1;min-width:0}
+.warn{color:#d70015}
+.thumb{width:64px;height:40px;border-radius:6px;overflow:hidden;border:0;padding:0;flex:none}
+.thumb svg{width:100%;height:100%;display:block}
+.memo{display:flex;gap:12px;align-items:flex-start}
+.play{width:36px;height:36px;border-radius:50%;border:0;background:#ff3b30;color:#fff;font-size:14px;flex:none}
+.transcript{margin-top:8px;font-size:14px;color:#333;background:#f5f5f7;border-radius:10px;padding:8px 10px;font-style:italic}
+.post{background:#fff;margin-bottom:10px}
+.post .ph{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:14px;font-weight:600}
+.post .ph small{font-weight:400;color:#8e8e93;margin-left:auto}
+.post .pimg{border:0;padding:0;width:100%;display:block;background:#000}
+.post .pimg svg{width:100%;display:block}
+.post .cap{padding:8px 12px 12px;font-size:14px;display:flex;gap:6px;align-items:flex-start}
+.post .cap span{flex:1}
+.ring{padding:2px;border-radius:50%;background:linear-gradient(45deg,#f9a13a,#e1306c,#8a3ab9)}
+.ring .av{border:2px solid #fff;width:36px;height:36px;font-size:13px}
+
+/* ---------- Dossier (thema-bewust) ---------- */
+.dossier{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:22px;min-width:0}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.case{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;color:var(--accent);font-weight:600}
+.dh h1{font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:44px;line-height:.95;margin:2px 0 0;text-transform:uppercase;letter-spacing:.01em}
+.score{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.score span{font-size:28px;font-weight:600;display:block;line-height:1}
+.score small{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.dossier h2{font-family:var(--f-display);font-stretch:75%;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:15px;margin:0 0 10px;display:flex;gap:8px;align-items:center}
+.dossier h2 .n{font-family:var(--f-mono);font-size:11px;background:var(--ink);color:var(--panel);padding:1px 7px;border-radius:10px;letter-spacing:0}
+details.brief summary{font-family:var(--f-display);font-stretch:75%;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:15px;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+details.brief summary::-webkit-details-marker{display:none}
+details.brief summary::after{content:"+";font-family:var(--f-mono)}
+details.brief[open] summary::after{content:"–"}
+.brief p{margin:10px 0 0;max-width:62ch}
+.suspects{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.sus{border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:14px;line-height:1.35}
+.sus b{font-family:var(--f-display);font-stretch:85%;font-size:15px;display:block}
+.sus span{color:var(--muted)}
+
+.tasks{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.task{border:1px solid var(--line);border-radius:4px;padding:12px 14px;display:grid;grid-template-columns:28px minmax(0,1fr);gap:4px 10px}
+.task .num{font-family:var(--f-mono);font-size:12px;font-weight:600;width:26px;height:26px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center}
+.task.done .num{background:var(--ok);border-color:var(--ok);color:var(--panel)}
+.task.locked{opacity:.5}
+.task.active{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.task .q{font-weight:400;margin:2px 0 0}
+.task .res{grid-column:2;font-size:14.5px;color:var(--muted);margin:0}
+.task .act{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.task input{font-family:var(--f-mono);font-size:16px;width:110px;padding:7px 10px;border:1.5px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--panel);padding:7px 14px;border-radius:4px;font-family:var(--f-display);font-stretch:85%;font-weight:800;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.btn.ghost{background:none;color:var(--ink)}
+.btn.small{padding:4px 10px;font-size:12.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hint{grid-column:2;font-size:14.5px;background:var(--accent-soft);border-left:3px solid var(--accent);padding:7px 10px;margin:8px 0 0}
+.fb{grid-column:2;font-size:14px;color:var(--stamp);margin:6px 0 0}
+.choice{display:flex;gap:8px;flex-wrap:wrap}
+
+.pins{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pins li{display:flex;gap:10px;align-items:baseline;font-size:14.5px;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.pins .tag{font-family:var(--f-mono);font-size:11px;font-weight:600;background:var(--accent);color:var(--panel);padding:1px 6px;border-radius:2px;flex:none}
+.pins .txt{flex:1;min-width:0}
+.pins button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
+.empty{color:var(--muted);font-size:14.5px;font-style:italic;margin:0}
+
+.report fieldset{border:0;padding:0;margin:0 0 14px}
+.report legend{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:15px;line-height:1.35;cursor:pointer}
+.opt input{margin-top:3px;accent-color:var(--accent);flex:none}
+.confirm{border:2px solid var(--stamp);padding:12px;border-radius:4px;margin-top:6px}
+.confirm p{margin:0 0 10px}
+.locked-note{color:var(--muted);font-size:14.5px;margin:0}
+.foot{border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.foot small{color:var(--muted);font-size:12.5px}
+.linkbtn{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline;padding:0}
+
+/* modals */
+.modal{position:fixed;inset:0;background:rgba(8,12,20,.6);display:grid;place-items:center;z-index:50;padding-block:max(16px,env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{background:var(--panel);color:var(--ink);max-width:560px;width:100%;max-height:100%;overflow-y:auto;border-radius:6px;padding:26px 24px}
+.sheet h2{font-family:var(--f-display);font-stretch:75%;font-weight:800;text-transform:uppercase;font-size:40px;line-height:.95;margin:4px 0 12px;text-wrap:balance}
+.sheet p{margin:0 0 12px}
+.stamp{display:inline-block;font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:var(--stamp);border:3px solid var(--stamp);padding:2px 12px;transform:rotate(-4deg);margin:4px 0 12px}
+.stamp.ok{color:var(--ok);border-color:var(--ok)}
+.verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 14px}
+.verdict div{border:1px solid var(--line);border-radius:4px;padding:8px;text-align:center;font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.verdict b{display:block;font-size:20px;margin-top:2px}
+.share{font-family:var(--f-mono);font-size:13px;white-space:pre-wrap;background:var(--bg);border-radius:4px;padding:10px 12px;margin:0 0 10px;user-select:all}
+.chain{margin:0 0 14px;padding-left:20px;font-size:15px}
+.chain li{margin-bottom:5px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:4px;font-size:14.5px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.dbtn{display:none}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);justify-items:center;padding-block:12px 84px}
+  .phone{position:relative;top:0;height:min(780px,calc(100dvh - 100px));min-height:560px}
+  .dossier{position:fixed;inset:auto 0 0 0;max-height:86dvh;overflow-y:auto;z-index:40;border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .3s ease;
+    padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+  body.dopen .dossier{transform:none;box-shadow:0 -10px 40px rgba(0,0,0,.35)}
+  .dbtn{display:flex;position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;gap:8px;align-items:center;
+    border:0;background:var(--ink);color:var(--panel);padding:12px 18px;border-radius:30px;font-family:var(--f-display);font-stretch:85%;font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .dbtn small{font-family:var(--f-mono);font-weight:400;opacity:.8}
+  .close-d{display:inline-flex!important}
+}
+@media (max-width:440px){
+  .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 96px);width:100%}
+  .screen{border-radius:22px}
+  .pad{gap:10px 18px}
+  .ltime{font-size:72px}
+  .suspects{grid-template-columns:1fr}
+}
+.close-d{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="layout">
+  <div class="phone"><div class="screen" id="screen"></div></div>
+  <aside class="dossier" id="dossier" aria-label="Recherchedossier"></aside>
+</div>
+<button class="dbtn" id="dbtn" data-act="toggleD">Dossier <small id="dbtnmeta"></small></button>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+/* ======================= ZAAKGEGEVENS ======================= */
+const SOLUTION={wie:'daan',hoe:'beeldje',waarom:'vervalsing'};
+
+const EV={ // alles wat je kunt vastpinnen
+  reiger:{l:"Foto: beeldje De Reiger (brons, 1931)",s:1},
+  watch:{l:"Gezondheid: hartslag stopt om 22:14",s:1},
+  faceid:{l:"Instellingen: ontgrendeld met Face ID om 22:21",s:1},
+  msg2222:{l:"Bericht van Ruben aan Daan, 22:22: “Sorry voor vanavond…”",s:1},
+  deletedmsg:{l:"Twee berichten aan Daan verwijderd om 22:23",s:1},
+  raaks:{l:"Daan, 21:47: “Sta in Raaks, kom eraan.”",s:1},
+  daanwo:{l:"Daan, wo 23:40: “Laat me het uitleggen voordat je iemand belt.”",s:1},
+  daan2240:{l:"Daan, 22:40: “Geen probleem. Slaap lekker.”",s:1},
+  code:{l:"Groep Galerie Team: personeelscode 4417, alleen Daan en Mila",s:1},
+  alarm:{l:"Beveiliging: alarm aan om 22:29 met personeelscode",s:1},
+  cam:{l:"Camerabeeld 21:58: man in donkere jas, grijze stationwagen “GV-2…”",s:1},
+  volvo:{l:"Foto: Daan bij zijn grijze Volvo, kenteken GV-218-K",s:1},
+  mertens:{l:"Rapport Mertens: Polderzicht is een vervalsing, verkocht via D. Verbeek",s:1},
+  mail22:{l:"Mail aan Daan: “Donderdag 22:00 in de galerie. Alleen jij en ik.” (gelezen)",s:1},
+  agenda:{l:"Agenda do 22:00: “D. — Mertens!”",s:1},
+  memo:{l:"Spraakmemo 21:30: “Hij krijgt één kans om het zelf te melden.”",s:1},
+  notes:{l:"Notitie: Daans verkopen nalopen",s:1},
+  deleted:{l:"Recent verwijderd om 22:24: lijst verkopen via D.V.",s:1},
+  signature:{l:"Foto: signatuur Polderzicht, rood omcirkeld",s:1},
+  milastory:{l:"Kiekje: Mila om 22:10 op pubquiz in Zandvoort",s:1},
+  lotteloc:{l:"Vind: Lotte om 22:15 bij Stadsschouwburg Amsterdam",s:1},
+  lottechat:{l:"Lotte vraagt €15.000, ruzie op dinsdag",s:0},
+  milacontract:{l:"Mila's contract wordt niet verlengd",s:0},
+  henkmail:{l:"Advocaat: burenruzie met Henk de Wit",s:0},
+  calls:{l:"3 gemiste oproepen van Lotte",s:0},
+  henkpost:{l:"Henk: “Vroeg naar bed, morgen beurs”",s:0}
+};
+
+const TASKS=[
+  {id:1,q:"Ontgrendel Rubens telefoon.",type:'auto',
+   hint:"Bekijk de achtergrond van het vergrendelscherm. Zoom in op het bordje bij het beeldje.",
+   done:"De code was 1931: het jaartal van het bronzen beeldje De Reiger. Datzelfde beeldje ontbreekt nu in de vitrine."},
+  {id:2,q:"Hoe laat stopte Rubens hartslag?",type:'time',ans:'2214',ph:'uu:mm',
+   hint:"Ruben droeg een smartwatch. Open de app Gezondheid.",
+   done:"Om 22:14 valt de hartslag weg. Vlak daarvoor schiet die omhoog naar 128."},
+  {id:3,q:"Na Rubens dood is zijn telefoon nog ontgrendeld. Hoe laat?",type:'time',ans:'2221',ph:'uu:mm',
+   hint:"Kijk in Instellingen, bij Face ID en toegangscode.",
+   done:"Om 22:21 is de telefoon met Face ID ontgrendeld, zeven minuten na Rubens dood. Iemand hield de telefoon voor zijn gezicht. Een minuut later ging er een bericht naar Daan."},
+  {id:4,q:"Om 22:29 ging het alarm van de galerie aan. Met welke code?",type:'code',ans:'4417',ph:'code',
+   hint:"De app Beveiliging zegt welk soort code het was. Zoek daarna in Berichten waar die code gedeeld is.",
+   done:"De personeelscode 4417 is alleen gedeeld in de groep Galerie Team, met Daan en Mila."},
+  {id:5,q:"Daan en Mila kenden de code. Wie van hen kan het alarm niet hebben aangezet?",type:'choice',opts:[['daan','Daan Verbeek'],['mila','Mila Jansen']],ans:'mila',
+   hint:"Waar was Mila om 22:10? Ruben volgt haar op Kiekje.",
+   done:"Mila stond om 22:10 op een pubquiz in Zandvoort, een half uur rijden van de galerie."}
+];
+
+const Q={
+  wie:[['lotte','Lotte Aldering, dochter'],['daan','Daan Verbeek, compagnon'],['mila','Mila Jansen, assistent'],['henk','Henk de Wit, buurman']],
+  hoe:[['val','Het was een ongeluk: hij viel van de trap'],['beeldje','Geslagen met het bronzen beeldje, daarna als val in scène gezet'],['gif','Vergiftigd via de whisky'],['duw','Van de wenteltrap geduwd']],
+  waarom:[['erfenis','Om eerder aan de erfenis te komen'],['ontslag','Uit wraak om een ontslag'],['vervalsing','Om de verkoop van vervalsingen geheim te houden'],['buren','Na een jarenlange burenruzie']]
+};
+
+/* ======================= STATE ======================= */
+const KEY='telefoon-zaak-001-v1';
+const fresh=()=>({started:false,unlocked:false,stack:[],pins:[],step:1,wrong:0,hints:[],report:null,memo:{}});
+let S; try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){S=fresh()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let viewer=null, pinEntry='', fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
+let uidc=0; const uid=()=>'u'+(++uidc);
+
+const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
+const pinned=id=>S.pins.includes(id);
+const pinBtn=id=>`<button class="pin ${pinned(id)?'on':''}" data-act="pin" data-id="${id}" title="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-label="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-pressed="${pinned(id)}">📌</button>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ======================= FOTO'S (SVG) ======================= */
+const PH={
+ reiger:{t:"De Reiger",d:"12 maart 2024",ev:'reiger',svg:u=>`<svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs><radialGradient id="${u}a" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#46505e"/><stop offset="1" stop-color="#0c0e13"/></radialGradient>
+  <linearGradient id="${u}b" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#4f3418"/><stop offset=".45" stop-color="#b98443"/><stop offset="1" stop-color="#3e2710"/></linearGradient></defs>
+  <rect width="300" height="420" fill="url(#${u}a)"/>
+  <ellipse cx="150" cy="120" rx="120" ry="60" fill="#fff" opacity=".05"/>
+  <rect x="92" y="300" width="116" height="130" fill="#e6e2da"/><rect x="92" y="300" width="116" height="5" fill="#c9c3b7"/>
+  <g stroke="#2e1c0b" stroke-width=".8" fill="url(#${u}b)">
+   <path d="M146 300 L143 246 L147 246 L150 300Z M158 300 L160 246 L164 246 L162 300Z"/>
+   <ellipse cx="156" cy="230" rx="36" ry="19" transform="rotate(-16 156 230)"/>
+   <path d="M120 238 L98 256 L128 244Z"/>
+   <path d="M180 220 C194 196 172 176 170 156 C168 134 182 120 196 122 L199 127 C188 129 180 138 182 155 C184 176 204 196 190 223Z"/>
+   <path d="M196 122 L242 132 L197 131Z"/>
+  </g>
+  <circle cx="191" cy="126" r="1.5" fill="#0c0c0c"/>
+  <rect x="131" y="334" width="38" height="17" fill="#c8a04a" stroke="#86651f" stroke-width=".5"/>
+  <text x="150" y="341" font-size="3.4" text-anchor="middle" font-family="Georgia,serif" font-style="italic" fill="#2a1d04">De Reiger</text>
+  <text x="150" y="345.5" font-size="2.8" text-anchor="middle" font-family="Georgia,serif" fill="#2a1d04">brons, 1931</text>
+  <text x="150" y="349" font-size="1.9" text-anchor="middle" font-family="Georgia,serif" fill="#2a1d04">collectie R. Aldering · niet te koop</text>
+ </svg>`},
+ signature:{t:"Polderzicht (detail)",d:"12 november 2025, 16:41",ev:'signature',svg:u=>`<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="220" fill="#7c8350"/>
+  <path d="M0 120 C60 100 120 140 190 112 C240 92 290 118 320 104 L320 220 L0 220Z" fill="#5d6a37"/>
+  <path d="M0 160 C80 150 150 176 320 150 L320 220 L0 220Z" fill="#46532a"/>
+  <g stroke="#a9ad78" stroke-width="3" opacity=".5"><path d="M10 40 L70 34 M90 30 L160 38 M180 26 L300 34 M30 70 L140 64 M170 62 L290 70"/></g>
+  <g stroke="#2f3a1c" stroke-width="2" opacity=".6"><path d="M20 140 l14 -6 M60 150 l18 -4 M110 146 l12 -7 M150 158 l16 -3"/></g>
+  <text x="248" y="196" font-size="12" font-family="Georgia,serif" font-style="italic" fill="#25190b" text-anchor="middle">A. Vermeer-Kok ’38</text>
+  <ellipse cx="248" cy="192" rx="62" ry="17" fill="none" stroke="#e5352b" stroke-width="2.5"/>
+  <rect x="14" y="14" width="86" height="34" fill="#ffe680" transform="rotate(-3 57 31)"/>
+  <text x="20" y="29" font-size="8" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#333" transform="rotate(-3 57 31)">titaanwit?? in 1938?</text>
+  <text x="20" y="41" font-size="8" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#333" transform="rotate(-3 57 31)">→ Mertens bellen</text>
+ </svg>`},
+ volvo:{t:"Nieuwe bak 😄",d:"3 september 2025, 12:18",ev:'volvo',svg:u=>`<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3ec"/><stop offset="1" stop-color="#d9ecf7"/></linearGradient></defs>
+  <rect width="320" height="220" fill="url(#${u}s)"/>
+  <rect y="150" width="320" height="70" fill="#9a9a96"/>
+  <rect x="0" y="120" width="320" height="30" fill="#6e8a5a"/>
+  <g transform="translate(70 66)">
+   <path d="M10 30 L30 6 L150 6 L170 30 L174 88 L6 88Z" fill="#8a9097" stroke="#5c6168"/>
+   <path d="M34 12 L146 12 L160 34 L20 34Z" fill="#2c3540"/>
+   <rect x="14" y="44" width="22" height="10" rx="2" fill="#c8291f"/><rect x="144" y="44" width="22" height="10" rx="2" fill="#c8291f"/>
+   <rect x="58" y="60" width="64" height="16" rx="2" fill="#f2c318" stroke="#222" stroke-width="1"/>
+   <rect x="58" y="60" width="8" height="16" fill="#1d4ea1"/>
+   <text x="94" y="72.5" font-size="11" font-weight="700" text-anchor="middle" font-family="Arial,sans-serif" fill="#111">GV-218-K</text>
+   <rect x="16" y="88" width="26" height="12" rx="3" fill="#1b1b1b"/><rect x="138" y="88" width="26" height="12" rx="3" fill="#1b1b1b"/>
+  </g>
+  <g transform="translate(262 92)"><circle cx="10" cy="10" r="10" fill="#e0b99a"/><path d="M6 6 C8 0 16 0 18 6Z" fill="#5a4630"/><rect x="0" y="20" width="22" height="44" rx="6" fill="#26405f"/><rect x="2" y="64" width="7" height="30" fill="#333"/><rect x="13" y="64" width="7" height="30" fill="#333"/><path d="M22 28 L32 18" stroke="#26405f" stroke-width="6" stroke-linecap="round"/></g>
+ </svg>`},
+ cam:{t:"Camera voordeur",d:"13 november 2025, 21:58",ev:'cam',svg:u=>`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+  <defs><pattern id="${u}p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#fff" opacity=".035"/></pattern>
+  <radialGradient id="${u}g" cx="80%" cy="10%" r="50%"><stop offset="0" stop-color="#d8d0a0" stop-opacity=".45"/><stop offset="1" stop-color="#d8d0a0" stop-opacity="0"/></radialGradient></defs>
+  <rect width="320" height="200" fill="#1a2127"/><rect width="320" height="200" fill="url(#${u}g)"/>
+  <rect y="150" width="320" height="50" fill="#262d33"/><path d="M0 150 L320 150" stroke="#3e474f"/>
+  <rect x="20" y="40" width="54" height="110" fill="#2c3439" stroke="#3b444b"/>
+  <g fill="#0b0e11"><circle cx="150" cy="78" r="13"/><path d="M128 96 C132 88 168 88 172 96 L178 160 L122 160Z"/><rect x="132" y="158" width="12" height="28"/><rect x="156" y="158" width="12" height="28"/></g>
+  <g><path d="M232 112 L250 96 L320 96 L320 168 L226 168Z" fill="#6f767c"/><path d="M252 100 L320 100 L320 122 L246 122Z" fill="#20272d"/>
+   <rect x="242" y="146" width="40" height="11" fill="#c9ab1e"/><text x="246" y="154.5" font-size="8" font-weight="700" font-family="Arial,sans-serif" fill="#111">GV-2</text><rect x="266" y="148" width="14" height="7" fill="#3a3a3a"/>
+   <rect x="236" y="168" width="20" height="10" fill="#111"/></g>
+  <rect width="320" height="200" fill="url(#${u}p)"/>
+  <text x="8" y="14" font-size="8" font-family="monospace" fill="#cfe6d8">CAM1 VOORDEUR  13-11-2025  21:58:12</text>
+  <text x="8" y="194" font-size="7" font-family="monospace" fill="#cfe6d8" opacity=".8">BEWEGING · BEZOEKER BINNENGELATEN</text>
+ </svg>`},
+ milastory:{t:"Story van mila.jns",d:"13 november 2025, 22:10",ev:'milastory',svg:u=>`<svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="${u}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2042"/><stop offset="1" stop-color="#a24a2c"/></linearGradient></defs>
+  <rect width="320" height="300" fill="url(#${u}w)"/>
+  <rect x="96" y="22" width="128" height="60" fill="#1f2a22" stroke="#7a5a32" stroke-width="5"/>
+  <text x="160" y="50" font-size="16" text-anchor="middle" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#f3f0e0">RONDE 4</text>
+  <text x="160" y="70" font-size="9" text-anchor="middle" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#f3f0e0">De Uil · Zandvoort</text>
+  <g fill="#e3b892"><circle cx="70" cy="150" r="22"/><circle cx="130" cy="140" r="22"/><circle cx="190" cy="142" r="22"/><circle cx="250" cy="152" r="22"/></g>
+  <g fill="#2a1a12"><path d="M48 146 C50 120 92 120 92 146 C86 132 54 132 48 146Z"/><path d="M168 138 C170 112 212 112 212 138 C206 124 174 124 168 138Z"/></g>
+  <path d="M120 128 C118 110 142 106 150 124 L152 172 L144 160 L140 132Z" fill="#c76f2a"/>
+  <g fill="#30425a"><rect x="44" y="172" width="52" height="60" rx="10"/><rect x="104" y="162" width="52" height="70" rx="10" fill="#7b3f8f"/><rect x="164" y="164" width="52" height="68" rx="10"/><rect x="224" y="174" width="52" height="58" rx="10"/></g>
+  <rect x="20" y="226" width="280" height="74" fill="#5a3a22"/>
+  <rect x="56" y="210" width="16" height="26" fill="#f5c84a" opacity=".85"/><rect x="200" y="208" width="16" height="28" fill="#f5c84a" opacity=".85"/>
+  <rect x="110" y="232" width="60" height="40" fill="#f4f1e6" transform="rotate(-6 140 252)"/>
+  <text x="18" y="290" font-size="15" font-weight="700" font-family="Arial,sans-serif" fill="#fff">we staan EERSTE 🦊</text>
+ </svg>`},
+ deleted:{t:"Screenshot",d:"Gemaakt 12 nov 2025, 23:02 · verwijderd 13 nov 2025, 22:24",ev:'deleted',svg:u=>`<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#fff"/><rect width="300" height="34" fill="#f7f7f7"/>
+  <text x="14" y="22" font-size="12" font-weight="700" font-family="Arial,sans-serif" fill="#111">Verkopen via D.V. — 2024–2025</text>
+  <g font-family="Arial,sans-serif" font-size="11" fill="#222">
+   <text x="14" y="62">Polderzicht (Vermeer-Kok)</text><text x="286" y="62" text-anchor="end">€ 84.000</text>
+   <text x="14" y="88">Duinlandschap met molen</text><text x="286" y="88" text-anchor="end">€ 46.500</text>
+   <text x="14" y="114">Stilleven met haring</text><text x="286" y="114" text-anchor="end">€ 31.000</text>
+   <text x="14" y="140">Haarlemse gracht, avond</text><text x="286" y="140" text-anchor="end">€ 22.750</text>
+  </g>
+  <g stroke="#eee"><path d="M14 72H286M14 98H286M14 124H286M14 150H286"/></g>
+  <text x="14" y="176" font-size="11" font-weight="700" font-family="Arial,sans-serif" fill="#111">Totaal € 184.250</text>
+  <text x="14" y="210" font-size="13" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#d22">allemaal laten onderzoeken!!</text>
+  <text x="14" y="232" font-size="11" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#d22">kopers inlichten → maandag politie?</text>
+ </svg>`}
+};
+const photoBtn=(id,cls='')=>{const u=uid();return `<button class="${cls}" data-act="photo" data-id="${id}" aria-label="Open foto: ${esc(PH[id].t)}">${PH[id].svg(u)}</button>`};
+
+/* ======================= TELEFOON-SCHERMEN ======================= */
+const statusbar=light=>`<div class="island"></div><div class="sbar ${light?'light':''}"><span>09:12</span><span>●●● 5G ▮▮▯ 23%</span></div>`;
+
+function lockScreen(){
+  const u=uid();
+  const dots=[0,1,2,3].map(i=>`<i class="${i<pinEntry.length?'f':''}"></i>`).join('');
+  const keys=['1','2','3','4','5','6','7','8','9'].map(k=>`<button data-act="digit" data-k="${k}">${k}</button>`).join('');
+  return `<div class="lock">
+   <div class="wall">${PH.reiger.svg(u)}</div><div class="veil"></div>
+   <div class="ldate">vrijdag 14 november</div>
+   <div class="ltime">09:12</div>
+   <div class="notifs">
+     <div class="notif"><b>Berichten · Lotte <small>do 23:35</small></b><p>Pap? Ik heb je drie keer gebeld. Sorry van di…</p></div>
+     <div class="notif"><b>Telefoon <small>do 23:31</small></b><p>3 gemiste oproepen van Lotte</p></div>
+   </div>
+   <div class="lockbottom">
+     <div class="lockhint">Hint: “mijn trots” <button data-act="photo" data-id="reiger">Achtergrond bekijken</button></div>
+     <div class="dots" id="dots">${dots}</div>
+     <div class="pad">${keys}<button class="txt" data-act="noop" aria-hidden="true" tabindex="-1"></button><button data-act="digit" data-k="0">0</button><button class="txt" data-act="del">Wis</button></div>
+   </div></div>`;
+}
+
+const APPS=[
+ ['berichten','Berichten','#34c759','💬',1],['telefoon','Telefoon','#34c759','📞',3],['mail','Mail','#1a7cf5','✉️',0],['agenda','Agenda','cal','',0],
+ ['fotos','Foto’s','#ffffff','🌼',0],['gezondheid','Gezondheid','#ffffff','❤️',0],['beveiliging','Beveiliging','#1f2b38','🛡️',0],['kiekje','Kiekje','linear-gradient(45deg,#f9a13a,#e1306c,#8a3ab9)','📷',0],
+ ['vind','Vind','#30b65a','📍',0],['notities','Notities','#ffd54a','📝',0],['memo','Memo’s','#1c1c1e','🎙️',0],['instellingen','Instellingen','#8e8e93','⚙️',0]
+];
+function homeScreen(){
+  return `<div class="home"><div class="grid">${APPS.map(([id,n,c,i,b])=>c==='cal'
+   ?`<button class="ico" data-act="open" data-app="${id}"><span class="i cal"><small>VRIJDAG</small><b>14</b></span>${n}</button>`
+   :`<button class="ico" data-act="open" data-app="${id}"><span class="i" style="background:${c}">${i}${b?`<span class="badge">${b}</span>`:''}</span>${n}</button>`).join('')}</div></div>`;
+}
+const hdr=(title,back='Terug')=>`<div class="ah"><button class="back" data-act="back">‹ ${back}</button><b>${title}</b><span></span></div>`;
+const bigHdr=title=>`<div class="ah"><button class="back" data-act="back">‹ Home</button><span></span><span></span><div class="big">${title}</div></div>`;
+const av=(t,c)=>`<span class="av" style="background:${c}">${t}</span>`;
+
+const CHATS={
+ daan:{n:'Daan Verbeek',a:['DV','#6b7a8f'],last:'Geen probleem. Slaap lekker.',t:'do',msgs:[
+   ['d','Woensdag 12 november'],
+   ['o','Ruben, laat me het uitleggen voordat je iemand belt.','23:40','daanwo'],
+   ['m','Donderdag. Niet eerder.','23:41'],
+   ['d','Donderdag 13 november'],
+   ['o','Sta in Raaks, kom eraan.','21:47','raaks'],
+   ['m','Sorry voor vanavond. Ga slapen, morgen verder.','22:22','msg2222'],
+   ['mdel','Dit bericht is verwijderd','22:23','deletedmsg'],
+   ['mdel','Dit bericht is verwijderd','22:23'],
+   ['o','Geen probleem. Slaap lekker.','22:40','daan2240']]},
+ lotte:{n:'Lotte',a:['L','#d0708a'],last:'Pap? Ik heb je drie keer gebeld. Sorry van dinsdag…',t:'do',unread:1,msgs:[
+   ['d','Dinsdag 11 november'],
+   ['o','Pap, ik zit echt klem. Kun je me €15.000 lenen? Ik betaal het terug, echt.','19:02','lottechat'],
+   ['m','Nee Lot. Niet weer.','19:30'],
+   ['o','Ik krijg het later toch allemaal.','19:31'],
+   ['m','Dat is niet hoe het werkt.','19:40'],
+   ['o','Dan hoef je mij ook niet meer te zien.','19:41'],
+   ['d','Donderdag 13 november'],
+   ['o','Pap? Ik heb je drie keer gebeld. Sorry van dinsdag. Bel je me morgen? ❤️','23:35']]},
+ team:{n:'Galerie Team',a:['GT','#b08a3e'],last:'Mila: Ik ga ervan door! Vitrine 3 is afgestoft.',t:'do',group:1,msgs:[
+   ['d','Donderdag 2 oktober'],
+   ['m','Nieuwe personeelscode voor het alarm: 4417. Niet doorgeven, ook niet aan familie.','09:05','code'],
+   ['o','Genoteerd 👍','09:07',null,'Mila'],
+   ['o','👍','09:30',null,'Daan'],
+   ['d','Donderdag 13 november'],
+   ['o','Ik ga ervan door! Vitrine 3 is afgestoft. Fijne avond 🙂','17:58',null,'Mila']]},
+ mila:{n:'Mila Jansen',a:['MJ','#7b5bd6'],last:'Oké.',t:'ma',msgs:[
+   ['d','Maandag 10 november'],
+   ['o','Kunnen we nog praten over mijn contract? Ik snap het niet.','10:12'],
+   ['m','Mijn besluit staat vast. Het spijt me, Mila. Je krijgt een goede referentie.','10:40','milacontract'],
+   ['o','Oké.','10:41']]}
+};
+
+function appScreen(top){
+  switch(top.app){
+  case 'berichten':
+    if(top.chat){const c=CHATS[top.chat];
+      return hdr(c.n,'Berichten')+`<div class="body"><div class="chat">${c.msgs.map(m=>{
+        if(m[0]==='d')return `<div class="day">${m[1]}</div>`;
+        const me=m[0][0]==='m', del=m[0]==='mdel';
+        return `<div class="msg ${me?'me':''}"><div class="bub ${del?'del':''}">${m[4]?`<span class="who">${m[4]}</span>`:''}${esc(m[1])}<small>${m[2]}</small></div>${m[3]?pinBtn(m[3]):''}</div>`}).join('')}</div></div>`;}
+    return bigHdr('Berichten')+`<div class="body"><div class="list">${Object.entries(CHATS).map(([k,c])=>`<button class="row" data-act="chat" data-id="${k}">${c.unread?'<span class="unread"></span>':''}${av(c.a[0],c.a[1])}<span class="grow"><b>${c.n}</b><div class="sub">${esc(c.last)}</div></span><span class="meta">${c.t}</span></button>`).join('')}</div></div>`;
+  case 'telefoon':
+    return bigHdr('Recent')+`<div class="body"><div class="list">
+      <div class="row"><span class="grow"><b class="warn">Lotte (3)</b><div class="sub">gemist · do 23:12, 23:20, 23:31</div></span>${pinBtn('calls')}</div>
+      <div class="row"><span class="grow"><b>Daan Verbeek</b><div class="sub">inkomend · do 21:40 · 1 min 12 s</div></span></div>
+      <div class="row"><span class="grow"><b>Mertens Taxaties</b><div class="sub">inkomend · wo 15:02 · 14 min 21 s</div></span></div>
+      <div class="row"><span class="grow"><b class="warn">Mila Jansen</b><div class="sub">gemist · ma 10:05</div></span></div>
+      <div class="row"><span class="grow"><b>Tandartspraktijk Spaarne</b><div class="sub">uitgaand · ma 09:11 · 2 min</div></span></div>
+    </div></div>`;
+  case 'mail':
+    if(top.mail==='mertens')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Rapport Polderzicht (vertrouwelijk)</h3>
+      <div class="from">${av('MT','#3d6b8f')}<div><b>Mertens Taxaties</b><small>aan Ruben Aldering · wo 12 nov, 16:20</small></div></div>
+      <p>Beste Ruben,</p><p>Zoals telefonisch besproken: bijgaand mijn bevindingen. Mijn conclusie is helaas eenduidig.</p><p>Met vriendelijke groet,<br>Joost Mertens, register-taxateur</p>
+      <div class="attach"><h4>📎 Rapport_Polderzicht.pdf</h4>
+       <p><b>Werk:</b> “Polderzicht”, olieverf op doek, gesigneerd “A. Vermeer-Kok ’38”.</p>
+       <p><b>Herkomst:</b> verkocht in maart 2025 via D. Verbeek (Galerie Aldering) voor €84.000.</p>
+       <p><b>Onderzoek:</b> in de witte verf zit een pigment dat pas na 1950 in kunstenaarsverf werd gebruikt.</p>
+       <p><b>Conclusie:</b> dit schilderij kan niet in 1938 gemaakt zijn. Het is een <b>vervalsing</b>. Ik raad aan ook de andere werken van dezelfde aanbrenger te laten onderzoeken.</p>
+       ${pinBtn('mertens')} <small>vastpinnen</small></div></div></div>`;
+    if(top.mail==='daan')return hdr('','Verzonden')+`<div class="body"><div class="mailv"><h3>Polderzicht</h3>
+      <div class="from">${av('RA','#4a4a4a')}<div><b>Ruben Aldering</b><small>aan Daan Verbeek · wo 12 nov, 23:12</small></div></div>
+      <p>Daan,</p><p>Ik heb het rapport van Mertens. Polderzicht is vals, en ik denk niet dat het de enige is.</p><p>Donderdag 22:00 in de galerie. Alleen jij en ik.</p><p>R.</p>
+      <div class="status">✓ Gelezen door Daan Verbeek · do 13 nov, 08:03</div><p style="margin-top:10px">${pinBtn('mail22')} <small>vastpinnen</small></p></div></div>`;
+    if(top.mail==='advocaat')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Inzake binnenplaats Spaarne 41 / De Wit</h3>
+      <div class="from">${av('PB','#555')}<div><b>Mr. P. Bakker Advocaten</b><small>aan Ruben Aldering · ma 3 nov, 11:47</small></div></div>
+      <p>Geachte heer Aldering,</p><p>De advocaat van de heer De Wit laat weten dat zijn cliënt vasthoudt aan het recht van overpad over de gedeelde binnenplaats. Een zitting bij de kantonrechter staat gepland voor februari.</p><p>Ik adviseer u voorlopig geen contact met de heer De Wit op te nemen.</p>
+      <p>${pinBtn('henkmail')} <small>vastpinnen</small></p></div></div>`;
+    if(top.mail==='nieuws')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Spaarnestad Nieuws: ochtendeditie</h3><div class="from">${av('SN','#c0392b')}<div><b>Spaarnestad Nieuws</b><small>do 13 nov, 07:00</small></div></div><p>Regen verwacht vanaf de middag · Nieuwe fietsbrug over het Spaarne opent in maart · Kunstroute Haarlem trekt record aantal bezoekers.</p></div></div>`;
+    return bigHdr('Inbox')+`<div class="body"><div class="list">
+      <button class="row" data-act="mail" data-id="mertens"><span class="unread" style="background:transparent"></span><span class="grow"><b>Mertens Taxaties</b> <span class="meta" style="float:right">wo</span><div>Rapport Polderzicht (vertrouwelijk)</div><div class="sub">Zoals telefonisch besproken: bijgaand mijn bevindingen…</div></span></button>
+      <button class="row" data-act="mail" data-id="nieuws"><span class="unread" style="background:transparent"></span><span class="grow"><b>Spaarnestad Nieuws</b> <span class="meta" style="float:right">do</span><div>Ochtendeditie</div><div class="sub">Regen verwacht vanaf de middag…</div></span></button>
+      <button class="row" data-act="mail" data-id="advocaat"><span class="unread" style="background:transparent"></span><span class="grow"><b>Mr. P. Bakker Advocaten</b> <span class="meta" style="float:right">3 nov</span><div>Inzake binnenplaats Spaarne 41 / De Wit</div><div class="sub">De advocaat van de heer De Wit laat weten…</div></span></button>
+     </div><div class="sect">Verzonden</div><div class="list">
+      <button class="row" data-act="mail" data-id="daan"><span class="grow"><b>Aan: Daan Verbeek</b> <span class="meta" style="float:right">wo</span><div>Polderzicht</div><div class="sub">Ik heb het rapport van Mertens. Polderzicht is vals…</div></span></button>
+     </div></div>`;
+  case 'agenda':
+    return bigHdr('November')+`<div class="body">
+     <div class="sect">Maandag 10</div><div class="list"><div class="row"><span class="meta">10:30</span><span class="grow">Gesprek Mila</span></div></div>
+     <div class="sect">Woensdag 12</div><div class="list"><div class="row"><span class="meta">15:00</span><span class="grow">Mertens belt over Polderzicht</span></div></div>
+     <div class="sect">Donderdag 13</div><div class="list"><div class="row"><span class="meta">14:30</span><span class="grow">Tandarts</span></div><div class="row"><span class="meta">22:00</span><span class="grow"><b>D. — Mertens!</b><div class="sub">Galerie, kantoor boven</div></span>${pinBtn('agenda')}</div></div>
+     <div class="sect">Vrijdag 14</div><div class="list"><div class="row"><span class="meta">11:00</span><span class="grow">Notaris?? (testament)</span></div></div>
+     <div class="sect">Maandag 17</div><div class="list"><div class="row"><span class="meta">09:00</span><span class="grow">Politie bellen?</span></div></div></div>`;
+  case 'fotos':
+    if(top.album==='deleted')return hdr('Recent verwijderd','Albums')+`<div class="body"><p class="note">Onderdelen worden na 30 dagen definitief verwijderd.</p><div class="pgrid">${photoBtn('deleted')}</div></div>`;
+    return bigHdr('Foto’s')+`<div class="body"><div class="pgrid">${photoBtn('signature')}${photoBtn('volvo')}${photoBtn('reiger')}</div>
+      <div class="sect">Albums</div><div class="list"><button class="row" data-act="album" data-id="deleted"><span class="grow">🗑️ Recent verwijderd</span><span class="meta">1</span><span class="chev">›</span></button></div></div>`;
+  case 'gezondheid': {
+    const pts=[['21:30',72],['21:45',75],['21:55',84],['22:00',96],['22:05',104],['22:09',112],['22:13',128]];
+    const x=i=>30+i*40, y=v=>130-(v-60)*1.3;
+    const line=pts.map((p,i)=>`${i?'L':'M'}${x(i)} ${y(p[1])}`).join(' ');
+    return bigHdr('Hartslag')+`<div class="body"><div class="card"><h4>Donderdag 13 november, 21:30–22:30</h4><div class="sub" style="color:#8e8e93;font-size:13px">Bron: Rubens horloge</div>
+     <svg viewBox="0 0 340 150" style="width:100%;margin-top:8px" role="img" aria-label="Hartslag stijgt van 72 naar 128 en stopt na 22:13">
+      <g stroke="#eee">${[70,90,110,130].map(v=>`<path d="M24 ${y(v)}H330"/>`).join('')}</g>
+      <g font-size="9" fill="#999" font-family="sans-serif">${[70,90,110,130].map(v=>`<text x="0" y="${y(v)+3}">${v}</text>`).join('')}</g>
+      <path d="${line}" fill="none" stroke="#ff2d55" stroke-width="2.5"/>
+      ${pts.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p[1])}" r="3" fill="#ff2d55"/>`).join('')}
+      <path d="M${x(6)} ${y(128)} L${x(6)+14} 140" stroke="#ff2d55" stroke-dasharray="3 3"/>
+      <text x="${x(6)-4}" y="${y(128)-8}" font-size="10" fill="#ff2d55" font-family="sans-serif" text-anchor="end">128</text>
+     </svg></div>
+     <div class="list">${pts.slice().reverse().map(p=>`<div class="row"><span class="meta" style="width:44px">${p[0]}</span><span class="grow">${p[1]} bpm</span></div>`).join('')}
+      <div class="row"><span class="meta warn" style="width:44px">22:14</span><span class="grow warn">Geen hartslag gemeten · daarna geen metingen meer</span>${pinBtn('watch')}</div></div>
+     <div class="list"><div class="row"><span class="grow">Stappen donderdag</span><span class="meta">6.412</span></div><div class="row"><span class="grow">Rusthartslag gemiddeld</span><span class="meta">64 bpm</span></div></div></div>`;}
+  case 'beveiliging':
+    return bigHdr('Galerie Aldering')+`<div class="body"><div class="card"><h4>Logboek donderdag 13 november</h4>
+      <div class="kv"><span class="t">17:59</span><span class="grow">Alarm ingeschakeld · personeelscode</span></div>
+      <div class="kv"><span class="t">21:51</span><span class="grow">Alarm uitgeschakeld · badge R. Aldering</span></div>
+      <div class="kv"><span class="t">21:58</span><span class="grow">Voordeur: bezoeker binnengelaten (intercom)</span>${photoBtn('cam','thumb')}${pinBtn('cam')}</div>
+      <div class="kv"><span class="t">22:27</span><span class="grow">Voordeur van binnenuit geopend</span></div>
+      <div class="kv"><span class="t warn">22:29</span><span class="grow"><b>Alarm ingeschakeld · personeelscode</b></span>${pinBtn('alarm')}</div>
+      <div class="kv"><span class="t">22:30</span><span class="grow">Voordeur gesloten</span></div>
+      <div class="kv"><span class="t">07:38</span><span class="grow">Alarm uitgeschakeld · badge F. el Amrani (schoonmaak)</span></div>
+     </div><p class="note">Rubens eigen badge schakelt het alarm alleen uit. Aanzetten kan met de badge of met de personeelscode.</p></div>`;
+  case 'kiekje':
+    return bigHdr('Kiekje')+`<div class="body">
+     <div class="post"><div class="ph"><span class="ring">${av('MJ','#7b5bd6')}</span>mila.jns<small>do 22:10</small></div><button class="pimg" data-act="photo" data-id="milastory" aria-label="Open foto">${PH.milastory.svg(uid())}</button>
+      <div class="cap"><span><b>mila.jns</b> Ronde 4 bij De Uil in Zandvoort 🦉 Team De Slimme Vossen staat EERSTE</span>${pinBtn('milastory')}</div></div>
+     <div class="post"><div class="ph">${av('L','#d0708a')}lotte.aldering<small>do 20:05</small></div>
+      <div class="cap"><span><b>lotte.aldering</b> Eindelijk weer naar het theater 🎭 Stadsschouwburg, eerste rij!</span></div></div>
+     <div class="post"><div class="ph">${av('HW','#8a7a5a')}dewit.antiek<small>do 19:30</small></div>
+      <div class="cap"><span><b>dewit.antiek</b> Vroeg naar bed vandaag, morgen om 6 uur op naar de antiekbeurs in Utrecht. Kom langs bij stand 14!</span>${pinBtn('henkpost')}</div></div>
+     <div class="post"><div class="ph">${av('GA','#b08a3e')}galerie.aldering<small>wo 12:00</small></div>
+      <div class="cap"><span><b>galerie.aldering</b> Nog drie weken te zien: “Licht op de polder”, met Nederlandse landschappen uit de jaren dertig.</span></div></div>
+    </div>`;
+  case 'vind':
+    return bigHdr('Personen')+`<div class="body"><div class="card" style="padding:0;overflow:hidden">
+      <svg viewBox="0 0 340 180" style="width:100%;display:block" role="img" aria-label="Kaart van Amsterdam met Lotte bij de Stadsschouwburg">
+       <rect width="340" height="180" fill="#e8eee4"/><path d="M0 120 C80 100 140 150 220 120 S320 90 340 100 L340 130 C300 120 260 150 210 150 C140 170 80 130 0 150Z" fill="#a9cfe8"/>
+       <g stroke="#fff" stroke-width="6"><path d="M20 20 L320 60 M60 0 L120 180 M200 0 L240 180 M0 80 L340 70"/></g>
+       <g stroke="#f4d58d" stroke-width="5"><path d="M0 40 C100 50 200 30 340 40"/></g>
+       <circle cx="178" cy="66" r="16" fill="#d0708a"/><text x="178" y="71" font-size="13" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">L</text>
+       <text x="198" y="92" font-size="10" fill="#333" font-family="sans-serif">Leidseplein</text>
+      </svg>
+      <div style="padding:12px 14px" class="kv"><span class="grow"><b>Lotte</b><div class="sub" style="color:#6b6b72;font-size:13.5px">Stadsschouwburg, Leidseplein, Amsterdam · do 22:15</div><div class="sub" style="color:#8e8e93;font-size:12.5px">Lotte deelt haar locatie sinds 2022</div></span>${pinBtn('lotteloc')}</div></div>
+      <p class="note">Je deelt je locatie met: Lotte.</p></div>`;
+  case 'notities':
+    if(top.note==='daan')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Daans verkopen nalopen</h3><p style="color:#8e8e93;font-size:13px">wo 12 nov 2025, 23:05</p>
+      <p>Polderzicht ✗ (Mertens: vals)<br>Duinlandschap met molen ?<br>Stilleven met haring ?<br>Haarlemse gracht, avond ?</p><p>Allemaal via D. Allemaal zonder herkomstpapieren. Waarom heb ik dat nooit gezien?</p><p>${pinBtn('notes')} <small>vastpinnen</small></p></div></div>`;
+    if(top.note==='expo')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Voorjaarsexpo</h3><p>Thema “Water”? Vragen: Lotte voor de opening (ze kan zo goed spreken). Henk NIET uitnodigen.</p></div></div>`;
+    if(top.note==='bood')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Boodschappen</h3><p>Koffiebonen · Oude kaas · Whisky (Lagavulin) · Vuilniszakken</p></div></div>`;
+    return bigHdr('Notities')+`<div class="body"><div class="list">
+      <button class="row" data-act="note" data-id="daan"><span class="grow"><b>Daans verkopen nalopen</b><div class="sub">wo · Polderzicht ✗ (Mertens: vals)</div></span></button>
+      <button class="row" data-act="note" data-id="bood"><span class="grow"><b>Boodschappen</b><div class="sub">di · Koffiebonen · Oude kaas · Whisky</div></span></button>
+      <button class="row" data-act="note" data-id="expo"><span class="grow"><b>Voorjaarsexpo</b><div class="sub">2 nov · Thema “Water”?</div></span></button></div></div>`;
+  case 'memo': {
+    const memos=[
+      ['m1','Notitie','do 13 nov, 21:30','0:24',"Rustig blijven vanavond. Hij krijgt één kans om het zelf te melden. Anders bel ik maandag de politie. Twintig jaar… twintig jaar, Daan.",'memo'],
+      ['m2','Galerie, ideeën','zo 9 nov, 11:02','0:41',"Reiger naar de etalage voor de kerst? Nee. Die blijft in de vitrine boven. Die gaat nooit weg, die heb ik van vader.",null]];
+    return bigHdr('Memo’s')+`<div class="body">${memos.map(m=>`<div class="card memo"><button class="play" data-act="memo" data-id="${m[0]}" aria-label="Afspelen">${S.memo[m[0]]?'❚❚':'▶'}</button>
+      <div style="flex:1;min-width:0"><b>${m[1]}</b><div style="color:#8e8e93;font-size:13px">${m[2]} · ${m[3]}</div>${S.memo[m[0]]?`<div class="transcript">“${m[4]}”</div>`:''}</div>${m[5]&&S.memo[m[0]]?pinBtn(m[5]):''}</div>`).join('')}
+      <p class="note">Tik op afspelen om het transcript te zien.</p></div>`;}
+  case 'instellingen':
+    if(top.sub==='faceid')return hdr('Face ID en code','Instellingen')+`<div class="body"><div class="sect">Laatste ontgrendelingen</div><div class="list">
+      <div class="row"><span class="grow">vr 14 nov · 09:10</span><span class="meta">Toegangscode</span></div>
+      <div class="row"><span class="grow warn"><b>do 13 nov · 22:21</b></span><span class="meta">Face ID</span>${pinBtn('faceid')}</div>
+      <div class="row"><span class="grow">do 13 nov · 22:03</span><span class="meta">Face ID</span></div>
+      <div class="row"><span class="grow">do 13 nov · 21:46</span><span class="meta">Face ID</span></div>
+      <div class="row"><span class="grow">do 13 nov · 21:29</span><span class="meta">Face ID</span></div>
+      <div class="row"><span class="grow">do 13 nov · 18:12</span><span class="meta">Face ID</span></div></div>
+      <div class="sect">Opties</div><div class="list"><div class="row"><span class="grow">Vereis aandacht voor Face ID</span><span class="meta">Uit</span></div></div>
+      <p class="note">Met “Vereis aandacht” uit ontgrendelt Face ID ook als de ogen gesloten zijn.</p></div>`;
+    return bigHdr('Instellingen')+`<div class="body"><div class="list"><div class="row">${av('RA','#4a4a4a')}<span class="grow"><b>Ruben Aldering</b><div class="sub">Account, opslag en meer</div></span></div></div>
+      <div class="list"><div class="row"><span class="grow">Vliegtuigmodus</span><span class="meta">Uit</span></div><div class="row"><span class="grow">Wifi</span><span class="meta">Galerie_Aldering</span></div><div class="row"><span class="grow">Batterij</span><span class="meta">23%</span></div></div>
+      <div class="list"><button class="row" data-act="sub" data-id="faceid"><span class="grow">Face ID en toegangscode</span><span class="chev">›</span></button><div class="row"><span class="grow">Schermtijd</span><span class="chev">›</span></div><div class="row"><span class="grow">Privacy</span><span class="chev">›</span></div></div></div>`;
+  }
+  return hdr('');
+}
+
+function viewerHTML(){
+  const p=PH[viewer];
+  return `<div class="viewer"><div class="vh"><button data-act="closeview">‹ Terug</button><div>${esc(p.t)}<br><small>${p.d}</small></div><span style="width:50px"></span></div>
+   <div class="zoomwrap" id="zw" data-act="zoom" title="Tik om in of uit te zoomen"><div class="img">${p.svg(uid())}</div></div>
+   <div class="vfoot"><span>Tik op de foto om in te zoomen op dat punt</span>${S.unlocked||viewer!=='reiger'?pinBtn(p.ev):''}</div></div>`;
+}
+
+function renderPhone(){
+  const el=document.getElementById('screen');
+  const top=S.stack[S.stack.length-1];
+  const dark=!S.unlocked||!top;
+  let h=statusbar(dark && !viewer || !!viewer);
+  if(!S.unlocked) h+=lockScreen();
+  else if(!top) h+=homeScreen();
+  else h+=`<div class="app">${appScreen(top)}</div>`;
+  if(viewer) h+=viewerHTML();
+  h+=`<button class="homebar ${dark||viewer?'light':''}" data-act="home" aria-label="Naar beginscherm"></button>`;
+  const prevBody=el.querySelector('.body'); const sc=prevBody?prevBody.scrollTop:0; const prevKey=el.dataset.k;
+  el.innerHTML=h;
+  const k=JSON.stringify(top||{})+(S.unlocked?1:0);
+  if(prevKey===k){const b=el.querySelector('.body'); if(b) b.scrollTop=sc}
+  el.dataset.k=k;
+}
+
+/* ======================= DOSSIER ======================= */
+function taskHTML(t){
+  const done=S.step>t.id, active=S.step===t.id, cls=done?'done':active?'active':'locked';
+  let h=`<li class="task ${cls}"><span class="num">${done?'✓':t.id}</span><p class="q">${active||done?t.q:'Vergrendeld'}</p>`;
+  if(done) h+=`<p class="res">${t.done}</p>`;
+  if(active){
+    if(t.type==='auto') h+=`<p class="res">Vind de pincode van vier cijfers en voer die in op de telefoon.</p>`;
+    else if(t.type==='choice') h+=`<div class="act choice">${t.opts.map(o=>`<button class="btn ghost" data-act="answer" data-id="${t.id}" data-v="${o[0]}">${o[1]}</button>`).join('')}</div>`;
+    else h+=`<div class="act"><input id="ans-${t.id}" inputmode="numeric" autocomplete="off" placeholder="${t.ph}" aria-label="Antwoord opdracht ${t.id}"><button class="btn" data-act="answer" data-id="${t.id}">Controleer</button></div>`;
+    if(fb[t.id]) h+=`<p class="fb">${fb[t.id]}</p>`;
+    if(S.hints.includes(t.id)) h+=`<p class="hint">${t.hint}</p>`;
+    else h+=`<div class="act"><button class="linkbtn" data-act="hint" data-id="${t.id}">Hint gebruiken (−10 punten)</button></div>`;
+  }
+  return h+'</li>';
+}
+function reportHTML(){
+  if(S.step<6) return `<p class="locked-note">Rond eerst de vijf opdrachten af. Daarna kun je je beschuldiging indienen.</p>`;
+  if(S.report) return `<p>Je rapport is ingediend. ${S.report.wie?'De zaak is opgelost.':'De dader is nog vrij.'}</p><div class="row-btns"><button class="btn" data-act="showresult">Bekijk uitslag</button></div>`;
+  const d=draft||{};
+  const grp=(k,l)=>`<fieldset><legend>${l}</legend>${Q[k].map(o=>`<label class="opt"><input type="radio" name="${k}" value="${o[0]}" ${d[k]===o[0]?'checked':''}>${o[1]}</label>`).join('')}</fieldset>`;
+  const pins=S.pins.length?S.pins.map(id=>`<label class="opt"><input type="checkbox" name="bewijs" value="${id}" ${(d.bewijs||[]).includes(id)?'checked':''}>${esc(EV[id].l)}</label>`).join(''):`<p class="empty">Je hebt nog geen bewijs vastgepind. Gebruik 📌 op de telefoon.</p>`;
+  let h=`<form class="report" id="reportform">${grp('wie','Wie is de dader?')}${grp('hoe','Hoe is Ruben om het leven gekomen?')}${grp('waarom','Waarom?')}
+   <fieldset><legend>Onderbouwing: kies precies 3 gepinde bewijzen</legend>${pins}</fieldset>`;
+  if(confirmArm) h+=`<div class="confirm"><p>Je hebt één poging. Weet je het zeker?</p><div class="row-btns"><button type="button" class="btn" data-act="submitreport">Ja, dien in</button><button type="button" class="btn ghost" data-act="cancelreport">Nog even kijken</button></div></div>`;
+  else h+=`<button type="button" class="btn" data-act="armreport">Beschuldiging indienen</button>`;
+  if(fb.report) h+=`<p class="fb" style="margin-top:8px">${fb.report}</p>`;
+  return h+'</form>';
+}
+function renderDossier(){
+  const d=document.getElementById('dossier');
+  const sc=d.scrollTop;
+  d.innerHTML=`
+  <header class="dh"><div><div class="case">ZAAK #001 · HAARLEM</div><h1>De Reiger</h1></div>
+   <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px">Sluiten ✕</button></div></header>
+  <details class="brief" ${S.step<=2?'open':''}><summary>Briefing</summary>
+   <p>Vrijdagochtend 07:40 vond de schoonmaakster galeriehouder <b>Ruben Aldering (58)</b> dood onder aan de wenteltrap in zijn galerie aan het Spaarne. Het lijkt een val, maar de patholoog vond <b>één ronde slag op het achterhoofd, met bronsdeeltjes in de wond</b>. Op het bureau stonden twee whiskyglazen, en één ervan was schoongeveegd.</p>
+   <p>Rubens telefoon lag naast hem. Doorzoek hem.</p>
+   <div class="suspects">
+    <div class="sus"><b>Lotte Aldering</b><span>31 · dochter, erfgenaam</span></div>
+    <div class="sus"><b>Daan Verbeek</b><span>44 · compagnon</span></div>
+    <div class="sus"><b>Mila Jansen</b><span>26 · assistent</span></div>
+    <div class="sus"><b>Henk de Wit</b><span>67 · buurman, antiquair</span></div>
+   </div></details>
+  <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
+  <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Tik op 📌 bij berichten, foto’s en logregels om bewijs te verzamelen. Je hebt het nodig voor je eindrapport.</p>`}</section>
+  <section><h2>Eindrapport</h2>${reportHTML()}</section>
+  <div class="foot"><small>Fout antwoord −5 · hint −10. Je voortgang blijft bewaard in deze browser.</small><button class="linkbtn" data-act="reset">${resetArm?'Tik nogmaals om alles te wissen':'Zaak opnieuw beginnen'}</button></div>`;
+  d.scrollTop=sc;
+  document.getElementById('dbtnmeta').textContent=`${Math.min(S.step-1,5)}/5 · ${score()}`;
+}
+
+/* ======================= MODALS ======================= */
+function renderModal(){
+  const m=document.getElementById('modal');
+  if(!S.started){
+    m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="introt">
+     <div class="case" style="font-family:var(--f-mono);color:var(--accent);font-size:12px;letter-spacing:.12em;font-weight:600">ZAAK #001 · RECHERCHE HAARLEM</div>
+     <h2 id="introt">De Reiger</h2>
+     <p>Een galeriehouder ligt dood onder aan zijn trap. Het lijkt een ongeluk, maar de patholoog denkt daar anders over.</p>
+     <p>Het enige wat je hebt is <b>zijn telefoon</b>. Ontgrendel hem, lees zijn berichten, bekijk zijn foto’s en vind uit wie hem die avond als laatste zag.</p>
+     <p style="color:var(--muted);font-size:14.5px">Speelduur ongeveer 15 minuten. Werk de opdrachten in het dossier af, pin bewijs vast met 📌 en dien aan het eind je beschuldiging in.</p>
+     <button class="btn" data-act="start">Start onderzoek</button></div></div>`; return;}
+  if(showResult&&S.report){
+    const r=S.report, ok=v=>v?'✅':'❌';
+    const stars=r.score>=90?'⭐⭐⭐':r.score>=70?'⭐⭐☆':r.score>0?'⭐☆☆':'☆☆☆';
+    const share=`🔎 Zaak #001 · De Reiger\nWie ${ok(r.wie)} Hoe ${ok(r.hoe)} Waarom ${ok(r.waarom)}\n💡 ${r.hints} hint${r.hints===1?'':'s'} · ✖️ ${r.wrong} fout\n${stars} ${r.score} punten`;
+    m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rest">
+      <span class="stamp ${r.wie?'ok':''}">${r.wie?'Zaak opgelost':'Dader ontsnapt'}</span>
+      <h2 id="rest">${r.wie?'Daan Verbeek is aangehouden':'Verkeerde verdachte'}</h2>
+      <div class="verdict"><div>Wie<b>${ok(r.wie)}</b></div><div>Hoe<b>${ok(r.hoe)}</b></div><div>Waarom<b>${ok(r.waarom)}</b></div></div>
+      <p style="font-family:var(--f-mono);font-size:14px">${stars} ${r.score} punten · onderbouwing ${3-r.bad}/3 sterk</p>
+      <p><b>Wat er gebeurde.</b> Ruben had ontdekt dat Daan via de galerie vervalsingen verkocht. Om 22:00 kwam Daan naar de galerie voor een gesprek. Dat liep uit de hand en om 22:14 sloeg Daan hem met het bronzen beeldje De Reiger. Hij legde Ruben onder aan de trap zodat het op een val leek. Daarna hield hij de telefoon voor Rubens gezicht. Hij stuurde zichzelf een bericht alsof Ruben nog leefde, wiste de berichten over het rapport en de screenshot met zijn verkopen, en zette met de personeelscode het alarm aan.</p>
+      <ol class="chain">
+       <li>Rubens hartslag stopt om <b>22:14</b>.</li>
+       <li>Om <b>22:21</b> wordt de telefoon met Face ID ontgrendeld, en om <b>22:22</b> “stuurt Ruben” een bericht. Ruben was toen al dood.</li>
+       <li>Het alarm gaat om <b>22:29</b> aan met de code die alleen Daan en Mila kennen. Mila zat in Zandvoort.</li>
+       <li>Op het camerabeeld staat een grijze stationwagen met kenteken “GV-2…”. Daan rijdt een grijze Volvo met <b>GV-218-K</b> en meldde om 21:47 dat hij in Raaks stond.</li>
+       <li>Het motief staat in het rapport van Mertens en in Rubens mail aan Daan: Polderzicht is vals.</li>
+      </ol>
+      <p style="color:var(--muted);font-size:14.5px">Afleiders: Lotte had ruzie en geldnood, maar zat in Amsterdam. Mila verloor haar baan, maar zat in Zandvoort. Henk had burenruzie, maar kende de code niet.</p>
+      <p style="font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Deel je resultaat (zonder spoilers)</p>
+      <pre class="share" id="sharetxt">${share}</pre>
+      <div class="row-btns"><button class="btn" data-act="copy">Kopieer resultaat</button><button class="btn ghost" data-act="closeresult">Sluiten</button></div>
+     </div></div>`; return;}
+  m.innerHTML='';
+}
+
+/* ======================= ACTIES ======================= */
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+function render(){renderPhone();renderDossier();renderModal()}
+
+function collectDraft(){
+  const f=document.getElementById('reportform'); if(!f) return draft;
+  const g=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value;
+  return {wie:g('wie'),hoe:g('hoe'),waarom:g('waarom'),bewijs:[...f.querySelectorAll('input[name="bewijs"]:checked')].map(i=>i.value)};
+}
+function checkAnswer(id,val){
+  const t=TASKS.find(x=>x.id===id);
+  let ok;
+  if(t.type==='choice') ok=val===t.ans;
+  else { if(!val||!val.trim()){fb[id]='Vul eerst een antwoord in.';renderDossier();return} ok=val.replace(/\D/g,'')===t.ans }
+  if(ok){S.step=id+1;delete fb[id];save();toast('Goed! Opdracht '+id+' afgerond.');render();}
+  else{S.wrong++;fb[id]=t.type==='choice'?'Nee, die kan het wel geweest zijn. Kijk nog eens waar beiden die avond waren. (−5)':'Dat klopt niet. Kijk nog eens goed. (−5)';save();renderDossier();
+    const inp=document.getElementById('ans-'+id); if(inp){inp.value='';inp.focus()}}
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const a=t.dataset.act, id=t.dataset.id;
+  if(a!=='reset') resetArm=false;
+  switch(a){
+   case 'start': S.started=true; save(); render(); break;
+   case 'digit':
+     if(pinEntry.length>=4) break;
+     pinEntry+=t.dataset.k; renderPhone();
+     if(pinEntry.length===4){
+       if(pinEntry==='1931'){setTimeout(()=>{pinEntry='';S.unlocked=true;if(S.step===1)S.step=2;save();toast('Telefoon ontgrendeld. Opdracht 1 afgerond.');render()},200)}
+       else{setTimeout(()=>{const d=document.getElementById('dots');d&&d.classList.add('shake');setTimeout(()=>{pinEntry='';renderPhone()},420)},120)}
+     } break;
+   case 'del': pinEntry=pinEntry.slice(0,-1); renderPhone(); break;
+   case 'open': S.stack=[{app:t.dataset.app}]; save(); renderPhone(); break;
+   case 'chat': S.stack.push({app:'berichten',chat:id}); save(); renderPhone(); break;
+   case 'mail': S.stack.push({app:'mail',mail:id}); save(); renderPhone(); break;
+   case 'note': S.stack.push({app:'notities',note:id}); save(); renderPhone(); break;
+   case 'album': S.stack.push({app:'fotos',album:id}); save(); renderPhone(); break;
+   case 'sub': S.stack.push({app:'instellingen',sub:id}); save(); renderPhone(); break;
+   case 'back': S.stack.pop(); save(); renderPhone(); break;
+   case 'home': viewer=null; if(S.unlocked){S.stack=[];save()} renderPhone(); break;
+   case 'photo': viewer=id; renderPhone(); break;
+   case 'closeview': viewer=null; renderPhone(); break;
+   case 'zoom': {
+     const img=t.querySelector('.img'); const r=t.getBoundingClientRect();
+     if(t.classList.toggle('z')){const ir=img.getBoundingClientRect();const ox=((e.clientX-ir.left)/ir.width*100).toFixed(1),oy=((e.clientY-ir.top)/ir.height*100).toFixed(1);img.style.transformOrigin=`${ox}% ${oy}%`;img.style.transform='scale(3.4)'}
+     else img.style.transform='scale(1)';
+     break;}
+   case 'pin': {
+     const i=S.pins.indexOf(id);
+     if(i>=0){S.pins.splice(i,1);toast('Losgemaakt')} else {S.pins.push(id);toast('📌 Vastgepind: '+EV[id].l)}
+     if(draft)draft=collectDraft();
+     save(); renderPhone(); renderDossier(); break;}
+   case 'memo': S.memo[id]=!S.memo[id]; save(); renderPhone(); break;
+   case 'answer': {
+     const task=TASKS.find(x=>x.id===+id);
+     if(task.type==='choice') checkAnswer(+id,t.dataset.v);
+     else checkAnswer(+id,(document.getElementById('ans-'+id)||{}).value);
+     break;}
+   case 'hint': if(!S.hints.includes(+id)){S.hints.push(+id);save()} renderDossier(); break;
+   case 'armreport': {
+     draft=collectDraft();
+     if(!draft.wie||!draft.hoe||!draft.waarom){fb.report='Beantwoord wie, hoe en waarom.';renderDossier();break}
+     if(draft.bewijs.length!==3){fb.report=`Kies precies 3 bewijzen (nu ${draft.bewijs.length}).`;renderDossier();break}
+     delete fb.report; confirmArm=true; renderDossier(); break;}
+   case 'cancelreport': draft=collectDraft(); confirmArm=false; renderDossier(); break;
+   case 'submitreport': {
+     const d=collectDraft(); const bad=d.bewijs.filter(x=>!EV[x].s).length;
+     const r={wie:d.wie===SOLUTION.wie,hoe:d.hoe===SOLUTION.hoe,waarom:d.waarom===SOLUTION.waarom,bad,hints:S.hints.length,wrong:S.wrong};
+     r.pen=(r.hoe?0:15)+(r.waarom?0:15)+5*bad;
+     S.report=r; r.score=r.wie?Math.max(0,100-5*S.wrong-10*S.hints.length-r.pen):0;
+     if(!r.wie) r.pen=100;
+     confirmArm=false; draft=null; showResult=true; save(); render(); break;}
+   case 'showresult': showResult=true; renderModal(); break;
+   case 'closeresult': showResult=false; renderModal(); break;
+   case 'copy': {
+     const txt=document.getElementById('sharetxt').textContent;
+     const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('sharetxt'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Tekst geselecteerd. Kopieer met je toetsenbord of menu.')};
+     try{navigator.clipboard.writeText(txt).then(()=>toast('Resultaat gekopieerd'),sel)}catch(err){sel()}
+     break;}
+   case 'reset':
+     if(!resetArm){resetArm=true;renderDossier();break}
+     resetArm=false; S=fresh(); S.started=true; viewer=null; pinEntry=''; fb={}; draft=null; confirmArm=false; showResult=false; save(); render(); toast('Zaak opnieuw gestart'); break;
+   case 'toggleD': document.body.classList.toggle('dopen'); break;
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.id&&e.target.id.startsWith('ans-')){e.preventDefault();checkAnswer(+e.target.id.slice(4),e.target.value)}
+  if(!S.unlocked&&S.started&&!viewer&&/^[0-9]$/.test(e.key)&&!(e.target.matches&&e.target.matches('input'))){const b=document.querySelector(`[data-act="digit"][data-k="${e.key}"]`);b&&b.click()}
+  if(e.key==='Escape'){if(viewer){viewer=null;renderPhone()}else if(showResult){showResult=false;renderModal()}}
+});
+document.addEventListener('change',e=>{if(e.target.closest('#reportform')){draft=collectDraft();if(confirmArm){confirmArm=false;renderDossier()}}});
+
+render();
+})();
+</script>
+
+</body>
+</html>
