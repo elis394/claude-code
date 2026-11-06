@@ -10,7 +10,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Jost:wght@300;400;500&family=Caveat:wght@500;600&display=swap">
 <style>
 /* Nachtgalerie: een donkere museumzaal na sluitingstijd. De telefoon staat als object op een sokkel onder één spot; het dossier hangt als zaaltekst aan de wand. Eén kleur verzadigd: de rode "verkocht"-stip = verdacht. */
 :root{
@@ -25,9 +25,9 @@
   --bg:var(--wall); --panel:var(--wall); --accent:var(--light); --stamp:var(--dot);
   color-scheme:dark;
 }
-::selection{background:rgba(200,38,28,.38);color:#fff}
+::selection{background:rgba(245,221,170,.32);color:#fff}
 html,body{height:100%}
-body{background:radial-gradient(ellipse 90% 70% at 35% -10%,var(--wall-hi),var(--wall) 55%,var(--wall-lo)) fixed,var(--wall);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;caret-color:var(--dot);scrollbar-color:var(--line) transparent}
+body{background:radial-gradient(ellipse 90% 70% at 35% -10%,var(--wall-hi),var(--wall) 55%,var(--wall-lo)) fixed,var(--wall);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;caret-color:var(--light);scrollbar-color:var(--line) transparent}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--light);outline-offset:3px}
@@ -68,9 +68,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .dots.shake{animation:shake .4s}
 @keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 .pad{--k:clamp(50px,8.4cqh,64px);display:grid;grid-template-columns:repeat(3,var(--k));gap:clamp(8px,1.5cqh,12px) 22px}
-.pad button{width:var(--k);height:var(--k);border-radius:50%;border:0;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font-size:26px;font-family:var(--f-ui)}
-.pad button.txt{background:none;font-size:15px}
-.lockhint{font-size:13px;opacity:.9;display:flex;gap:10px;align-items:center}
+.pad button{width:var(--k);height:var(--k);border-radius:50%;border:0;background:rgba(28,30,32,.42);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);color:#fff;font-size:26px;font-family:var(--f-ui);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.pad button.txt{background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:15px}
+.lockhint{font-size:13px;display:flex;gap:10px;align-items:center;background:rgba(20,22,24,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:4px 4px 4px 14px}
 @container (max-height:700px){.notif:nth-child(2){display:none}}
 @container (max-height:600px){.notifs{display:none}}
 @container (max-height:470px){.ldate{display:none}.ltime{font-size:44px;margin-top:40px}.pad{--k:44px;gap:6px 22px}.lockbottom{gap:6px;margin-bottom:12px}.pad button{font-size:22px}}
@@ -94,7 +94,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 /* apps */
 .app{position:absolute;inset:0;display:flex;flex-direction:column;background:#f2f2f7}
 .ah{padding:50px 12px 8px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:rgba(249,249,251,.95);border-bottom:1px solid #d9d9de;min-height:92px}
-.ah .back{border:0;background:none;color:#0a7aff;font-size:16px;justify-self:start;padding:6px 4px;font-family:var(--f-ui)}
+.ah .back{border:0;background:none;color:#0a7aff;font-size:16px;justify-self:start;padding:6px 4px 6px 0;font-family:var(--f-ui);display:inline-flex;align-items:center;gap:1px}
 .ah b{font-size:16px;text-align:center}
 .ah .big{grid-column:1/-1;font-size:30px;font-weight:700;padding:2px 6px 0}
 .body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:30px}
@@ -104,7 +104,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .row .grow{flex:1;min-width:0}
 .row .sub{color:#6b6b72;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .meta{color:#6c6c72;font-size:13px;white-space:nowrap}
-.row .chev{color:#c4c4c8}
+.row .chev{color:#c4c4c8;display:grid}
+.icn{display:block;flex:none}
 .row .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;flex:none}
 .unread{width:9px;height:9px;border-radius:50%;background:#0a7aff;flex:none}
@@ -171,7 +172,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .thumb{width:64px;height:40px;border-radius:6px;overflow:hidden;border:0;padding:0;flex:none}
 .thumb svg{width:100%;height:100%;display:block}
 .memo{display:flex;gap:12px;align-items:flex-start}
-.play{width:36px;height:36px;border-radius:50%;border:0;background:#ff3b30;color:#fff;font-size:14px;flex:none}
+.play{width:36px;height:36px;border-radius:50%;border:0;background:#ff3b30;color:#fff;flex:none;display:grid;place-items:center}
 .transcript{margin-top:8px;font-size:14px;color:#333;background:#f5f5f7;border-radius:10px;padding:8px 10px;font-style:italic}
 .post{background:#fff;margin-bottom:10px}
 .post .ph{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:14px;font-weight:600}
@@ -186,12 +187,17 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 /* ---------- Zaal: spot, sokkel, opening ---------- */
 .stage{position:relative;display:flex;flex-direction:column;align-items:center}
 .stage::before{content:"";position:absolute;left:50%;top:-40px;width:min(820px,100vw);height:calc(100% + 80px);transform:translateX(-50%);pointer-events:none;
-  background:radial-gradient(ellipse 42% 58% at 50% 40%,rgba(245,221,170,.13),rgba(245,221,170,.04) 55%,transparent 74%);opacity:.6;transition:opacity 1.4s ease}
+  background:radial-gradient(ellipse 44% 60% at 50% 42%,rgba(245,221,170,.16),rgba(245,221,170,.05) 55%,transparent 74%);opacity:1;transition:opacity 1.4s ease}
 body.intro .stage::before{opacity:1;background:radial-gradient(ellipse 34% 62% at 50% 62%,rgba(245,221,170,.30),rgba(245,221,170,.08) 50%,transparent 72%)}
 body.intro .layout{align-items:center;min-height:100dvh}
-body.intro .phone{height:min(600px,calc(100dvh - 300px));min-height:420px;transform:perspective(1500px) rotateX(64deg) scale(.86);box-shadow:0 0 0 1.5px #2e3330,0 60px 50px -10px rgba(0,0,0,.75)}
-.plinth{display:none;width:min(340px,92%);position:relative;margin-top:-34px;z-index:-1}
-.plinth i{display:block;height:46px;background:linear-gradient(#F3F0EA,#DCD7CC);clip-path:polygon(6% 0,94% 0,100% 100%,0 100%)}
+body.intro .layout,body.lifting .layout{grid-template-areas:"stage top" "stage rest";grid-template-rows:auto auto;align-content:center;row-gap:20px}
+body.intro .stage,body.lifting .stage{grid-area:stage;align-self:center}
+body.intro #intro,body.lifting #intro{grid-area:top;align-self:end}
+body.intro #intro2,body.lifting #intro2{grid-area:rest;align-self:start}
+.opening .go-m{display:none}
+body.intro .phone{height:min(600px,calc(100dvh - 300px));min-height:420px;transform:perspective(1500px) rotateX(64deg) scale(.8);box-shadow:0 0 0 1.5px #2e3330,0 60px 50px -10px rgba(0,0,0,.75)}
+.plinth{display:none;width:min(470px,100%);position:relative;margin-top:-96px;z-index:-1}
+.plinth i{display:block;height:92px;background:radial-gradient(ellipse 37% 34% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.18) 60%,transparent 78%),linear-gradient(#F4F1EB,#D8D2C5);clip-path:polygon(11% 0,89% 0,100% 100%,0 100%)}
 .plinth b{display:block;height:min(170px,18dvh);background:linear-gradient(90deg,#C9C3B7,#E7E3DA 30%,#E7E3DA 70%,#BDB7AB);box-shadow:0 30px 40px -20px rgba(0,0,0,.8)}
 body.intro .plinth,body.lifting .plinth{display:block}
 body.lifting .plinth{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform 1.1s cubic-bezier(.16,1,.3,1)}
@@ -230,8 +236,8 @@ body.intro .dossier,body.lifting .dossier{display:none}
 .dossier h2 .n{font-weight:500;letter-spacing:.04em;color:var(--ink)}
 details.brief summary{cursor:pointer;list-style:none;justify-content:space-between;margin:0}
 details.brief summary::-webkit-details-marker{display:none}
-details.brief summary::after{content:"+";font-size:16px;letter-spacing:0}
-details.brief[open] summary::after{content:"−"}
+details.brief summary::after{content:"";width:12px;height:12px;flex:none;background:linear-gradient(currentColor,currentColor) center/12px 1.5px no-repeat,linear-gradient(currentColor,currentColor) center/1.5px 12px no-repeat}
+details.brief[open] summary::after{background:linear-gradient(currentColor,currentColor) center/12px 1.5px no-repeat}
 .brief p{margin:12px 0 0;max-width:62ch;font-size:15.5px}
 .suspects{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:14px;background:var(--line);border-block:1px solid var(--line)}
 .sus{background:var(--wall);padding:10px 12px 10px 0;font-size:13.5px;line-height:1.35}
@@ -262,9 +268,8 @@ details.brief[open] summary::after{content:"−"}
 .task.active .btn.ghost{background:none;color:var(--label-ink);border-color:var(--label-ink)}
 .task.active .btn.ghost:hover{background:var(--label-ink);color:var(--label)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.hint{grid-column:2;font-size:14.5px;background:#E2DBCC;padding:9px 12px;margin:10px 0 0}
-.fb{grid-column:2;font-size:14px;color:var(--err);margin:8px 0 0}
-.task.active .fb{color:#A1251B}
+.hint{grid-column:2;font-size:14.5px;border-top:1px solid var(--line);padding:10px 0 0;margin:12px 0 0}
+.fb{grid-column:2;font-size:14.5px;font-weight:600;color:var(--ink);margin:8px 0 0}
 .choice{display:flex;gap:10px;flex-wrap:wrap}
 
 .pins{list-style:none;margin:0;padding:0;display:grid}
@@ -299,7 +304,12 @@ details.brief[open] summary::after{content:"−"}
 .verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:6px 0 16px;border-block:1px solid var(--line)}
 .verdict div{padding:10px 8px;text-align:center;font-size:11.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
 .verdict div+div{border-left:1px solid var(--line)}
-.verdict b{display:block;font-size:20px;margin-top:4px;letter-spacing:0}
+.verdict b{display:flex;justify-content:center;align-items:center;gap:7px;font-size:15px;font-weight:600;margin-top:6px;letter-spacing:0;text-transform:none;color:var(--label-ink)}
+.vd{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--label-ink);box-sizing:border-box}
+.vd.on{background:var(--dot);border-color:var(--dot)}
+.tally{font-size:15px}
+.tally b{font-family:var(--f-display);font-weight:400;font-size:26px;vertical-align:-2px}
+.lbl{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px!important}
 .share{font:500 13.5px/1.5 var(--f-body);white-space:pre-wrap;background:var(--bg);padding:12px 14px;margin:0 0 12px;user-select:all}
 .chain{margin:0 0 14px;padding-left:20px;font-size:15px}
 .chain li{margin-bottom:6px}
@@ -310,6 +320,7 @@ details.brief[open] summary::after{content:"−"}
 
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:max-content;max-width:min(420px,calc(100% - 32px));background:var(--label);color:var(--label-ink);padding:11px 16px;font-size:14.5px;z-index:60;box-shadow:0 14px 30px -10px rgba(0,0,0,.8)}
 .dbtn{display:none}
+.tdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--dot);margin-right:9px;vertical-align:1px}
 .close-d{display:none}
 .taskbar{display:none}
 
@@ -317,23 +328,30 @@ details.brief[open] summary::after{content:"−"}
   .layout{grid-template-columns:minmax(0,1fr);justify-items:center;padding-block:12px 84px;gap:10px}
   .phone{position:relative;top:0;height:min(780px,calc(100dvh - 150px));min-height:0}
   .stage{width:min(390px,100%)}
-  body.intro .phone{height:min(320px,38dvh);min-height:0}
+  body.intro .phone{height:min(330px,40dvh);min-height:0}
   body.intro .layout{padding-bottom:0;gap:0;align-items:start;min-height:0}
   .opening{order:-1;width:min(420px,100%);gap:12px;padding-top:6px}
+  .opening-rest{order:1;padding-top:22px;padding-bottom:28px;gap:14px}
+  .opening .go-m{display:flex}
+  .opening .go-d{display:none}
+  .go-m small{display:none}
+  body.intro .layout,body.lifting .layout{grid-template-areas:none;grid-template-rows:none;row-gap:0}
+  body.intro .stage,body.lifting .stage,body.intro #intro,body.lifting #intro,body.intro #intro2,body.lifting #intro2{grid-area:auto}
   .vinyl{font-size:50px}
   .objlabel{font-size:13px;padding:11px 13px}
   .lead{font-size:15.5px}
   .moves{gap:6px}
   .moves li{font-size:14px}
   .cw{font-size:12.5px;padding-top:9px}
-  .plinth{margin-top:-22px}
-  .plinth i{height:28px}
-  .plinth b{height:36px}
+  .plinth{width:min(360px,100%);margin-top:-58px}
+  .plinth i{height:56px}
+  .plinth b{height:34px}
   .dossier{position:fixed;inset:auto 0 0 0;max-height:86dvh;overflow-y:auto;z-index:40;background:var(--wall-hi);transform:translateY(105%);transition:transform .35s cubic-bezier(.16,1,.3,1);
     padding-top:20px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
   .sus{background:var(--wall-hi)}
   body.dopen .dossier{transform:none;box-shadow:0 -14px 50px rgba(0,0,0,.6);padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
   body:not(.intro):not(.lifting) .dbtn{display:flex}
+  body.dopen .dbtn{display:none!important}
   .dbtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;gap:10px;align-items:center;
     border:0;background:var(--plaster);color:var(--label-ink);padding:13px 18px;border-radius:2px;font:600 15px/1 var(--f-body);box-shadow:0 10px 24px -6px rgba(0,0,0,.7)}
   .dbtn small{font-weight:500;color:var(--label-mute);font-variant-numeric:tabular-nums}
@@ -343,8 +361,8 @@ details.brief[open] summary::after{content:"−"}
   .taskbar{align-items:center;gap:10px;width:min(390px,100%);border:1px solid var(--line);background:var(--wall-hi);color:var(--ink);padding:9px 12px;text-align:left;min-height:44px}
   .taskbar .k{font-size:12px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
   .taskbar .q{flex:1;min-width:0;font-size:14.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .taskbar .go{flex:none;color:var(--muted)}
-  .taskbar::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dot);flex:none}
+  .taskbar .go{flex:none;color:var(--muted);display:grid}
+
 }
 @media (max-width:440px){
   .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 150px);min-height:0;width:100%}
@@ -360,6 +378,7 @@ details.brief[open] summary::after{content:"−"}
   <button class="taskbar" id="taskbar" data-act="toggleD" aria-label="Open dossier"></button>
   <div class="stage" id="stage"><div class="phone"><div class="screen" id="screen"></div></div><div class="plinth" aria-hidden="true"><i></i><b></b></div></div>
   <section class="opening" id="intro" aria-labelledby="introt"></section>
+  <section class="opening opening-rest" id="intro2" aria-label="Zo werkt het"></section>
   <aside class="dossier" id="dossier" aria-label="Recherchedossier"></aside>
 </div>
 <button class="dbtn" id="dbtn" data-act="toggleD">Dossier <small id="dbtnmeta"></small></button>
@@ -434,6 +453,26 @@ let uidc=0; const uid=()=>'u'+(++uidc);
 
 const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
 const pinned=id=>S.pins.includes(id);
+const ICON={
+ msg:'<path d="M4.5 5.5h15v10.5H9.5l-5 4z"/>',
+ phone:'<path d="M7 3.5h2.6l1.7 4.4-2.2 1.4a11 11 0 0 0 5.6 5.6l1.4-2.2 4.4 1.7V17a2.5 2.5 0 0 1-2.5 2.5A15 15 0 0 1 4.5 6 2.5 2.5 0 0 1 7 3.5z"/>',
+ mail:'<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7.5 8 5.5 8-5.5"/>',
+ heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.2 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" fill="currentColor" stroke="none"/>',
+ shield:'<path d="M12 3.5l7 2.8v5.4c0 4.4-3 7.6-7 8.8-4-1.2-7-4.4-7-8.8V6.3z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+ camera:'<rect x="3.5" y="7" width="17" height="12.5" rx="3"/><circle cx="12" cy="13.2" r="3.4"/><circle cx="17" cy="9.8" r=".6" fill="currentColor"/>',
+ pin:'<path d="M12 20.5s-6-5.4-6-10.5a6 6 0 0 1 12 0c0 5.1-6 10.5-6 10.5z"/><circle cx="12" cy="10" r="2.2"/>',
+ notes:'<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/>',
+ mic:'<rect x="9" y="3.5" width="6" height="10.5" rx="3"/><path d="M5.8 11a6.2 6.2 0 0 0 12.4 0M12 17.2v3.3"/>',
+ gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21M5.6 5.6l1.9 1.9M16.5 16.5l1.9 1.9M5.6 18.4l1.9-1.9M16.5 7.5l1.9-1.9"/>',
+ trash:'<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5"/>',
+ clip:'<path d="M15.5 7.5 8.7 14.3a2.2 2.2 0 0 0 3.1 3.1l7-7a4 4 0 0 0-5.7-5.7l-7.3 7.3a5.8 5.8 0 0 0 8.2 8.2l5-5"/>',
+ play:'<path d="M8.5 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
+ pause:'<path d="M7.5 5.5h3v13h-3zM13.5 5.5h3v13h-3z" fill="currentColor" stroke="none"/>',
+ chevl:'<path d="M14.5 5.5 8 12l6.5 6.5"/>', chevr:'<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+ check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>', close:'<path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>'
+};
+const ic=(n,sz=20,w=1.9)=>`<svg class="icn" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const petals=()=>'<svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true">'+['#F9C74F','#F9844A','#F94144','#C77DFF','#4D96FF','#43AA8B','#90BE6D','#F8961E'].map((c,i)=>`<ellipse cx="12" cy="6.4" rx="2.6" ry="4.4" fill="${c}" opacity=".9" transform="rotate(${i*45} 12 12)"/>`).join('')+'</svg>';
 const pinBtn=id=>`<button class="pin ${pinned(id)?'on':''}" data-act="pin" data-id="${id}" title="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-pressed="${pinned(id)}"><span class="pi" aria-hidden="true"></span>${pinned(id)?'Gepind':'Pin'}</button>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -443,7 +482,6 @@ const PH={
   <defs><radialGradient id="${u}a" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#46505e"/><stop offset="1" stop-color="#0c0e13"/></radialGradient>
   <linearGradient id="${u}b" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#4f3418"/><stop offset=".45" stop-color="#b98443"/><stop offset="1" stop-color="#3e2710"/></linearGradient></defs>
   <rect width="300" height="420" fill="url(#${u}a)"/>
-  <ellipse cx="150" cy="120" rx="120" ry="60" fill="#fff" opacity=".05"/>
   <rect x="92" y="300" width="116" height="130" fill="#e6e2da"/><rect x="92" y="300" width="116" height="5" fill="#c9c3b7"/>
   <g stroke="#2e1c0b" stroke-width=".8" fill="url(#${u}b)">
    <path d="M146 300 L143 246 L147 246 L150 300Z M158 300 L160 246 L164 246 L162 300Z"/>
@@ -467,8 +505,8 @@ const PH={
   <text x="248" y="196" font-size="12" font-family="Georgia,serif" font-style="italic" fill="#25190b" text-anchor="middle">A. Vermeer-Kok ’38</text>
   <ellipse cx="248" cy="192" rx="62" ry="17" fill="none" stroke="#e5352b" stroke-width="2.5"/>
   <rect x="14" y="14" width="86" height="34" fill="#ffe680" transform="rotate(-3 57 31)"/>
-  <text x="20" y="29" font-size="8" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#333" transform="rotate(-3 57 31)">titaanwit?? in 1938?</text>
-  <text x="20" y="41" font-size="8" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#333" transform="rotate(-3 57 31)">→ Mertens bellen</text>
+  <text x="20" y="29" font-size="8" font-family="'Caveat',cursive" fill="#333" transform="rotate(-3 57 31)">titaanwit?? in 1938?</text>
+  <text x="20" y="41" font-size="8" font-family="'Caveat',cursive" fill="#333" transform="rotate(-3 57 31)">→ Mertens bellen</text>
  </svg>`},
  volvo:{t:"Nieuwe bak 😄",d:"3 september 2025, 12:18",ev:'volvo',svg:u=>`<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3ec"/><stop offset="1" stop-color="#d9ecf7"/></linearGradient></defs>
@@ -504,8 +542,8 @@ const PH={
   <defs><linearGradient id="${u}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2042"/><stop offset="1" stop-color="#a24a2c"/></linearGradient></defs>
   <rect width="320" height="300" fill="url(#${u}w)"/>
   <rect x="96" y="22" width="128" height="60" fill="#1f2a22" stroke="#7a5a32" stroke-width="5"/>
-  <text x="160" y="50" font-size="16" text-anchor="middle" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#f3f0e0">RONDE 4</text>
-  <text x="160" y="70" font-size="9" text-anchor="middle" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#f3f0e0">De Uil · Zandvoort</text>
+  <text x="160" y="50" font-size="16" text-anchor="middle" font-family="'Caveat',cursive" fill="#f3f0e0">RONDE 4</text>
+  <text x="160" y="70" font-size="9" text-anchor="middle" font-family="'Caveat',cursive" fill="#f3f0e0">De Uil · Zandvoort</text>
   <g fill="#e3b892"><circle cx="70" cy="150" r="22"/><circle cx="130" cy="140" r="22"/><circle cx="190" cy="142" r="22"/><circle cx="250" cy="152" r="22"/></g>
   <g fill="#2a1a12"><path d="M48 146 C50 120 92 120 92 146 C86 132 54 132 48 146Z"/><path d="M168 138 C170 112 212 112 212 138 C206 124 174 124 168 138Z"/></g>
   <path d="M120 128 C118 110 142 106 150 124 L152 172 L144 160 L140 132Z" fill="#c76f2a"/>
@@ -526,8 +564,8 @@ const PH={
   </g>
   <g stroke="#eee"><path d="M14 72H286M14 98H286M14 124H286M14 150H286"/></g>
   <text x="14" y="176" font-size="11" font-weight="700" font-family="Arial,sans-serif" fill="#111">Totaal € 184.250</text>
-  <text x="14" y="210" font-size="13" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#d22">allemaal laten onderzoeken!!</text>
-  <text x="14" y="232" font-size="11" font-family="'Comic Sans MS','Segoe Print',cursive" fill="#d22">kopers inlichten → maandag politie?</text>
+  <text x="14" y="210" font-size="13" font-family="'Caveat',cursive" fill="#d22">allemaal laten onderzoeken!!</text>
+  <text x="14" y="232" font-size="11" font-family="'Caveat',cursive" fill="#d22">kopers inlichten → maandag politie?</text>
  </svg>`}
 };
 const photoBtn=(id,cls='')=>{const u=uid();return `<button class="${cls}" data-act="photo" data-id="${id}" aria-label="Open foto: ${esc(PH[id].t)}">${PH[id].svg(u)}</button>`};
@@ -551,23 +589,23 @@ function lockScreen(){
      <div class="lockhint">Hint: “mijn trots” <button class="${pinFails>=3?'nudge':''}" data-act="photo" data-id="reiger">Achtergrond bekijken</button></div>
      <div class="dots" id="dots">${dots}</div>
      <div class="pinmsg" aria-live="polite">${pinFails>=3?'Het antwoord staat op het scherm. Bekijk de achtergrond goed.':pinFails?'Onjuiste code':'&nbsp;'}</div>
-     <div class="pad">${keys}<button class="txt" data-act="noop" aria-hidden="true" tabindex="-1"></button><button data-act="digit" data-k="0">0</button><button class="txt" data-act="del">Wis</button></div>
+     <div class="pad">${keys}<span aria-hidden="true"></span><button data-act="digit" data-k="0">0</button><button class="txt" data-act="del">Wis</button></div>
    </div></div>`;
 }
 
 const APPS=[
- ['berichten','Berichten','#34c759','💬',1],['telefoon','Telefoon','#34c759','📞',3],['mail','Mail','#1a7cf5','✉️',0],['agenda','Agenda','cal','',0],
- ['fotos','Foto’s','#ffffff','🌼',0],['gezondheid','Gezondheid','#ffffff','❤️',0],['beveiliging','Beveiliging','#1f2b38','🛡️',0],['kiekje','Kiekje','linear-gradient(45deg,#f9a13a,#e1306c,#8a3ab9)','📷',0],
- ['vind','Vind','#30b65a','📍',0],['notities','Notities','#ffd54a','📝',0],['memo','Memo’s','#1c1c1e','🎙️',0],['instellingen','Instellingen','#8e8e93','⚙️',0]
+ ['berichten','Berichten','#34c759','msg',1,'#fff'],['telefoon','Telefoon','#34c759','phone',3,'#fff'],['mail','Mail','#1a7cf5','mail',0,'#fff'],['agenda','Agenda','cal','',0],
+ ['fotos','Foto’s','#ffffff','petals',0],['gezondheid','Gezondheid','#ffffff','heart',0,'#ff2d55'],['beveiliging','Beveiliging','#1f2b38','shield',0,'#fff'],['kiekje','Kiekje','linear-gradient(45deg,#f9a13a,#e1306c,#8a3ab9)','camera',0,'#fff'],
+ ['vind','Vind','#30b65a','pin',0,'#fff'],['notities','Notities','#ffd54a','notes',0,'#6b4e00'],['memo','Memo’s','#1c1c1e','mic',0,'#ff453a'],['instellingen','Instellingen','#8e8e93','gear',0,'#fff']
 ];
 function homeScreen(){
   const tip=S.tipPin?'':`<div class="tip" role="note"><span><b>Tip:</b> zie je een <span class="pin"><span class="pi"></span>Pin</span>-knop bij een bericht, foto of logregel? Tik erop om het als bewijs te bewaren. Je hebt 3 bewijzen nodig voor je eindrapport.</span><button class="ok" data-act="tipok">Begrepen</button></div>`;
-  return `<div class="home">${tip}<div class="grid">${APPS.map(([id,n,c,i,b])=>c==='cal'
+  return `<div class="home">${tip}<div class="grid">${APPS.map(([id,n,c,i,b,fg])=>c==='cal'
    ?`<button class="ico" data-act="open" data-app="${id}"><span class="i cal"><small>VRIJDAG</small><b>14</b></span>${n}</button>`
-   :`<button class="ico" data-act="open" data-app="${id}"><span class="i" style="background:${c}">${i}${b?`<span class="badge">${b}</span>`:''}</span>${n}</button>`).join('')}</div></div>`;
+   :`<button class="ico" data-act="open" data-app="${id}"><span class="i" style="background:${c};color:${fg||'#fff'}">${i==='petals'?petals():ic(i,32,1.8)}${b?`<span class="badge">${b}</span>`:''}</span>${n}</button>`).join('')}</div></div>`;
 }
-const hdr=(title,back='Terug')=>`<div class="ah"><button class="back" data-act="back">‹ ${back}</button><b>${title}</b><span></span></div>`;
-const bigHdr=title=>`<div class="ah"><button class="back" data-act="back">‹ Home</button><span></span><span></span><div class="big">${title}</div></div>`;
+const hdr=(title,back='Terug')=>`<div class="ah"><button class="back" data-act="back">${ic('chevl',20,2.2)}${back}</button><b>${title}</b><span></span></div>`;
+const bigHdr=title=>`<div class="ah"><button class="back" data-act="back">${ic('chevl',20,2.2)}Home</button><span></span><span></span><div class="big">${title}</div></div>`;
 const av=(t,c)=>`<span class="av" style="background:${c}">${t}</span>`;
 
 const CHATS={
@@ -625,7 +663,7 @@ function appScreen(top){
     if(top.mail==='mertens')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Rapport Polderzicht (vertrouwelijk)</h3>
       <div class="from">${av('MT','#3d6b8f')}<div><b>Mertens Taxaties</b><small>aan Ruben Aldering · wo 12 nov, 16:20</small></div></div>
       <p>Beste Ruben,</p><p>Zoals telefonisch besproken: bijgaand mijn bevindingen. Mijn conclusie is helaas eenduidig.</p><p>Met vriendelijke groet,<br>Joost Mertens, register-taxateur</p>
-      <div class="attach"><h4>📎 Rapport_Polderzicht.pdf</h4>
+      <div class="attach"><h4 style="display:flex;align-items:center;gap:6px">${ic('clip',16)} Rapport_Polderzicht.pdf</h4>
        <p><b>Werk:</b> “Polderzicht”, olieverf op doek, gesigneerd “A. Vermeer-Kok ’38”.</p>
        <p><b>Herkomst:</b> verkocht in maart 2025 via D. Verbeek (Galerie Aldering) voor €84.000.</p>
        <p><b>Onderzoek:</b> in de witte verf zit een pigment dat pas na 1950 in kunstenaarsverf werd gebruikt.</p>
@@ -634,7 +672,7 @@ function appScreen(top){
     if(top.mail==='daan')return hdr('','Verzonden')+`<div class="body"><div class="mailv"><h3>Polderzicht</h3>
       <div class="from">${av('RA','#4a4a4a')}<div><b>Ruben Aldering</b><small>aan Daan Verbeek · wo 12 nov, 23:12</small></div></div>
       <p>Daan,</p><p>Ik heb het rapport van Mertens. Polderzicht is vals, en ik denk niet dat het de enige is.</p><p>Donderdag 22:00 in de galerie. Alleen jij en ik.</p><p>R.</p>
-      <div class="status">✓ Gelezen door Daan Verbeek · do 13 nov, 08:03</div><p style="margin-top:10px">${pinBtn('mail22')}</p></div></div>`;
+      <div class="status">${ic('check',14,2.4)} Gelezen door Daan Verbeek · do 13 nov, 08:03</div><p style="margin-top:10px">${pinBtn('mail22')}</p></div></div>`;
     if(top.mail==='advocaat')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Inzake binnenplaats Spaarne 41 / De Wit</h3>
       <div class="from">${av('PB','#555')}<div><b>Mr. P. Bakker Advocaten</b><small>aan Ruben Aldering · ma 3 nov, 11:47</small></div></div>
       <p>Geachte heer Aldering,</p><p>De advocaat van de heer De Wit laat weten dat zijn cliënt vasthoudt aan het recht van overpad over de gedeelde binnenplaats. Een zitting bij de kantonrechter staat gepland voor februari.</p><p>Ik adviseer u voorlopig geen contact met de heer De Wit op te nemen.</p>
@@ -657,7 +695,7 @@ function appScreen(top){
   case 'fotos':
     if(top.album==='deleted')return hdr('Recent verwijderd','Albums')+`<div class="body"><p class="note">Onderdelen worden na 30 dagen definitief verwijderd.</p><div class="pgrid">${photoBtn('deleted')}</div></div>`;
     return bigHdr('Foto’s')+`<div class="body"><div class="pgrid">${photoBtn('signature')}${photoBtn('volvo')}${photoBtn('reiger')}</div>
-      <div class="sect">Albums</div><div class="list"><button class="row" data-act="album" data-id="deleted"><span class="grow">🗑️ Recent verwijderd</span><span class="meta">1</span><span class="chev">›</span></button></div></div>`;
+      <div class="sect">Albums</div><div class="list"><button class="row" data-act="album" data-id="deleted"><span class="grow" style="display:flex;align-items:center;gap:8px;color:#0a7aff">${ic('trash',18)}<span style="color:#111">Recent verwijderd</span></span><span class="meta">1</span><span class="chev">${ic('chevr',16,2.2)}</span></button></div></div>`;
   case 'gezondheid': {
     const pts=[['21:30',72],['21:45',75],['21:55',84],['22:00',96],['22:05',104],['22:09',112],['22:13',128]];
     const x=i=>30+i*40, y=v=>130-(v-60)*1.3;
@@ -719,7 +757,7 @@ function appScreen(top){
     const memos=[
       ['m1','Notitie','do 13 nov, 21:30','0:24',"Rustig blijven vanavond. Hij krijgt één kans om het zelf te melden. Anders bel ik maandag de politie. Twintig jaar… twintig jaar, Daan.",'memo'],
       ['m2','Galerie, ideeën','zo 9 nov, 11:02','0:41',"Reiger naar de etalage voor de kerst? Nee. Die blijft in de vitrine boven. Die gaat nooit weg, die heb ik van vader.",null]];
-    return bigHdr('Memo’s')+`<div class="body">${memos.map(m=>`<div class="card memo"><button class="play" data-act="memo" data-id="${m[0]}" aria-label="Afspelen">${S.memo[m[0]]?'❚❚':'▶'}</button>
+    return bigHdr('Memo’s')+`<div class="body">${memos.map(m=>`<div class="card memo"><button class="play" data-act="memo" data-id="${m[0]}" aria-label="Afspelen">${S.memo[m[0]]?ic('pause',16):ic('play',16)}</button>
       <div style="flex:1;min-width:0"><b>${m[1]}</b><div style="color:#6c6c72;font-size:13px">${m[2]} · ${m[3]}</div>${S.memo[m[0]]?`<div class="transcript">“${m[4]}”</div>`:''}</div>${m[5]&&S.memo[m[0]]?pinBtn(m[5]):''}</div>`).join('')}
       <p class="note">Tik op afspelen om het transcript te zien.</p></div>`;}
   case 'instellingen':
@@ -734,14 +772,14 @@ function appScreen(top){
       <p class="note">Met “Vereis aandacht” uit ontgrendelt Face ID ook als de ogen gesloten zijn.</p></div>`;
     return bigHdr('Instellingen')+`<div class="body"><div class="list"><div class="row">${av('RA','#4a4a4a')}<span class="grow"><b>Ruben Aldering</b><div class="sub">Account, opslag en meer</div></span></div></div>
       <div class="list"><div class="row"><span class="grow">Vliegtuigmodus</span><span class="meta">Uit</span></div><div class="row"><span class="grow">Wifi</span><span class="meta">Galerie_Aldering</span></div><div class="row"><span class="grow">Batterij</span><span class="meta">23%</span></div></div>
-      <div class="list"><button class="row" data-act="sub" data-id="faceid"><span class="grow">Face ID en toegangscode</span><span class="chev">›</span></button><div class="row"><span class="grow">Schermtijd</span><span class="chev">›</span></div><div class="row"><span class="grow">Privacy</span><span class="chev">›</span></div></div></div>`;
+      <div class="list"><button class="row" data-act="sub" data-id="faceid"><span class="grow">Face ID en toegangscode</span><span class="chev">${ic('chevr',16,2.2)}</span></button><div class="row"><span class="grow">Schermtijd</span><span class="chev">${ic('chevr',16,2.2)}</span></div><div class="row"><span class="grow">Privacy</span><span class="chev">${ic('chevr',16,2.2)}</span></div></div></div>`;
   }
   return hdr('');
 }
 
 function viewerHTML(){
   const p=PH[viewer];
-  return `<div class="viewer"><div class="vh"><button data-act="closeview">‹ Terug</button><div>${esc(p.t)}<br><small>${p.d}</small></div><span style="width:50px"></span></div>
+  return `<div class="viewer"><div class="vh"><button data-act="closeview" style="display:inline-flex;align-items:center">${ic('chevl',20,2.2)}Terug</button><div>${esc(p.t)}<br><small>${p.d}</small></div><span style="width:50px"></span></div>
    <div class="zoomwrap" id="zw" data-act="zoom" title="Tik om in of uit te zoomen"><div class="img">${p.svg(uid())}</div></div>
    <div class="vfoot"><span>Tik op de foto om in te zoomen op dat punt</span>${S.unlocked||viewer!=='reiger'?pinBtn(p.ev):''}</div></div>`;
 }
@@ -767,7 +805,7 @@ function renderPhone(){
 /* ======================= DOSSIER ======================= */
 function taskHTML(t){
   const done=S.step>t.id, active=S.step===t.id, cls=done?'done':active?'active':'locked';
-  let h=`<li class="task ${cls}"><span class="num">${done?'✓':t.id}</span><p class="q">${active||done?t.q:'Vergrendeld'}</p>`;
+  let h=`<li class="task ${cls}"><span class="num">${done?ic('check',18,2.2):t.id}</span><p class="q">${active||done?t.q:'Vergrendeld'}</p>`;
   if(done) h+=`<p class="res">${t.done}</p>`;
   if(active){
     if(t.type==='auto') h+=`<p class="res">Vind de pincode van vier cijfers en voer die in op de telefoon.</p>`;
@@ -797,7 +835,7 @@ function renderDossier(){
   const sc=d.scrollTop;
   d.innerHTML=`
   <header class="dh"><div><h1>De Reiger</h1><div class="case">Zaak #001 · Haarlem</div></div>
-   <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px">Sluiten ✕</button></div></header>
+   <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px;display:inline-flex;align-items:center;gap:4px">Sluiten ${ic('close',14,2)}</button></div></header>
   <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
   <section><h2>Eindrapport</h2>${reportHTML()}</section>
   <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Nog niets vastgepind. Tik op <b>Pin</b> bij een bericht, foto of logregel die verdacht is. Je eindrapport vraagt om drie bewijzen.</p>`}</section>
@@ -814,9 +852,10 @@ function renderDossier(){
   d.scrollTop=sc;
   document.getElementById('dbtnmeta').textContent=`${Math.min(S.step-1,5)}/5 · ${score()}`;
   const tb=document.getElementById('taskbar'), cur=TASKS.find(t=>t.id===S.step);
-  tb.innerHTML=S.report?'<span class="k">Afgesloten</span><span class="q">Bekijk je uitslag in het dossier</span><span class="go">›</span>'
-    :cur?`<span class="k">${cur.id}/5</span><span class="q">${esc(cur.q)}</span><span class="go">›</span>`
-    :'<span class="k">Rapport</span><span class="q">Dien je beschuldiging in</span><span class="go">›</span>';
+  const go='<span class="go">'+ic('chevr',16)+'</span>';
+  tb.innerHTML=S.report?'<span class="k">Afgesloten</span><span class="q">Bekijk je uitslag in het dossier</span>'+go
+    :cur?`<span class="k">${cur.id}/5</span><span class="q">${esc(cur.q)}</span>`+go
+    :'<span class="k">Rapport</span><span class="q">Dien je beschuldiging in</span>'+go;
 }
 
 /* ======================= MODALS ======================= */
@@ -824,14 +863,14 @@ function renderModal(){
   const m=document.getElementById('modal');
 
   if(showResult&&S.report){
-    const r=S.report, ok=v=>v?'✅':'❌';
-    const stars=r.score>=90?'⭐⭐⭐':r.score>=70?'⭐⭐☆':r.score>0?'⭐☆☆':'☆☆☆';
-    const share=`🔎 Zaak #001 · De Reiger\nWie ${ok(r.wie)} Hoe ${ok(r.hoe)} Waarom ${ok(r.waarom)}\n💡 ${r.hints} hint${r.hints===1?'':'s'} · ✖️ ${r.wrong} fout\n${stars} ${r.score} punten`;
+    const r=S.report, ok=v=>v?'✅':'❌', said=v=>`<i class="vd ${v?'on':''}" aria-hidden="true"></i>${v?'juist':'onjuist'}`;
+    const parts=[r.wie,r.hoe,r.waarom].filter(Boolean).length;
+    const share=`🔎 Zaak #001 · De Reiger\nWie ${ok(r.wie)} Hoe ${ok(r.hoe)} Waarom ${ok(r.waarom)}\n💡 ${r.hints} hint${r.hints===1?'':'s'} · ✖️ ${r.wrong} fout\n${r.score} punten`;
     m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rest">
       <span class="stamp ${r.wie?'ok':''}">${r.wie?'Zaak opgelost':'Dader ontsnapt'}</span>
       <h2 id="rest">${r.wie?'Daan Verbeek is aangehouden':'Verkeerde verdachte'}</h2>
-      <div class="verdict"><div>Wie<b>${ok(r.wie)}</b></div><div>Hoe<b>${ok(r.hoe)}</b></div><div>Waarom<b>${ok(r.waarom)}</b></div></div>
-      <p style="font-family:var(--f-mono);font-size:14px">${stars} ${r.score} punten · onderbouwing ${3-r.bad}/3 sterk</p>
+      <div class="verdict"><div>Wie<b>${said(r.wie)}</b></div><div>Hoe<b>${said(r.hoe)}</b></div><div>Waarom<b>${said(r.waarom)}</b></div></div>
+      <p class="tally"><b>${r.score}</b> punten · ${parts} van 3 onderdelen juist · onderbouwing ${3-r.bad} van 3 sterk</p>
       <p><b>Wat er gebeurde.</b> Ruben had ontdekt dat Daan via de galerie vervalsingen verkocht. Om 22:00 kwam Daan naar de galerie voor een gesprek. Dat liep uit de hand en om 22:14 sloeg Daan hem met het bronzen beeldje De Reiger. Hij legde Ruben onder aan de trap zodat het op een val leek. Daarna hield hij de telefoon voor Rubens gezicht. Hij stuurde zichzelf een bericht alsof Ruben nog leefde, wiste de berichten over het rapport en de screenshot met zijn verkopen, en zette met de personeelscode het alarm aan.</p>
       <ol class="chain">
        <li>Rubens hartslag stopt om <b>22:14</b>.</li>
@@ -841,7 +880,7 @@ function renderModal(){
        <li>Het motief staat in het rapport van Mertens en in Rubens mail aan Daan: Polderzicht is vals.</li>
       </ol>
       <p style="color:var(--muted);font-size:14.5px">Afleiders: Lotte had ruzie en geldnood, maar zat in Amsterdam. Mila verloor haar baan, maar zat in Zandvoort. Henk had burenruzie, maar kende de code niet.</p>
-      <p style="font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Deel je resultaat (zonder spoilers)</p>
+      <p class="lbl">Deel je resultaat (zonder spoilers)</p>
       <pre class="share" id="sharetxt">${share}</pre>
       <div class="row-btns"><button class="btn" data-act="copy">Kopieer resultaat</button><button class="btn ghost" data-act="closeresult">Sluiten</button></div>
      </div></div>`; return;}
@@ -850,20 +889,22 @@ function renderModal(){
 
 /* ======================= ACTIES ======================= */
 let toastT;
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+function toast(msg,dot){const t=document.getElementById('toast');t.innerHTML=(dot?'<span class="tdot" aria-hidden="true"></span>':'')+esc(msg);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function renderIntro(){
-  const el=document.getElementById('intro');
-  if(S.started){el.innerHTML='';return}
+  const el=document.getElementById('intro'), el2=document.getElementById('intro2');
+  if(S.started){el.innerHTML='';el2.innerHTML='';return}
+  const go=cls=>`<div class="go ${cls}"><button class="btn" data-act="start">Pak de telefoon</button><small>± 15 minuten · je voortgang wordt bewaard</small></div>`;
   el.innerHTML=`<h1 class="vinyl" id="introt">De Reiger</h1>
    <div class="objlabel"><b>Telefoon, zwart</b>Gevonden naast het lichaam van Ruben Aldering (58), galeriehouder.<span>Galerie Aldering, Haarlem · vrijdag 14 november, 07:40</span><span>Collectie Recherche Haarlem · zaak #001</span></div>
-   <p class="lead">Het lijkt een val van de trap. De patholoog denkt daar anders over. Het enige wat je hebt is zijn telefoon.</p>
+   ${go('go-m')}`;
+  el2.innerHTML=`<p class="lead">Het lijkt een val van de trap. De patholoog denkt daar anders over. Het enige wat je hebt is zijn telefoon.</p>
    <ol class="moves">
      <li><span><b>Doorzoek de telefoon.</b> Berichten, foto’s, logs: alles kan een spoor zijn.</span></li>
      <li><span><b>Pin wat verdacht is.</b> Je hebt drie bewijzen nodig voor je beschuldiging.</span></li>
      <li><span><b>Volg het dossier.</b> Vijf vragen leiden je naar de dader. Hints kosten punten.</span></li>
    </ol>
    <p class="cw"><b>Inhoud:</b> moord, bedrog en een overleden persoon. Geen expliciete beelden.</p>
-   <div class="go"><button class="btn" data-act="start">Pak de telefoon</button><small>± 15 minuten · je voortgang wordt bewaard</small></div>`;
+   ${go('go-d')}`;
 }
 function render(){
   document.body.classList.toggle('intro',!S.started&&!document.body.classList.contains('lifting'));
@@ -923,7 +964,7 @@ document.addEventListener('click',e=>{
      break;}
    case 'pin': {
      const i=S.pins.indexOf(id);
-     if(i>=0){S.pins.splice(i,1);toast('Losgemaakt')} else {S.pins.push(id);S.tipPin=true;toast('📌 Vastgepind: '+EV[id].l)}
+     if(i>=0){S.pins.splice(i,1);toast('Losgemaakt')} else {S.pins.push(id);S.tipPin=true;toast('Vastgepind: '+EV[id].l,true)}
      if(draft)draft=collectDraft();
      save(); renderPhone(); renderDossier(); break;}
    case 'memo': S.memo[id]=!S.memo[id]; save(); renderPhone(); break;
