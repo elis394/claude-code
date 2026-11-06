@@ -67,6 +67,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .lockhint{font-size:13px;opacity:.9;display:flex;gap:10px;align-items:center}
 @container (max-height:700px){.notif:nth-child(2){display:none}}
 @container (max-height:600px){.notifs{display:none}}
+@container (max-height:470px){.ldate{display:none}.ltime{font-size:44px;margin-top:40px}.pad{--k:44px;gap:6px 22px}.lockbottom{gap:6px;margin-bottom:12px}.pad button{font-size:22px}}
+.pinmsg{font-size:12.5px;min-height:17px;margin-top:-6px;text-align:center;padding:0 24px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.lockhint button.nudge{background:#fff;color:#111;box-shadow:0 0 0 4px rgba(255,255,255,.28)}
 .lockhint button{border:0;background:rgba(255,255,255,.26);color:#fff;border-radius:16px;padding:7px 12px;font-size:12.5px;font-family:var(--f-ui)}
 
 /* beginscherm */
@@ -176,7 +179,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 /* ---------- Dossier (thema-bewust) ---------- */
 .dossier{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:22px;min-width:0}
 .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px}
-.case{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;color:var(--accent);font-weight:600}
+.case{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--muted);margin-top:6px}
 .dh h1{font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:44px;line-height:.95;margin:2px 0 0;text-transform:uppercase;letter-spacing:.01em}
 .score{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .score span{font-size:28px;font-weight:600;display:block;line-height:1}
@@ -198,7 +201,7 @@ details.brief[open] summary::after{content:"–"}
 .task .num{font-family:var(--f-mono);font-size:12px;font-weight:600;width:26px;height:26px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center}
 .task.done .num{background:var(--ok);border-color:var(--ok);color:var(--panel)}
 .task.locked{opacity:.5}
-.task.active{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.task.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent-soft) 35%,var(--panel))}
 .task .q{font-weight:400;margin:2px 0 0}
 .task .res{grid-column:2;font-size:14.5px;color:var(--muted);margin:0}
 .task.done{padding:8px 14px;grid-template-columns:22px minmax(0,1fr);align-items:start}
@@ -212,7 +215,7 @@ details.brief[open] summary::after{content:"–"}
 .btn.ghost{background:none;color:var(--ink)}
 .btn.small{padding:4px 10px;font-size:12.5px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.hint{grid-column:2;font-size:14.5px;background:var(--accent-soft);border-left:3px solid var(--accent);padding:7px 10px;margin:8px 0 0}
+.hint{grid-column:2;font-size:14.5px;background:var(--accent-soft);border-radius:3px;padding:8px 11px;margin:8px 0 0}
 .fb{grid-column:2;font-size:14px;color:var(--stamp);margin:6px 0 0}
 .choice{display:flex;gap:8px;flex-wrap:wrap}
 
@@ -239,6 +242,11 @@ details.brief[open] summary::after{content:"–"}
 .sheet{background:var(--panel);color:var(--ink);max-width:560px;width:100%;max-height:100%;overflow-y:auto;border-radius:6px;padding:26px 24px}
 .sheet h2{font-family:var(--f-display);font-stretch:75%;font-weight:800;text-transform:uppercase;font-size:40px;line-height:.95;margin:4px 0 12px;text-wrap:balance}
 .sheet p{margin:0 0 12px}
+.sheet .meta{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);letter-spacing:.04em;margin:-4px 0 14px}
+.moves{margin:0 0 14px;padding-left:22px;display:grid;gap:6px}
+.moves li{padding-left:2px}
+.moves li::marker{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.cw{font-size:14.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 .stamp{display:inline-block;font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:var(--stamp);border:3px solid var(--stamp);padding:2px 12px;transform:rotate(-4deg);margin:4px 0 12px}
 .stamp.ok{color:var(--ok);border-color:var(--ok)}
 .verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 14px}
@@ -254,25 +262,35 @@ details.brief[open] summary::after{content:"–"}
 
 @media (max-width:900px){
   .layout{grid-template-columns:minmax(0,1fr);justify-items:center;padding-block:12px 84px}
-  .phone{position:relative;top:0;height:min(780px,calc(100dvh - 96px));min-height:0}
+  .phone{position:relative;top:0;height:min(780px,calc(100dvh - 150px));min-height:0}
   .dossier{position:fixed;inset:auto 0 0 0;max-height:86dvh;overflow-y:auto;z-index:40;border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .3s ease;
     padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
   body.dopen .dossier{transform:none;box-shadow:0 -10px 40px rgba(0,0,0,.35);padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
   .dbtn{display:flex;position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;gap:8px;align-items:center;
     border:0;background:var(--ink);color:var(--panel);padding:12px 18px;border-radius:30px;font-family:var(--f-display);font-stretch:85%;font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
   .dbtn small{font-family:var(--f-mono);font-weight:400;opacity:.8}
+  .toast{top:calc(66px + env(safe-area-inset-top,0px))}
   .close-d{display:inline-flex!important}
 }
 @media (max-width:440px){
-  .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 96px);min-height:0;width:100%}
+  .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 150px);min-height:0;width:100%}
   .screen{border-radius:22px}
   .pad{gap:10px 18px}
   }
 .close-d{display:none}
+.taskbar{display:none}
+@media (max-width:900px){
+  .taskbar{display:flex;align-items:center;gap:10px;width:min(390px,100%);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 12px;text-align:left;min-height:44px}
+  .taskbar .k{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);flex:none}
+  .taskbar .q{flex:1;min-width:0;font-size:14.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .taskbar .go{flex:none;color:var(--muted);font-family:var(--f-mono)}
+  .layout{gap:10px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="layout">
+  <button class="taskbar" id="taskbar" data-act="toggleD" aria-label="Open dossier"></button>
   <div class="phone"><div class="screen" id="screen"></div></div>
   <aside class="dossier" id="dossier" aria-label="Recherchedossier"></aside>
 </div>
@@ -343,7 +361,7 @@ const KEY='telefoon-zaak-001-v1';
 const fresh=()=>({started:false,unlocked:false,stack:[],pins:[],step:1,wrong:0,hints:[],report:null,memo:{}});
 let S; try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){S=fresh()}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-let viewer=null, pinEntry='', fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
+let viewer=null, pinEntry='', pinFails=0, fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
 let uidc=0; const uid=()=>'u'+(++uidc);
 
 const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
@@ -462,8 +480,9 @@ function lockScreen(){
      <div class="notif"><b>Telefoon <small>do 23:31</small></b><p>3 gemiste oproepen van Lotte</p></div>
    </div>
    <div class="lockbottom">
-     <div class="lockhint">Hint: “mijn trots” <button data-act="photo" data-id="reiger">Achtergrond bekijken</button></div>
+     <div class="lockhint">Hint: “mijn trots” <button class="${pinFails>=3?'nudge':''}" data-act="photo" data-id="reiger">Achtergrond bekijken</button></div>
      <div class="dots" id="dots">${dots}</div>
+     <div class="pinmsg" aria-live="polite">${pinFails>=3?'Het antwoord staat op het scherm. Bekijk de achtergrond goed.':pinFails?'Onjuiste code':'&nbsp;'}</div>
      <div class="pad">${keys}<button class="txt" data-act="noop" aria-hidden="true" tabindex="-1"></button><button data-act="digit" data-k="0">0</button><button class="txt" data-act="del">Wis</button></div>
    </div></div>`;
 }
@@ -708,11 +727,11 @@ function renderDossier(){
   const d=document.getElementById('dossier');
   const sc=d.scrollTop;
   d.innerHTML=`
-  <header class="dh"><div><div class="case">ZAAK #001 · HAARLEM</div><h1>De Reiger</h1></div>
+  <header class="dh"><div><h1>De Reiger</h1><div class="case">Zaak #001 · Haarlem</div></div>
    <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px">Sluiten ✕</button></div></header>
   <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
   <section><h2>Eindrapport</h2>${reportHTML()}</section>
-  <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Tik op 📌 bij berichten, foto’s en logregels om bewijs te verzamelen. Je hebt het nodig voor je eindrapport.</p>`}</section>
+  <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Nog niets vastgepind. Tik op <b>Pin</b> bij een bericht, foto of logregel die verdacht is. Je eindrapport vraagt om drie bewijzen.</p>`}</section>
   <details class="brief" ${S.step<=1?'open':''}><summary>Briefing</summary>
    <p>Vrijdagochtend 07:40 vond de schoonmaakster galeriehouder <b>Ruben Aldering (58)</b> dood onder aan de wenteltrap in zijn galerie aan het Spaarne. Het lijkt een val, maar de patholoog vond <b>één ronde slag op het achterhoofd, met bronsdeeltjes in de wond</b>. Op het bureau stonden twee whiskyglazen, en één ervan was schoongeveegd.</p>
    <p>Rubens telefoon lag naast hem. Doorzoek hem.</p>
@@ -725,6 +744,10 @@ function renderDossier(){
   <div class="foot"><small>Fout antwoord −5 · hint −10. Je voortgang blijft bewaard in deze browser.</small><button class="linkbtn" data-act="reset">${resetArm?'Tik nogmaals om alles te wissen':'Zaak opnieuw beginnen'}</button></div>`;
   d.scrollTop=sc;
   document.getElementById('dbtnmeta').textContent=`${Math.min(S.step-1,5)}/5 · ${score()}`;
+  const tb=document.getElementById('taskbar'), cur=TASKS.find(t=>t.id===S.step);
+  tb.innerHTML=S.report?'<span class="k">Afgesloten</span><span class="q">Bekijk je uitslag in het dossier</span><span class="go">›</span>'
+    :cur?`<span class="k">${cur.id}/5</span><span class="q">${esc(cur.q)}</span><span class="go">›</span>`
+    :'<span class="k">Rapport</span><span class="q">Dien je beschuldiging in</span><span class="go">›</span>';
 }
 
 /* ======================= MODALS ======================= */
@@ -732,12 +755,16 @@ function renderModal(){
   const m=document.getElementById('modal');
   if(!S.started){
     m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="introt">
-     <div class="case" style="font-family:var(--f-mono);color:var(--accent);font-size:12px;letter-spacing:.12em;font-weight:600">ZAAK #001 · RECHERCHE HAARLEM</div>
      <h2 id="introt">De Reiger</h2>
-     <p>Een galeriehouder ligt dood onder aan zijn trap. Het lijkt een ongeluk, maar de patholoog denkt daar anders over.</p>
-     <p>Het enige wat je hebt is <b>zijn telefoon</b>. Ontgrendel hem, lees zijn berichten, bekijk zijn foto’s en vind uit wie hem die avond als laatste zag.</p>
-     <p style="color:var(--muted);font-size:14.5px">Speelduur ongeveer 15 minuten. Werk de opdrachten in het dossier af, pin bewijs vast met 📌 en dien aan het eind je beschuldiging in.</p>
-     <button class="btn" data-act="start">Start onderzoek</button></div></div>`; return;}
+     <p class="meta">Zaak #001 · Haarlem · ± 15 minuten</p>
+     <p>Een galeriehouder ligt dood onder aan zijn trap. Het lijkt een ongeluk, maar de patholoog denkt daar anders over. Het enige wat je hebt is <b>zijn telefoon</b>.</p>
+     <ol class="moves">
+       <li><b>Doorzoek de telefoon.</b> Berichten, foto’s, logs: alles kan een spoor zijn.</li>
+       <li><b>Pin wat verdacht is.</b> Je hebt drie bewijzen nodig voor je beschuldiging.</li>
+       <li><b>Volg het dossier.</b> Vijf vragen leiden je naar de dader. Hints kosten punten.</li>
+     </ol>
+     <p class="cw"><b>Inhoud:</b> moord, bedrog en een overleden persoon. Geen expliciete beelden.</p>
+     <div class="row-btns"><button class="btn" data-act="start">Pak de telefoon</button></div></div></div>`; return;}
   if(showResult&&S.report){
     const r=S.report, ok=v=>v?'✅':'❌';
     const stars=r.score>=90?'⭐⭐⭐':r.score>=70?'⭐⭐☆':r.score>0?'⭐☆☆':'☆☆☆';
@@ -778,7 +805,7 @@ function checkAnswer(id,val){
   let ok;
   if(t.type==='choice') ok=val===t.ans;
   else { if(!val||!val.trim()){fb[id]='Vul eerst een antwoord in.';renderDossier();return} ok=val.replace(/\D/g,'')===t.ans }
-  if(ok){S.step=id+1;delete fb[id];save();toast('Goed! Opdracht '+id+' afgerond.');render();}
+  if(ok){S.step=id+1;delete fb[id];save();toast(id===5?'Goed. Je eindrapport staat open.':'Goed. Opdracht '+(id+1)+' staat klaar.');render();}
   else{S.wrong++;fb[id]=t.type==='choice'?'Nee, die kan het wel geweest zijn. Kijk nog eens waar beiden die avond waren. (−5)':'Dat klopt niet. Kijk nog eens goed. (−5)';save();renderDossier();
     const inp=document.getElementById('ans-'+id); if(inp){inp.value='';inp.focus()}}
 }
@@ -793,8 +820,8 @@ document.addEventListener('click',e=>{
      if(pinEntry.length>=4) break;
      pinEntry+=t.dataset.k; renderPhone();
      if(pinEntry.length===4){
-       if(pinEntry==='1931'){setTimeout(()=>{pinEntry='';S.unlocked=true;if(S.step===1)S.step=2;save();toast('Telefoon ontgrendeld. Opdracht 1 afgerond.');render()},200)}
-       else{setTimeout(()=>{const d=document.getElementById('dots');d&&d.classList.add('shake');setTimeout(()=>{pinEntry='';renderPhone()},420)},120)}
+       if(pinEntry==='1931'){setTimeout(()=>{pinEntry='';S.unlocked=true;if(S.step===1)S.step=2;save();toast('Ontgrendeld. Volgende vraag staat in het dossier.');render()},200)}
+       else{pinFails++;setTimeout(()=>{const d=document.getElementById('dots');d&&d.classList.add('shake');setTimeout(()=>{pinEntry='';renderPhone()},420)},120)}
      } break;
    case 'del': pinEntry=pinEntry.slice(0,-1); renderPhone(); break;
    case 'open': S.stack=[{app:t.dataset.app}]; save(); renderPhone(); break;
