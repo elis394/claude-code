@@ -15,7 +15,7 @@
 /* Layout: links een nagebootste telefoon (het speelveld), rechts het recherchedossier; op mobiel wordt het dossier een uitschuifpaneel. */
 :root{
   --bg:#D9E0E6; --panel:#F4F6F8; --ink:#142033; --muted:#596577; --line:#C2CBD5;
-  --accent:#A86F08; --accent-soft:#F3E3C2; --stamp:#B3261E; --ok:#2B7A4D;
+  --accent:#8A5A00; --accent-soft:#F3E3C2; --stamp:#B3261E; --ok:#2B7A4D;
   --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
   --f-body:"Newsreader",Georgia,"Times New Roman",serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -38,10 +38,12 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
   padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* ---------- Telefoon (eigen, vaste look: dit is een apparaat) ---------- */
-.phone{width:390px;max-width:100%;height:min(812px,calc(100dvh - 56px));min-height:600px;background:#0b0b0d;border-radius:52px;padding:12px;
+.phone{width:390px;max-width:100%;height:min(812px,calc(100dvh - 56px));min-height:520px;background:#0b0b0d;border-radius:52px;padding:12px;
   box-shadow:0 0 0 2px #2b2b30,0 30px 60px -20px rgba(0,0,0,.45);position:sticky;top:28px}
-.screen{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;background:#f2f2f7;color:#111;font-family:var(--f-ui);font-size:15px;line-height:1.35;display:flex;flex-direction:column}
-.sbar{position:absolute;inset:0 0 auto;height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-weight:600;font-size:14px;z-index:5;pointer-events:none}
+.screen{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;background:#f2f2f7;color:#111;font-family:var(--f-ui);font-size:15px;line-height:1.35;display:flex;flex-direction:column;container-type:size}
+.sbar{position:absolute;inset:0 0 auto;height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 26px 0 30px;font-weight:600;font-size:14px;z-index:5;pointer-events:none}
+.sbar .r{display:flex;align-items:center;gap:5px;font-size:12.5px}
+.sbar svg{display:block}
 .sbar.light{color:#fff}
 .island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;border-radius:20px;background:#000;z-index:6}
 .homebar{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:rgba(0,0,0,.75);border:0;padding:0;z-index:8}
@@ -54,28 +56,33 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .lock .wall svg{width:100%;height:100%;display:block}
 .lock .veil{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,0) 40%,rgba(0,0,0,.55))}
 .lock>*:not(.wall):not(.veil){position:relative}
-.ldate{margin-top:62px;font-size:17px;font-weight:500;opacity:.9}
-.ltime{font-size:84px;font-weight:600;letter-spacing:-2px;line-height:1}
-.notifs{width:calc(100% - 24px);display:grid;gap:8px;margin-top:18px}
-.notif{background:rgba(245,245,250,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#111;border-radius:18px;padding:10px 14px;font-size:14px}
-.notif b{display:flex;justify-content:space-between;font-size:13px}
-.notif b small{font-weight:400;color:#555}
+.ldate{margin-top:clamp(44px,7.5cqh,62px);font-size:17px;font-weight:500;opacity:.9}
+.ltime{font-size:clamp(54px,10.5cqh,84px);font-weight:600;letter-spacing:-2px;line-height:1}
+.notifs{width:calc(100% - 24px);display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:clamp(10px,2cqh,18px)}
+.notif{background:rgba(245,245,250,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#111;border-radius:18px;padding:10px 14px;font-size:14px;min-width:0}
+.notif b{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.notif b small{font-weight:400;color:#444;flex:none}
 .notif p{margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lockbottom{margin-top:auto;margin-bottom:26px;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.lockbottom{margin-top:auto;margin-bottom:clamp(16px,3.2cqh,26px);width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
 .dots{display:flex;gap:14px;margin-bottom:4px}
 .dots i{width:13px;height:13px;border-radius:50%;border:1.5px solid #fff}
 .dots i.f{background:#fff}
 .dots.shake{animation:shake .4s}
 @keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
-.pad{display:grid;grid-template-columns:repeat(3,64px);gap:12px 22px}
-.pad button{width:64px;height:64px;border-radius:50%;border:0;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font-size:26px;font-family:var(--f-ui)}
+.pad{--k:clamp(50px,8.4cqh,64px);display:grid;grid-template-columns:repeat(3,var(--k));gap:clamp(8px,1.5cqh,12px) 22px}
+.pad button{width:var(--k);height:var(--k);border-radius:50%;border:0;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font-size:26px;font-family:var(--f-ui)}
 .pad button.txt{background:none;font-size:15px}
 .lockhint{font-size:13px;opacity:.9;display:flex;gap:10px;align-items:center}
-.lockhint button{border:0;background:rgba(255,255,255,.22);color:#fff;border-radius:14px;padding:4px 10px;font-size:12px;font-family:var(--f-ui)}
+@container (max-height:700px){.notif:nth-child(2){display:none}}
+@container (max-height:600px){.notifs{display:none}}
+.lockhint button{border:0;background:rgba(255,255,255,.26);color:#fff;border-radius:16px;padding:7px 12px;font-size:12.5px;font-family:var(--f-ui)}
 
 /* beginscherm */
 .home{position:absolute;inset:0;background:linear-gradient(160deg,#25324a,#0e1626 55%,#3b2a1a);padding:64px 18px 0;color:#fff}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 8px}
+.tip{background:rgba(255,255,255,.14);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:12px 14px;font-size:13.5px;line-height:1.4;margin-bottom:22px;display:grid;gap:8px}
+.tip .pin{pointer-events:none}
+.tip button.ok{justify-self:start;border:0;background:#fff;color:#111;border-radius:14px;padding:6px 14px;font:600 13px var(--f-ui)}
 .ico{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:5px;color:#fff;font-size:11.5px;font-family:var(--f-ui)}
 .ico span.i{width:60px;height:60px;border-radius:15px;display:grid;place-items:center;font-size:29px;position:relative;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .ico .badge{position:absolute;top:-6px;right:-6px;background:#ff3b30;color:#fff;font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:11px;display:grid;place-items:center;padding:0 5px}
@@ -95,35 +102,40 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .row:last-child{border-bottom:0}
 .row .grow{flex:1;min-width:0}
 .row .sub{color:#6b6b72;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .meta{color:#8e8e93;font-size:13px;white-space:nowrap}
+.row .meta{color:#6c6c72;font-size:13px;white-space:nowrap}
 .row .chev{color:#c4c4c8}
+.row .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;flex:none}
 .unread{width:9px;height:9px;border-radius:50%;background:#0a7aff;flex:none}
 .sect{margin:18px 28px 6px;color:#6b6b72;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
-.note{margin:8px 28px;color:#8e8e93;font-size:12.5px}
+.note{margin:8px 28px;color:#6c6c72;font-size:12.5px}
 
 /* chat */
 .chat{padding:10px 12px 30px;display:flex;flex-direction:column;gap:4px;background:#fff;min-height:100%}
-.day{align-self:center;color:#8e8e93;font-size:12px;margin:12px 0 4px}
-.msg{max-width:78%;display:flex;align-items:flex-end;gap:6px}
+.day{align-self:center;color:#6c6c72;font-size:12px;margin:12px 0 4px}
+.msg{max-width:84%;display:flex;align-items:flex-end;gap:6px}
+.msg .bub{min-width:0}
 .msg.me{align-self:flex-end;flex-direction:row-reverse}
 .bub{padding:8px 12px;border-radius:18px;background:#e9e9eb;color:#111;font-size:15px;position:relative}
 .msg.me .bub{background:#0a7aff;color:#fff}
 .bub small{display:block;font-size:11px;opacity:.65;margin-top:2px}
 .bub .who{display:block;font-size:11.5px;font-weight:600;color:#7a4fd0;margin-bottom:1px}
-.bub.del{background:none;border:1px solid #d0d0d5;color:#8e8e93;font-style:italic}
-.msg.me .bub.del{background:none;color:#8e8e93}
+.bub.del{background:none;border:1px solid #d0d0d5;color:#6c6c72;font-style:italic}
+.msg.me .bub.del{background:none;color:#6c6c72}
 
 /* vastpinnen */
-.pin{border:0;background:none;font-size:15px;opacity:.35;padding:4px;filter:grayscale(1);flex:none;line-height:1}
-.pin.on{opacity:1;filter:none}
-.pin:hover{opacity:.8}
+.pin{position:relative;display:inline-flex;align-items:center;gap:3px;flex:none;border:1px solid #c7c7cc;background:#fff;color:#3a3a3c;border-radius:14px;padding:3px 9px 3px 6px;font:600 12px/1.25 var(--f-ui);white-space:nowrap;vertical-align:middle}
+.pin::after{content:"";position:absolute;inset:-9px -5px}
+.pin:hover{border-color:#8a8a8f}
+.pin.on{background:#ffd60a;border-color:#d9a900;color:#3d2e00}
+.pin .pi{font-size:12px;filter:grayscale(1);opacity:.7}
+.pin.on .pi{filter:none;opacity:1}
 
 /* mail */
 .mailv{background:#fff;min-height:100%;padding:16px 18px 30px}
 .mailv h3{margin:0 0 10px;font-size:20px}
 .mailv .from{display:flex;gap:10px;align-items:center;margin-bottom:14px;font-size:14px}
-.mailv .from small{color:#8e8e93;display:block}
+.mailv .from small{color:#6c6c72;display:block}
 .mailv p{margin:0 0 12px;font-size:15.5px;line-height:1.45}
 .attach{border:1px solid #e0e0e5;border-radius:12px;padding:12px 14px;background:#fafafc;font-size:14px}
 .attach h4{margin:0 0 6px;font-size:14px}
@@ -143,8 +155,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .zoomwrap .img{width:100%;transition:transform .3s ease}
 .zoomwrap .img svg{width:100%;height:auto;display:block}
 .vfoot{padding:10px 16px 28px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#ccc;gap:10px}
-.vfoot .pin{font-size:20px;filter:grayscale(1) brightness(2)}
-.vfoot .pin.on{filter:none}
+.vfoot .pin{background:#1c1c1e;border-color:#555;color:#fff;font-size:13px;padding:6px 12px 6px 9px}
+.vfoot .pin.on{background:#ffd60a;border-color:#d9a900;color:#3d2e00}
 
 /* overige app-onderdelen */
 .card{background:#fff;margin:14px;border-radius:14px;padding:14px}
@@ -161,7 +173,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .transcript{margin-top:8px;font-size:14px;color:#333;background:#f5f5f7;border-radius:10px;padding:8px 10px;font-style:italic}
 .post{background:#fff;margin-bottom:10px}
 .post .ph{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:14px;font-weight:600}
-.post .ph small{font-weight:400;color:#8e8e93;margin-left:auto}
+.post .ph small{font-weight:400;color:#6c6c72;margin-left:auto}
 .post .pimg{border:0;padding:0;width:100%;display:block;background:#000}
 .post .pimg svg{width:100%;display:block}
 .post .cap{padding:8px 12px 12px;font-size:14px;display:flex;gap:6px;align-items:flex-start}
@@ -197,6 +209,11 @@ details.brief[open] summary::after{content:"–"}
 .task.active{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
 .task .q{font-weight:400;margin:2px 0 0}
 .task .res{grid-column:2;font-size:14.5px;color:var(--muted);margin:0}
+.task.done{padding:8px 14px;grid-template-columns:22px minmax(0,1fr);align-items:start}
+.task.done .num{width:20px;height:20px;font-size:10px}
+.task.done .q{display:none}
+.task.done .res{grid-column:2;font-size:14px;line-height:1.4}
+.task.locked{padding:8px 14px}
 .task .act{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
 .task input{font-family:var(--f-mono);font-size:16px;width:110px;padding:7px 10px;border:1.5px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--panel);padding:7px 14px;border-radius:4px;font-family:var(--f-display);font-stretch:85%;font-weight:800;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
@@ -211,7 +228,7 @@ details.brief[open] summary::after{content:"–"}
 .pins li{display:flex;gap:10px;align-items:baseline;font-size:14.5px;border-bottom:1px dashed var(--line);padding-bottom:6px}
 .pins .tag{font-family:var(--f-mono);font-size:11px;font-weight:600;background:var(--accent);color:var(--panel);padding:1px 6px;border-radius:2px;flex:none}
 .pins .txt{flex:1;min-width:0}
-.pins button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
+.pins button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline;padding:8px 6px;margin:-8px -6px}
 .empty{color:var(--muted);font-size:14.5px;font-style:italic;margin:0}
 
 .report fieldset{border:0;padding:0;margin:0 0 14px}
@@ -223,7 +240,7 @@ details.brief[open] summary::after{content:"–"}
 .locked-note{color:var(--muted);font-size:14.5px;margin:0}
 .foot{border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .foot small{color:var(--muted);font-size:12.5px}
-.linkbtn{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline;padding:0}
+.linkbtn{border:0;background:none;color:var(--muted);font-size:13.5px;text-decoration:underline;padding:8px 0;margin:-8px 0}
 
 /* modals */
 .modal{position:fixed;inset:0;background:rgba(8,12,20,.6);display:grid;place-items:center;z-index:50;padding-block:max(16px,env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -240,27 +257,25 @@ details.brief[open] summary::after{content:"–"}
 .chain li{margin-bottom:5px}
 .row-btns{display:flex;gap:8px;flex-wrap:wrap}
 
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:4px;font-size:14.5px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:max-content;max-width:min(420px,calc(100% - 32px));background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:4px;font-size:14.5px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .dbtn{display:none}
 
 @media (max-width:900px){
   .layout{grid-template-columns:minmax(0,1fr);justify-items:center;padding-block:12px 84px}
-  .phone{position:relative;top:0;height:min(780px,calc(100dvh - 100px));min-height:560px}
+  .phone{position:relative;top:0;height:min(780px,calc(100dvh - 96px));min-height:0}
   .dossier{position:fixed;inset:auto 0 0 0;max-height:86dvh;overflow-y:auto;z-index:40;border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .3s ease;
     padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
-  body.dopen .dossier{transform:none;box-shadow:0 -10px 40px rgba(0,0,0,.35)}
+  body.dopen .dossier{transform:none;box-shadow:0 -10px 40px rgba(0,0,0,.35);padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
   .dbtn{display:flex;position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;gap:8px;align-items:center;
     border:0;background:var(--ink);color:var(--panel);padding:12px 18px;border-radius:30px;font-family:var(--f-display);font-stretch:85%;font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
   .dbtn small{font-family:var(--f-mono);font-weight:400;opacity:.8}
   .close-d{display:inline-flex!important}
 }
 @media (max-width:440px){
-  .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 96px);width:100%}
+  .phone{padding:0;border-radius:0;box-shadow:none;background:none;height:calc(100dvh - 96px);min-height:0;width:100%}
   .screen{border-radius:22px}
   .pad{gap:10px 18px}
-  .ltime{font-size:72px}
-  .suspects{grid-template-columns:1fr}
-}
+  }
 .close-d{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -341,7 +356,7 @@ let uidc=0; const uid=()=>'u'+(++uidc);
 
 const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
 const pinned=id=>S.pins.includes(id);
-const pinBtn=id=>`<button class="pin ${pinned(id)?'on':''}" data-act="pin" data-id="${id}" title="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-label="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-pressed="${pinned(id)}">📌</button>`;
+const pinBtn=id=>`<button class="pin ${pinned(id)?'on':''}" data-act="pin" data-id="${id}" title="${pinned(id)?'Losmaken':'Vastpinnen als bewijs'}" aria-pressed="${pinned(id)}"><span class="pi" aria-hidden="true">📌</span>${pinned(id)?'Gepind':'Pin'}</button>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ======================= FOTO'S (SVG) ======================= */
@@ -440,7 +455,7 @@ const PH={
 const photoBtn=(id,cls='')=>{const u=uid();return `<button class="${cls}" data-act="photo" data-id="${id}" aria-label="Open foto: ${esc(PH[id].t)}">${PH[id].svg(u)}</button>`};
 
 /* ======================= TELEFOON-SCHERMEN ======================= */
-const statusbar=light=>`<div class="island"></div><div class="sbar ${light?'light':''}"><span>09:12</span><span>●●● 5G ▮▮▯ 23%</span></div>`;
+const statusbar=light=>`<div class="island"></div><div class="sbar ${light?'light':''}"><span>09:12</span><span class="r" aria-label="5G, batterij 23 procent">5G<svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="5" height="8" rx="1.5" fill="#ff9f0a"/><rect x="22.5" y="4" width="1.6" height="4" rx=".8" fill="currentColor" opacity=".45"/></svg></span></div>`;
 
 function lockScreen(){
   const u=uid();
@@ -467,7 +482,8 @@ const APPS=[
  ['vind','Vind','#30b65a','📍',0],['notities','Notities','#ffd54a','📝',0],['memo','Memo’s','#1c1c1e','🎙️',0],['instellingen','Instellingen','#8e8e93','⚙️',0]
 ];
 function homeScreen(){
-  return `<div class="home"><div class="grid">${APPS.map(([id,n,c,i,b])=>c==='cal'
+  const tip=S.tipPin?'':`<div class="tip" role="note"><span><b>Tip:</b> zie je een <span class="pin"><span class="pi">📌</span>Pin</span>-knop bij een bericht, foto of logregel? Tik erop om het als bewijs te bewaren. Je hebt 3 bewijzen nodig voor je eindrapport.</span><button class="ok" data-act="tipok">Begrepen</button></div>`;
+  return `<div class="home">${tip}<div class="grid">${APPS.map(([id,n,c,i,b])=>c==='cal'
    ?`<button class="ico" data-act="open" data-app="${id}"><span class="i cal"><small>VRIJDAG</small><b>14</b></span>${n}</button>`
    :`<button class="ico" data-act="open" data-app="${id}"><span class="i" style="background:${c}">${i}${b?`<span class="badge">${b}</span>`:''}</span>${n}</button>`).join('')}</div></div>`;
 }
@@ -535,22 +551,22 @@ function appScreen(top){
        <p><b>Herkomst:</b> verkocht in maart 2025 via D. Verbeek (Galerie Aldering) voor €84.000.</p>
        <p><b>Onderzoek:</b> in de witte verf zit een pigment dat pas na 1950 in kunstenaarsverf werd gebruikt.</p>
        <p><b>Conclusie:</b> dit schilderij kan niet in 1938 gemaakt zijn. Het is een <b>vervalsing</b>. Ik raad aan ook de andere werken van dezelfde aanbrenger te laten onderzoeken.</p>
-       ${pinBtn('mertens')} <small>vastpinnen</small></div></div></div>`;
+       ${pinBtn('mertens')}</div></div></div>`;
     if(top.mail==='daan')return hdr('','Verzonden')+`<div class="body"><div class="mailv"><h3>Polderzicht</h3>
       <div class="from">${av('RA','#4a4a4a')}<div><b>Ruben Aldering</b><small>aan Daan Verbeek · wo 12 nov, 23:12</small></div></div>
       <p>Daan,</p><p>Ik heb het rapport van Mertens. Polderzicht is vals, en ik denk niet dat het de enige is.</p><p>Donderdag 22:00 in de galerie. Alleen jij en ik.</p><p>R.</p>
-      <div class="status">✓ Gelezen door Daan Verbeek · do 13 nov, 08:03</div><p style="margin-top:10px">${pinBtn('mail22')} <small>vastpinnen</small></p></div></div>`;
+      <div class="status">✓ Gelezen door Daan Verbeek · do 13 nov, 08:03</div><p style="margin-top:10px">${pinBtn('mail22')}</p></div></div>`;
     if(top.mail==='advocaat')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Inzake binnenplaats Spaarne 41 / De Wit</h3>
       <div class="from">${av('PB','#555')}<div><b>Mr. P. Bakker Advocaten</b><small>aan Ruben Aldering · ma 3 nov, 11:47</small></div></div>
       <p>Geachte heer Aldering,</p><p>De advocaat van de heer De Wit laat weten dat zijn cliënt vasthoudt aan het recht van overpad over de gedeelde binnenplaats. Een zitting bij de kantonrechter staat gepland voor februari.</p><p>Ik adviseer u voorlopig geen contact met de heer De Wit op te nemen.</p>
-      <p>${pinBtn('henkmail')} <small>vastpinnen</small></p></div></div>`;
+      <p>${pinBtn('henkmail')}</p></div></div>`;
     if(top.mail==='nieuws')return hdr('','Inbox')+`<div class="body"><div class="mailv"><h3>Spaarnestad Nieuws: ochtendeditie</h3><div class="from">${av('SN','#c0392b')}<div><b>Spaarnestad Nieuws</b><small>do 13 nov, 07:00</small></div></div><p>Regen verwacht vanaf de middag · Nieuwe fietsbrug over het Spaarne opent in maart · Kunstroute Haarlem trekt record aantal bezoekers.</p></div></div>`;
     return bigHdr('Inbox')+`<div class="body"><div class="list">
-      <button class="row" data-act="mail" data-id="mertens"><span class="unread" style="background:transparent"></span><span class="grow"><b>Mertens Taxaties</b> <span class="meta" style="float:right">wo</span><div>Rapport Polderzicht (vertrouwelijk)</div><div class="sub">Zoals telefonisch besproken: bijgaand mijn bevindingen…</div></span></button>
-      <button class="row" data-act="mail" data-id="nieuws"><span class="unread" style="background:transparent"></span><span class="grow"><b>Spaarnestad Nieuws</b> <span class="meta" style="float:right">do</span><div>Ochtendeditie</div><div class="sub">Regen verwacht vanaf de middag…</div></span></button>
-      <button class="row" data-act="mail" data-id="advocaat"><span class="unread" style="background:transparent"></span><span class="grow"><b>Mr. P. Bakker Advocaten</b> <span class="meta" style="float:right">3 nov</span><div>Inzake binnenplaats Spaarne 41 / De Wit</div><div class="sub">De advocaat van de heer De Wit laat weten…</div></span></button>
+      <button class="row" data-act="mail" data-id="mertens"><span class="grow"><span class="top"><b>Mertens Taxaties</b><span class="meta">wo</span></span><div>Rapport Polderzicht (vertrouwelijk)</div><div class="sub">Zoals telefonisch besproken: bijgaand mijn bevindingen…</div></span></button>
+      <button class="row" data-act="mail" data-id="nieuws"><span class="grow"><span class="top"><b>Spaarnestad Nieuws</b><span class="meta">do</span></span><div>Ochtendeditie</div><div class="sub">Regen verwacht vanaf de middag…</div></span></button>
+      <button class="row" data-act="mail" data-id="advocaat"><span class="grow"><span class="top"><b>Mr. P. Bakker Advocaten</b><span class="meta">3 nov</span></span><div>Inzake binnenplaats Spaarne 41 / De Wit</div><div class="sub">De advocaat van de heer De Wit laat weten…</div></span></button>
      </div><div class="sect">Verzonden</div><div class="list">
-      <button class="row" data-act="mail" data-id="daan"><span class="grow"><b>Aan: Daan Verbeek</b> <span class="meta" style="float:right">wo</span><div>Polderzicht</div><div class="sub">Ik heb het rapport van Mertens. Polderzicht is vals…</div></span></button>
+      <button class="row" data-act="mail" data-id="daan"><span class="grow"><span class="top"><b>Aan: Daan Verbeek</b><span class="meta">wo</span></span><div>Polderzicht</div><div class="sub">Ik heb het rapport van Mertens. Polderzicht is vals…</div></span></button>
      </div></div>`;
   case 'agenda':
     return bigHdr('November')+`<div class="body">
@@ -567,7 +583,7 @@ function appScreen(top){
     const pts=[['21:30',72],['21:45',75],['21:55',84],['22:00',96],['22:05',104],['22:09',112],['22:13',128]];
     const x=i=>30+i*40, y=v=>130-(v-60)*1.3;
     const line=pts.map((p,i)=>`${i?'L':'M'}${x(i)} ${y(p[1])}`).join(' ');
-    return bigHdr('Hartslag')+`<div class="body"><div class="card"><h4>Donderdag 13 november, 21:30–22:30</h4><div class="sub" style="color:#8e8e93;font-size:13px">Bron: Rubens horloge</div>
+    return bigHdr('Hartslag')+`<div class="body"><div class="card"><h4>Donderdag 13 november, 21:30–22:30</h4><div class="sub" style="color:#6c6c72;font-size:13px">Bron: Rubens horloge</div>
      <svg viewBox="0 0 340 150" style="width:100%;margin-top:8px" role="img" aria-label="Hartslag stijgt van 72 naar 128 en stopt na 22:13">
       <g stroke="#eee">${[70,90,110,130].map(v=>`<path d="M24 ${y(v)}H330"/>`).join('')}</g>
       <g font-size="9" fill="#999" font-family="sans-serif">${[70,90,110,130].map(v=>`<text x="0" y="${y(v)+3}">${v}</text>`).join('')}</g>
@@ -609,11 +625,11 @@ function appScreen(top){
        <circle cx="178" cy="66" r="16" fill="#d0708a"/><text x="178" y="71" font-size="13" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">L</text>
        <text x="198" y="92" font-size="10" fill="#333" font-family="sans-serif">Leidseplein</text>
       </svg>
-      <div style="padding:12px 14px" class="kv"><span class="grow"><b>Lotte</b><div class="sub" style="color:#6b6b72;font-size:13.5px">Stadsschouwburg, Leidseplein, Amsterdam · do 22:15</div><div class="sub" style="color:#8e8e93;font-size:12.5px">Lotte deelt haar locatie sinds 2022</div></span>${pinBtn('lotteloc')}</div></div>
+      <div style="padding:12px 14px" class="kv"><span class="grow"><b>Lotte</b><div class="sub" style="color:#6b6b72;font-size:13.5px">Stadsschouwburg, Leidseplein, Amsterdam · do 22:15</div><div class="sub" style="color:#6c6c72;font-size:12.5px">Lotte deelt haar locatie sinds 2022</div></span>${pinBtn('lotteloc')}</div></div>
       <p class="note">Je deelt je locatie met: Lotte.</p></div>`;
   case 'notities':
-    if(top.note==='daan')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Daans verkopen nalopen</h3><p style="color:#8e8e93;font-size:13px">wo 12 nov 2025, 23:05</p>
-      <p>Polderzicht ✗ (Mertens: vals)<br>Duinlandschap met molen ?<br>Stilleven met haring ?<br>Haarlemse gracht, avond ?</p><p>Allemaal via D. Allemaal zonder herkomstpapieren. Waarom heb ik dat nooit gezien?</p><p>${pinBtn('notes')} <small>vastpinnen</small></p></div></div>`;
+    if(top.note==='daan')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Daans verkopen nalopen</h3><p style="color:#6c6c72;font-size:13px">wo 12 nov 2025, 23:05</p>
+      <p>Polderzicht ✗ (Mertens: vals)<br>Duinlandschap met molen ?<br>Stilleven met haring ?<br>Haarlemse gracht, avond ?</p><p>Allemaal via D. Allemaal zonder herkomstpapieren. Waarom heb ik dat nooit gezien?</p><p>${pinBtn('notes')}</p></div></div>`;
     if(top.note==='expo')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Voorjaarsexpo</h3><p>Thema “Water”? Vragen: Lotte voor de opening (ze kan zo goed spreken). Henk NIET uitnodigen.</p></div></div>`;
     if(top.note==='bood')return hdr('','Notities')+`<div class="body"><div class="mailv"><h3>Boodschappen</h3><p>Koffiebonen · Oude kaas · Whisky (Lagavulin) · Vuilniszakken</p></div></div>`;
     return bigHdr('Notities')+`<div class="body"><div class="list">
@@ -625,7 +641,7 @@ function appScreen(top){
       ['m1','Notitie','do 13 nov, 21:30','0:24',"Rustig blijven vanavond. Hij krijgt één kans om het zelf te melden. Anders bel ik maandag de politie. Twintig jaar… twintig jaar, Daan.",'memo'],
       ['m2','Galerie, ideeën','zo 9 nov, 11:02','0:41',"Reiger naar de etalage voor de kerst? Nee. Die blijft in de vitrine boven. Die gaat nooit weg, die heb ik van vader.",null]];
     return bigHdr('Memo’s')+`<div class="body">${memos.map(m=>`<div class="card memo"><button class="play" data-act="memo" data-id="${m[0]}" aria-label="Afspelen">${S.memo[m[0]]?'❚❚':'▶'}</button>
-      <div style="flex:1;min-width:0"><b>${m[1]}</b><div style="color:#8e8e93;font-size:13px">${m[2]} · ${m[3]}</div>${S.memo[m[0]]?`<div class="transcript">“${m[4]}”</div>`:''}</div>${m[5]&&S.memo[m[0]]?pinBtn(m[5]):''}</div>`).join('')}
+      <div style="flex:1;min-width:0"><b>${m[1]}</b><div style="color:#6c6c72;font-size:13px">${m[2]} · ${m[3]}</div>${S.memo[m[0]]?`<div class="transcript">“${m[4]}”</div>`:''}</div>${m[5]&&S.memo[m[0]]?pinBtn(m[5]):''}</div>`).join('')}
       <p class="note">Tik op afspelen om het transcript te zien.</p></div>`;}
   case 'instellingen':
     if(top.sub==='faceid')return hdr('Face ID en code','Instellingen')+`<div class="body"><div class="sect">Laatste ontgrendelingen</div><div class="list">
@@ -684,7 +700,7 @@ function taskHTML(t){
   return h+'</li>';
 }
 function reportHTML(){
-  if(S.step<6) return `<p class="locked-note">Rond eerst de vijf opdrachten af. Daarna kun je je beschuldiging indienen.</p>`;
+  if(S.step<6) return `<p class="locked-note">Gaat open na opdracht 5.</p>`;
   if(S.report) return `<p>Je rapport is ingediend. ${S.report.wie?'De zaak is opgelost.':'De dader is nog vrij.'}</p><div class="row-btns"><button class="btn" data-act="showresult">Bekijk uitslag</button></div>`;
   const d=draft||{};
   const grp=(k,l)=>`<fieldset><legend>${l}</legend>${Q[k].map(o=>`<label class="opt"><input type="radio" name="${k}" value="${o[0]}" ${d[k]===o[0]?'checked':''}>${o[1]}</label>`).join('')}</fieldset>`;
@@ -702,7 +718,10 @@ function renderDossier(){
   d.innerHTML=`
   <header class="dh"><div><div class="case">ZAAK #001 · HAARLEM</div><h1>De Reiger</h1></div>
    <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px">Sluiten ✕</button></div></header>
-  <details class="brief" ${S.step<=2?'open':''}><summary>Briefing</summary>
+  <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
+  <section><h2>Eindrapport</h2>${reportHTML()}</section>
+  <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Tik op 📌 bij berichten, foto’s en logregels om bewijs te verzamelen. Je hebt het nodig voor je eindrapport.</p>`}</section>
+  <details class="brief" ${S.step<=1?'open':''}><summary>Briefing</summary>
    <p>Vrijdagochtend 07:40 vond de schoonmaakster galeriehouder <b>Ruben Aldering (58)</b> dood onder aan de wenteltrap in zijn galerie aan het Spaarne. Het lijkt een val, maar de patholoog vond <b>één ronde slag op het achterhoofd, met bronsdeeltjes in de wond</b>. Op het bureau stonden twee whiskyglazen, en één ervan was schoongeveegd.</p>
    <p>Rubens telefoon lag naast hem. Doorzoek hem.</p>
    <div class="suspects">
@@ -711,9 +730,6 @@ function renderDossier(){
     <div class="sus"><b>Mila Jansen</b><span>26 · assistent</span></div>
     <div class="sus"><b>Henk de Wit</b><span>67 · buurman, antiquair</span></div>
    </div></details>
-  <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
-  <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Tik op 📌 bij berichten, foto’s en logregels om bewijs te verzamelen. Je hebt het nodig voor je eindrapport.</p>`}</section>
-  <section><h2>Eindrapport</h2>${reportHTML()}</section>
   <div class="foot"><small>Fout antwoord −5 · hint −10. Je voortgang blijft bewaard in deze browser.</small><button class="linkbtn" data-act="reset">${resetArm?'Tik nogmaals om alles te wissen':'Zaak opnieuw beginnen'}</button></div>`;
   d.scrollTop=sc;
   document.getElementById('dbtnmeta').textContent=`${Math.min(S.step-1,5)}/5 · ${score()}`;
@@ -806,10 +822,11 @@ document.addEventListener('click',e=>{
      break;}
    case 'pin': {
      const i=S.pins.indexOf(id);
-     if(i>=0){S.pins.splice(i,1);toast('Losgemaakt')} else {S.pins.push(id);toast('📌 Vastgepind: '+EV[id].l)}
+     if(i>=0){S.pins.splice(i,1);toast('Losgemaakt')} else {S.pins.push(id);S.tipPin=true;toast('📌 Vastgepind: '+EV[id].l)}
      if(draft)draft=collectDraft();
      save(); renderPhone(); renderDossier(); break;}
    case 'memo': S.memo[id]=!S.memo[id]; save(); renderPhone(); break;
+   case 'tipok': S.tipPin=true; save(); renderPhone(); break;
    case 'answer': {
      const task=TASKS.find(x=>x.id===+id);
      if(task.type==='choice') checkAnswer(+id,t.dataset.v);
