@@ -298,6 +298,8 @@ details.brief[open] summary::after{background:linear-gradient(currentColor,curre
 .sheet{--ink:var(--label-ink);--muted:var(--label-mute);--line:var(--label-line);--bg:#E2DBCC;background:var(--label);color:var(--label-ink);max-width:580px;width:100%;max-height:100%;overflow-y:auto;padding:30px 28px;box-shadow:0 30px 80px -20px rgba(0,0,0,.9)}
 .sheet h2{font-family:var(--f-display);font-weight:300;font-size:44px;line-height:.95;letter-spacing:-.02em;margin:6px 0 16px;text-wrap:balance}
 .sheet p{margin:0 0 12px}
+.sheet h2.vh::before{content:"";display:inline-block;width:.42em;height:.42em;border-radius:50%;border:2px solid var(--label-ink);box-sizing:border-box;margin-right:.28em;vertical-align:.08em}
+.sheet h2.vh.ok::before{background:var(--dot);border-color:var(--dot)}
 .stamp{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--label-ink)}
 .stamp::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--label-ink);box-sizing:border-box}
 .stamp.ok::before{background:var(--dot);border-color:var(--dot)}
@@ -321,7 +323,7 @@ details.brief[open] summary::after{background:linear-gradient(currentColor,curre
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:max-content;max-width:min(420px,calc(100% - 32px));background:var(--label);color:var(--label-ink);padding:11px 16px;font-size:14.5px;z-index:60;box-shadow:0 14px 30px -10px rgba(0,0,0,.8)}
 .dbtn{display:none}
 .tdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--dot);margin-right:9px;vertical-align:1px}
-.close-d{display:none}
+.close-d{display:none;align-items:center;gap:4px}
 .taskbar{display:none}
 
 @media (max-width:900px){
@@ -448,7 +450,7 @@ const KEY='telefoon-zaak-001-v1';
 const fresh=()=>({started:false,unlocked:false,stack:[],pins:[],step:1,wrong:0,hints:[],report:null,memo:{}});
 let S; try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){S=fresh()}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-let viewer=null, pinEntry='', pinFails=0, fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
+let shareText='', viewer=null, pinEntry='', pinFails=0, fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
 let uidc=0; const uid=()=>'u'+(++uidc);
 
 const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
@@ -482,7 +484,7 @@ const PH={
   <defs><radialGradient id="${u}a" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#46505e"/><stop offset="1" stop-color="#0c0e13"/></radialGradient>
   <linearGradient id="${u}b" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#4f3418"/><stop offset=".45" stop-color="#b98443"/><stop offset="1" stop-color="#3e2710"/></linearGradient></defs>
   <rect width="300" height="420" fill="url(#${u}a)"/>
-  <rect x="92" y="300" width="116" height="130" fill="#e6e2da"/><rect x="92" y="300" width="116" height="5" fill="#c9c3b7"/>
+  <rect x="92" y="300" width="116" height="130" fill="#2b3036"/><rect x="92" y="300" width="116" height="5" fill="#3d434b"/>
   <g stroke="#2e1c0b" stroke-width=".8" fill="url(#${u}b)">
    <path d="M146 300 L143 246 L147 246 L150 300Z M158 300 L160 246 L164 246 L162 300Z"/>
    <ellipse cx="156" cy="230" rx="36" ry="19" transform="rotate(-16 156 230)"/>
@@ -835,7 +837,7 @@ function renderDossier(){
   const sc=d.scrollTop;
   d.innerHTML=`
   <header class="dh"><div><h1>De Reiger</h1><div class="case">Zaak #001 · Haarlem</div></div>
-   <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px;display:inline-flex;align-items:center;gap:4px">Sluiten ${ic('close',14,2)}</button></div></header>
+   <div class="score"><span>${score()}</span><small>punten</small><br><button class="linkbtn close-d" data-act="toggleD" style="margin-top:6px">Sluiten ${ic('close',14,2)}</button></div></header>
   <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
   <section><h2>Eindrapport</h2>${reportHTML()}</section>
   <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Nog niets vastgepind. Tik op <b>Pin</b> bij een bericht, foto of logregel die verdacht is. Je eindrapport vraagt om drie bewijzen.</p>`}</section>
@@ -865,10 +867,12 @@ function renderModal(){
   if(showResult&&S.report){
     const r=S.report, ok=v=>v?'✅':'❌', said=v=>`<i class="vd ${v?'on':''}" aria-hidden="true"></i>${v?'juist':'onjuist'}`;
     const parts=[r.wie,r.hoe,r.waarom].filter(Boolean).length;
-    const share=`🔎 Zaak #001 · De Reiger\nWie ${ok(r.wie)} Hoe ${ok(r.hoe)} Waarom ${ok(r.waarom)}\n💡 ${r.hints} hint${r.hints===1?'':'s'} · ✖️ ${r.wrong} fout\n${r.score} punten`;
+    const plain=v=>v?'juist':'onjuist';
+    const shown=`Zaak #001 · De Reiger\nWie ${plain(r.wie)} · Hoe ${plain(r.hoe)} · Waarom ${plain(r.waarom)}\n${r.hints} hint${r.hints===1?'':'s'} · ${r.wrong} fout\n${r.score} punten`;
+    shareText=`🔎 Zaak #001 · De Reiger\nWie ${ok(r.wie)} Hoe ${ok(r.hoe)} Waarom ${ok(r.waarom)}\n💡 ${r.hints} hint${r.hints===1?'':'s'} · ✖️ ${r.wrong} fout\n${r.score} punten`;
+    document.getElementById('toast').hidden=true;
     m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rest">
-      <span class="stamp ${r.wie?'ok':''}">${r.wie?'Zaak opgelost':'Dader ontsnapt'}</span>
-      <h2 id="rest">${r.wie?'Daan Verbeek is aangehouden':'Verkeerde verdachte'}</h2>
+      <h2 id="rest" class="vh ${r.wie?'ok':''}">${r.wie?'Daan Verbeek is aangehouden':'Verkeerde verdachte'}</h2>
       <div class="verdict"><div>Wie<b>${said(r.wie)}</b></div><div>Hoe<b>${said(r.hoe)}</b></div><div>Waarom<b>${said(r.waarom)}</b></div></div>
       <p class="tally"><b>${r.score}</b> punten · ${parts} van 3 onderdelen juist · onderbouwing ${3-r.bad} van 3 sterk</p>
       <p><b>Wat er gebeurde.</b> Ruben had ontdekt dat Daan via de galerie vervalsingen verkocht. Om 22:00 kwam Daan naar de galerie voor een gesprek. Dat liep uit de hand en om 22:14 sloeg Daan hem met het bronzen beeldje De Reiger. Hij legde Ruben onder aan de trap zodat het op een val leek. Daarna hield hij de telefoon voor Rubens gezicht. Hij stuurde zichzelf een bericht alsof Ruben nog leefde, wiste de berichten over het rapport en de screenshot met zijn verkopen, en zette met de personeelscode het alarm aan.</p>
@@ -881,7 +885,7 @@ function renderModal(){
       </ol>
       <p style="color:var(--muted);font-size:14.5px">Afleiders: Lotte had ruzie en geldnood, maar zat in Amsterdam. Mila verloor haar baan, maar zat in Zandvoort. Henk had burenruzie, maar kende de code niet.</p>
       <p class="lbl">Deel je resultaat (zonder spoilers)</p>
-      <pre class="share" id="sharetxt">${share}</pre>
+      <pre class="share" id="sharetxt">${shown}</pre>
       <div class="row-btns"><button class="btn" data-act="copy">Kopieer resultaat</button><button class="btn ghost" data-act="closeresult">Sluiten</button></div>
      </div></div>`; return;}
   m.innerHTML='';
@@ -889,7 +893,7 @@ function renderModal(){
 
 /* ======================= ACTIES ======================= */
 let toastT;
-function toast(msg,dot){const t=document.getElementById('toast');t.innerHTML=(dot?'<span class="tdot" aria-hidden="true"></span>':'')+esc(msg);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+function toast(msg,dot){const t=document.getElementById('toast');if(showResult)return;t.innerHTML=(dot?'<span class="tdot" aria-hidden="true"></span>':'')+esc(msg);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function renderIntro(){
   const el=document.getElementById('intro'), el2=document.getElementById('intro2');
   if(S.started){el.innerHTML='';el2.innerHTML='';return}
@@ -991,7 +995,7 @@ document.addEventListener('click',e=>{
    case 'showresult': showResult=true; renderModal(); break;
    case 'closeresult': showResult=false; renderModal(); break;
    case 'copy': {
-     const txt=document.getElementById('sharetxt').textContent;
+     const txt=shareText||document.getElementById('sharetxt').textContent;
      const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('sharetxt'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Tekst geselecteerd. Kopieer met je toetsenbord of menu.')};
      try{navigator.clipboard.writeText(txt).then(()=>toast('Resultaat gekopieerd'),sel)}catch(err){sel()}
      break;}
