@@ -239,6 +239,8 @@ details.brief summary::-webkit-details-marker{display:none}
 details.brief summary::after{content:"";width:12px;height:12px;flex:none;background:linear-gradient(currentColor,currentColor) center/12px 1.5px no-repeat,linear-gradient(currentColor,currentColor) center/1.5px 12px no-repeat}
 details.brief[open] summary::after{background:linear-gradient(currentColor,currentColor) center/12px 1.5px no-repeat}
 .brief p{margin:12px 0 0;max-width:62ch;font-size:15.5px}
+.facts{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px;line-height:1.45;color:var(--muted);max-width:62ch}
+.facts b{color:var(--ink);font-weight:600}
 .suspects{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:14px;background:var(--line);border-block:1px solid var(--line)}
 .sus{background:var(--wall);padding:10px 12px 10px 0;font-size:13.5px;line-height:1.35}
 .sus:nth-child(even){padding-left:12px}
@@ -398,8 +400,8 @@ const EV={ // alles wat je kunt vastpinnen
   faceid:{l:"Instellingen: ontgrendeld met Face ID om 22:21",s:1},
   msg2222:{l:"Bericht van Ruben aan Daan, 22:22: “Sorry voor vanavond…”",s:1},
   deletedmsg:{l:"Twee berichten aan Daan verwijderd om 22:23",s:1},
-  raaks:{l:"Daan, 21:47: “Sta in Raaks, kom eraan.”",s:1},
-  daanwo:{l:"Daan, wo 23:40: “Laat me het uitleggen voordat je iemand belt.”",s:1},
+  raaks:{l:"Daan, 21:47: “Ben er over 10 minuten. Ik parkeer op de kade.”",s:1},
+  daanwo:{l:"Daan, do 08:11: “Laat me het uitleggen voordat je iemand belt.”",s:1},
   daan2240:{l:"Daan, 22:40: “Geen probleem. Slaap lekker.”",s:1},
   code:{l:"Groep Galerie Team: personeelscode 4417, alleen Daan en Mila",s:1},
   alarm:{l:"Beveiliging: alarm aan om 22:29 met personeelscode",s:1},
@@ -412,7 +414,7 @@ const EV={ // alles wat je kunt vastpinnen
   notes:{l:"Notitie: Daans verkopen nalopen",s:1},
   deleted:{l:"Recent verwijderd om 22:24: lijst verkopen via D.V.",s:1},
   signature:{l:"Foto: signatuur Polderzicht, rood omcirkeld",s:1},
-  milastory:{l:"Kiekje: Mila om 22:10 op pubquiz in Zandvoort",s:1},
+  milastory:{l:"Kiekje: Mila om 22:26 op pubquiz in Zandvoort",s:1},
   lotteloc:{l:"Vind: Lotte om 22:15 bij Stadsschouwburg Amsterdam",s:1},
   lottechat:{l:"Lotte vraagt €15.000, ruzie op dinsdag",s:0},
   milacontract:{l:"Mila's contract wordt niet verlengd",s:0},
@@ -435,8 +437,8 @@ const TASKS=[
    hint:"De app Beveiliging zegt welk soort code het was. Zoek daarna in Berichten waar die code gedeeld is.",
    done:"De personeelscode 4417 is alleen gedeeld in de groep Galerie Team, met Daan en Mila."},
   {id:5,q:"Daan en Mila kenden de code. Wie van hen kan het alarm niet hebben aangezet?",type:'choice',opts:[['daan','Daan Verbeek'],['mila','Mila Jansen']],ans:'mila',
-   hint:"Waar was Mila om 22:10? Ruben volgt haar op Kiekje.",
-   done:"Mila stond om 22:10 op een pubquiz in Zandvoort, een half uur rijden van de galerie."}
+   hint:"Waar was Mila rond 22:29? Ruben volgt haar op Kiekje.",
+   done:"Om 22:26 stond Mila nog op een pubquiz in Zandvoort, minstens twintig minuten rijden van de galerie. Om 22:29 kan zij het alarm in Haarlem niet hebben aangezet."}
 ];
 
 const Q={
@@ -507,7 +509,7 @@ const PH={
   <text x="248" y="196" font-size="12" font-family="Georgia,serif" font-style="italic" fill="#25190b" text-anchor="middle">A. Vermeer-Kok ’38</text>
   <ellipse cx="248" cy="192" rx="62" ry="17" fill="none" stroke="#e5352b" stroke-width="2.5"/>
   <rect x="14" y="14" width="86" height="34" fill="#ffe680" transform="rotate(-3 57 31)"/>
-  <text x="20" y="29" font-size="8" font-family="'Caveat',cursive" fill="#333" transform="rotate(-3 57 31)">titaanwit?? in 1938?</text>
+  <text x="20" y="29" font-size="8" font-family="'Caveat',cursive" fill="#333" transform="rotate(-3 57 31)">quinacridonrood?? in 1938?</text>
   <text x="20" y="41" font-size="8" font-family="'Caveat',cursive" fill="#333" transform="rotate(-3 57 31)">→ Mertens bellen</text>
  </svg>`},
  volvo:{t:"Nieuwe bak 😄",d:"3 september 2025, 12:18",ev:'volvo',svg:u=>`<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
@@ -540,11 +542,11 @@ const PH={
   <text x="8" y="14" font-size="8" font-family="monospace" fill="#cfe6d8">CAM1 VOORDEUR  13-11-2025  21:58:12</text>
   <text x="8" y="194" font-size="7" font-family="monospace" fill="#cfe6d8" opacity=".8">BEWEGING · BEZOEKER BINNENGELATEN</text>
  </svg>`},
- milastory:{t:"Story van mila.jns",d:"13 november 2025, 22:10",ev:'milastory',svg:u=>`<svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg">
+ milastory:{t:"Story van mila.jns",d:"13 november 2025, 22:26",ev:'milastory',svg:u=>`<svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="${u}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2042"/><stop offset="1" stop-color="#a24a2c"/></linearGradient></defs>
   <rect width="320" height="300" fill="url(#${u}w)"/>
   <rect x="96" y="22" width="128" height="60" fill="#1f2a22" stroke="#7a5a32" stroke-width="5"/>
-  <text x="160" y="50" font-size="16" text-anchor="middle" font-family="'Caveat',cursive" fill="#f3f0e0">RONDE 4</text>
+  <text x="160" y="50" font-size="16" text-anchor="middle" font-family="'Caveat',cursive" fill="#f3f0e0">RONDE 6</text>
   <text x="160" y="70" font-size="9" text-anchor="middle" font-family="'Caveat',cursive" fill="#f3f0e0">De Uil · Zandvoort</text>
   <g fill="#e3b892"><circle cx="70" cy="150" r="22"/><circle cx="130" cy="140" r="22"/><circle cx="190" cy="142" r="22"/><circle cx="250" cy="152" r="22"/></g>
   <g fill="#2a1a12"><path d="M48 146 C50 120 92 120 92 146 C86 132 54 132 48 146Z"/><path d="M168 138 C170 112 212 112 212 138 C206 124 174 124 168 138Z"/></g>
@@ -612,11 +614,10 @@ const av=(t,c)=>`<span class="av" style="background:${c}">${t}</span>`;
 
 const CHATS={
  daan:{n:'Daan Verbeek',a:['DV','#6b7a8f'],last:'Geen probleem. Slaap lekker.',t:'do',msgs:[
-   ['d','Woensdag 12 november'],
-   ['o','Ruben, laat me het uitleggen voordat je iemand belt.','23:40','daanwo'],
-   ['m','Donderdag. Niet eerder.','23:41'],
    ['d','Donderdag 13 november'],
-   ['o','Sta in Raaks, kom eraan.','21:47','raaks'],
+   ['o','Ruben, ik heb je mail gelezen. Laat me het uitleggen voordat je iemand belt.','08:11','daanwo'],
+   ['m','Vanavond om tien uur. Niet eerder.','08:26'],
+   ['o','Ben er over 10 minuten. Ik parkeer op de kade.','21:47','raaks'],
    ['m','Sorry voor vanavond. Ga slapen, morgen verder.','22:22','msg2222'],
    ['mdel','Dit bericht is verwijderd','22:23','deletedmsg'],
    ['mdel','Dit bericht is verwijderd','22:23'],
@@ -639,9 +640,9 @@ const CHATS={
    ['o','Ik ga ervan door! Vitrine 3 is afgestoft. Fijne avond 🙂','17:58',null,'Mila']]},
  mila:{n:'Mila Jansen',a:['MJ','#7b5bd6'],last:'Oké.',t:'ma',msgs:[
    ['d','Maandag 10 november'],
-   ['o','Kunnen we nog praten over mijn contract? Ik snap het niet.','10:12'],
-   ['m','Mijn besluit staat vast. Het spijt me, Mila. Je krijgt een goede referentie.','10:40','milacontract'],
-   ['o','Oké.','10:41']]}
+   ['o','Kunnen we toch nog een keer praten over mijn contract? Ik snap het echt niet.','11:20'],
+   ['m','Mijn besluit staat vast. Het spijt me, Mila. Je krijgt een goede referentie.','11:42','milacontract'],
+   ['o','Oké.','11:43']]}
 };
 
 function appScreen(top){
@@ -668,7 +669,7 @@ function appScreen(top){
       <div class="attach"><h4 style="display:flex;align-items:center;gap:6px">${ic('clip',16)} Rapport_Polderzicht.pdf</h4>
        <p><b>Werk:</b> “Polderzicht”, olieverf op doek, gesigneerd “A. Vermeer-Kok ’38”.</p>
        <p><b>Herkomst:</b> verkocht in maart 2025 via D. Verbeek (Galerie Aldering) voor €84.000.</p>
-       <p><b>Onderzoek:</b> in de witte verf zit een pigment dat pas na 1950 in kunstenaarsverf werd gebruikt.</p>
+       <p><b>Onderzoek:</b> in de rode verf zit quinacridonrood, een pigment dat pas vanaf 1958 in kunstenaarsverf verkrijgbaar was.</p>
        <p><b>Conclusie:</b> dit schilderij kan niet in 1938 gemaakt zijn. Het is een <b>vervalsing</b>. Ik raad aan ook de andere werken van dezelfde aanbrenger te laten onderzoeken.</p>
        ${pinBtn('mertens')}</div></div></div>`;
     if(top.mail==='daan')return hdr('','Verzonden')+`<div class="body"><div class="mailv"><h3>Polderzicht</h3>
@@ -726,8 +727,8 @@ function appScreen(top){
      </div><p class="note">Rubens eigen badge schakelt het alarm alleen uit. Aanzetten kan met de badge of met de personeelscode.</p></div>`;
   case 'kiekje':
     return bigHdr('Kiekje')+`<div class="body">
-     <div class="post"><div class="ph"><span class="ring">${av('MJ','#7b5bd6')}</span>mila.jns<small>do 22:10</small></div><button class="pimg" data-act="photo" data-id="milastory" aria-label="Open foto">${PH.milastory.svg(uid())}</button>
-      <div class="cap"><span><b>mila.jns</b> Ronde 4 bij De Uil in Zandvoort 🦉 Team De Slimme Vossen staat EERSTE</span>${pinBtn('milastory')}</div></div>
+     <div class="post"><div class="ph"><span class="ring">${av('MJ','#7b5bd6')}</span>mila.jns<small>do 22:26</small></div><button class="pimg" data-act="photo" data-id="milastory" aria-label="Open foto">${PH.milastory.svg(uid())}</button>
+      <div class="cap"><span><b>mila.jns</b> Laatste ronde bij De Uil in Zandvoort 🦉 Team De Slimme Vossen staat EERSTE, uitslag om 23:00</span>${pinBtn('milastory')}</div></div>
      <div class="post"><div class="ph">${av('L','#d0708a')}lotte.aldering<small>do 20:05</small></div>
       <div class="cap"><span><b>lotte.aldering</b> Eindelijk weer naar het theater 🎭 Stadsschouwburg, eerste rij!</span></div></div>
      <div class="post"><div class="ph">${av('HW','#8a7a5a')}dewit.antiek<small>do 19:30</small></div>
@@ -841,14 +842,19 @@ function renderDossier(){
   <section><h2>Opdrachten <span class="n">${Math.min(S.step-1,5)}/5</span></h2><ol class="tasks">${TASKS.map(taskHTML).join('')}</ol></section>
   <section><h2>Eindrapport</h2>${reportHTML()}</section>
   <section><h2>Vastgepind bewijs <span class="n">${S.pins.length}</span></h2>${S.pins.length?`<ul class="pins">${S.pins.map((id,i)=>`<li><span class="tag">B-${String(i+1).padStart(2,'0')}</span><span class="txt">${esc(EV[id].l)}</span><button data-act="pin" data-id="${id}">los</button></li>`).join('')}</ul>`:`<p class="empty">Nog niets vastgepind. Tik op <b>Pin</b> bij een bericht, foto of logregel die verdacht is. Je eindrapport vraagt om drie bewijzen.</p>`}</section>
-  <details class="brief" ${S.step<=1?'open':''}><summary>Briefing</summary>
-   <p>Vrijdagochtend 07:40 vond de schoonmaakster galeriehouder <b>Ruben Aldering (58)</b> dood onder aan de wenteltrap in zijn galerie aan het Spaarne. Het lijkt een val, maar de patholoog vond <b>één ronde slag op het achterhoofd, met bronsdeeltjes in de wond</b>. Op het bureau stonden twee whiskyglazen, en één ervan was schoongeveegd.</p>
-   <p>Rubens telefoon lag naast hem. Doorzoek hem.</p>
+  <details class="brief" open><summary>Wat de recherche al weet</summary>
+   <p>Vrijdagochtend 07:40 vond de schoonmaakster galeriehouder <b>Ruben Aldering (58)</b> dood onder aan de wenteltrap naar zijn kantoor, in Galerie Aldering aan het Spaarne in Haarlem. Het lijkt een val.</p>
+   <ul class="facts">
+    <li><b>Patholoog:</b> overleden donderdagavond tussen 21:00 en 23:00. Eén ronde slag op het achterhoofd, met bronsdeeltjes in de wond. Geen ander letsel dat bij een val past.</li>
+    <li><b>Kantoor:</b> uit de vitrine ontbreekt het bronzen beeldje <i>De Reiger</i> (1931). Op het bureau twee whiskyglazen, één ervan schoongeveegd.</li>
+    <li><b>Op het lichaam:</b> Ruben droeg zijn smartwatch nog. Zijn telefoon lag naast hem.</li>
+    <li><b>Galerie:</b> de voordeur heeft een alarm met camera. Ruben zelf gebruikte een badge, het personeel een code.</li>
+   </ul>
    <div class="suspects">
-    <div class="sus"><b>Lotte Aldering</b><span>31 · dochter, erfgenaam</span></div>
-    <div class="sus"><b>Daan Verbeek</b><span>44 · compagnon</span></div>
-    <div class="sus"><b>Mila Jansen</b><span>26 · assistent</span></div>
-    <div class="sus"><b>Henk de Wit</b><span>67 · buurman, antiquair</span></div>
+    <div class="sus"><b>Lotte Aldering</b><span>31 · dochter en enig kind, erft alles. Woont in Amsterdam.</span></div>
+    <div class="sus"><b>Daan Verbeek</b><span>44 · compagnon sinds 2005, verkoopt de schilderijen.</span></div>
+    <div class="sus"><b>Mila Jansen</b><span>26 · assistent in de galerie sinds 2023.</span></div>
+    <div class="sus"><b>Henk de Wit</b><span>67 · antiquair in het pand ernaast, al jaren in onmin met Ruben.</span></div>
    </div></details>
   <div class="foot"><small>Fout antwoord −5 · hint −10. Je voortgang blijft bewaard in deze browser.</small><button class="linkbtn" data-act="reset">${resetArm?'Tik nogmaals om alles te wissen':'Zaak opnieuw beginnen'}</button></div>`;
   d.scrollTop=sc;
@@ -875,12 +881,12 @@ function renderModal(){
       <h2 id="rest" class="vh ${r.wie?'ok':''}">${r.wie?'Daan Verbeek is aangehouden':'Verkeerde verdachte'}</h2>
       <div class="verdict"><div>Wie<b>${said(r.wie)}</b></div><div>Hoe<b>${said(r.hoe)}</b></div><div>Waarom<b>${said(r.waarom)}</b></div></div>
       <p class="tally"><b>${r.score}</b> punten · ${parts} van 3 onderdelen juist · onderbouwing ${3-r.bad} van 3 sterk</p>
-      <p><b>Wat er gebeurde.</b> Ruben had ontdekt dat Daan via de galerie vervalsingen verkocht. Om 22:00 kwam Daan naar de galerie voor een gesprek. Dat liep uit de hand en om 22:14 sloeg Daan hem met het bronzen beeldje De Reiger. Hij legde Ruben onder aan de trap zodat het op een val leek. Daarna hield hij de telefoon voor Rubens gezicht. Hij stuurde zichzelf een bericht alsof Ruben nog leefde, wiste de berichten over het rapport en de screenshot met zijn verkopen, en zette met de personeelscode het alarm aan.</p>
+      <p><b>Wat er gebeurde.</b> Ruben had ontdekt dat Daan via de galerie vervalsingen verkocht. Om 22:00 kwam Daan naar de galerie voor een gesprek. Dat liep uit de hand en om 22:14 sloeg Daan hem met het bronzen beeldje De Reiger. Hij legde Ruben onder aan de trap zodat het op een val leek. Daarna hield hij de telefoon voor Rubens gezicht. Hij stuurde zichzelf een bericht alsof Ruben nog leefde, wiste de berichten over het rapport en de screenshot met zijn verkopen, en zette bij het weggaan met de personeelscode het alarm aan, zodat de galerie de volgende ochtend netjes afgesloten leek, alsof Ruben alleen was geweest.</p>
       <ol class="chain">
        <li>Rubens hartslag stopt om <b>22:14</b>.</li>
        <li>Om <b>22:21</b> wordt de telefoon met Face ID ontgrendeld, en om <b>22:22</b> “stuurt Ruben” een bericht. Ruben was toen al dood.</li>
-       <li>Het alarm gaat om <b>22:29</b> aan met de code die alleen Daan en Mila kennen. Mila zat in Zandvoort.</li>
-       <li>Op het camerabeeld staat een grijze stationwagen met kenteken “GV-2…”. Daan rijdt een grijze Volvo met <b>GV-218-K</b> en meldde om 21:47 dat hij in Raaks stond.</li>
+       <li>Het alarm gaat om <b>22:29</b> aan met de code die alleen Daan en Mila kennen. Mila stond om 22:26 nog op een pubquiz in Zandvoort.</li>
+       <li>Op het camerabeeld staat een grijze stationwagen met kenteken “GV-2…”. Daan rijdt een grijze Volvo met <b>GV-218-K</b> en schreef om 21:47 dat hij op de kade zou parkeren.</li>
        <li>Het motief staat in het rapport van Mertens en in Rubens mail aan Daan: Polderzicht is vals.</li>
       </ol>
       <p style="color:var(--muted);font-size:14.5px">Afleiders: Lotte had ruzie en geldnood, maar zat in Amsterdam. Mila verloor haar baan, maar zat in Zandvoort. Henk had burenruzie, maar kende de code niet.</p>
