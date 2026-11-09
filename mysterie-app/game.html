@@ -260,11 +260,15 @@ details.brief[open] summary::after{background:linear-gradient(currentColor,curre
 .btn.ghost:hover{border-color:var(--ink)}
 .task.active .btn{background:var(--label-ink);border-color:var(--label-ink);color:var(--label)}
 .task.active .btn.ghost{background:none;color:var(--label-ink);border-color:var(--label-ink)}
-.task.active .btn.ghost:hover{background:var(--label-ink);color:var(--label)}
+.task.active .btn.ghost:hover{background:rgba(23,28,25,.07);box-shadow:inset 0 0 0 1px var(--label-ink)}
+.task.active{color-scheme:light}
+.task.active .opt input{accent-color:var(--label-ink)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .hint{grid-column:2;font-size:14.5px;border-top:1px solid var(--line);padding:10px 0 0;margin:12px 0 0}
 .fb{grid-column:2;font-size:14.5px;font-weight:600;color:var(--ink);margin:8px 0 0}
-.choice{display:flex;gap:10px;flex-wrap:wrap}
+.choice{display:flex;gap:8px;flex-wrap:wrap}
+.multi{gap:4px 18px}
+.multi .btn{margin-top:6px;flex-basis:100%;max-width:max-content}
 
 .pins{list-style:none;margin:0;padding:0;display:grid}
 .pins li{display:grid;grid-template-columns:14px 44px minmax(0,1fr) auto;gap:8px;align-items:baseline;font-size:14.5px;line-height:1.4;border-top:1px solid var(--line);padding:9px 0}
@@ -391,7 +395,7 @@ const EV={ // alles wat je kunt vastpinnen
   watch:{l:"Gezondheid: hartslag stopt om 22:14",s:1},
   faceid:{l:"Instellingen: ontgrendeld met Face ID om 22:21",s:1},
   msg2222:{l:"Bericht van Ruben aan Daan, 22:22: “Sorry voor vanavond…”",s:1},
-  deletedmsg:{l:"Twee berichten aan Daan verwijderd om 22:23",s:1},
+  deletedmsg:{l:"Twee berichten van Ruben aan Daan (wo 23:14) zijn gewist",s:1},
   raaks:{l:"Daan, 21:47: “Ben er over 10 minuten. Ik parkeer op de kade.”",s:1},
   daanwo:{l:"Daan, do 08:11: “Laat me het uitleggen voordat je iemand belt.”",s:1},
   daan2240:{l:"Daan, 22:40: “Geen probleem. Slaap lekker.”",s:1},
@@ -419,18 +423,20 @@ const TASKS=[
   {id:1,q:"Ontgrendel Rubens telefoon.",type:'auto',
    hint:"Bekijk de achtergrond van het vergrendelscherm. Zoom in op het bordje bij het beeldje.",
    done:"De code was 1931: het jaartal van het bronzen beeldje De Reiger. Datzelfde beeldje ontbreekt nu in de vitrine."},
-  {id:2,q:"Hoe laat stopte Rubens hartslag?",type:'time',ans:'2214',ph:'uu:mm',
-   hint:"Ruben droeg een smartwatch. Open de app Gezondheid.",
-   done:"Om 22:14 valt de hartslag weg. Vlak daarvoor schiet die omhoog naar 128."},
-  {id:3,q:"Na Rubens dood is zijn telefoon nog ontgrendeld. Hoe laat?",type:'time',ans:'2221',ph:'uu:mm',
-   hint:"Kijk in Instellingen, bij Face ID en toegangscode.",
-   done:"Om 22:21 is de telefoon met Face ID ontgrendeld, zeven minuten na Rubens dood. Iemand hield de telefoon voor zijn gezicht. Een minuut later ging er een bericht naar Daan."},
-  {id:4,q:"Om 22:29 ging het alarm van de galerie aan. Met welke code?",type:'code',ans:'4417',ph:'code',
-   hint:"De app Beveiliging zegt welk soort code het was. Zoek daarna in Berichten waar die code gedeeld is.",
-   done:"De personeelscode 4417 is alleen gedeeld in de groep Galerie Team, met Daan en Mila."},
-  {id:5,q:"Daan en Mila kenden de code. Wie van hen kan het alarm niet hebben aangezet?",type:'choice',opts:[['daan','Daan Verbeek'],['mila','Mila Jansen']],ans:'mila',
-   hint:"Waar was Mila rond 22:29? Ruben volgt haar op Kiekje.",
-   done:"Om 22:26 stond Mila nog op een pubquiz in Zandvoort, minstens twintig minuten rijden van de galerie. Om 22:29 kan zij het alarm in Haarlem niet hebben aangezet."}
+  {id:2,q:"Hoe laat is Ruben overleden?",type:'time',ans:'2214',ph:'uu:mm',
+   hint:"De patholoog houdt het op tussen 21:00 en 23:00. Ruben droeg zijn smartwatch nog. Welke app weet wat zijn hart deed?",
+   done:"Om 22:14 valt Rubens hartslag weg. Vlak daarvoor schiet die omhoog naar 128."},
+  {id:3,q:"Op de telefoon staat een bericht dat Ruben zelf niet verstuurd kan hebben. Hoe laat is het verstuurd?",type:'time',ans:'2222',ph:'uu:mm',
+   hint:"Leg het tijdstip van zijn dood naast de berichten die Ruben die avond verstuurde.",
+   done:"Om 22:22 ging er een bericht naar Daan: acht minuten na Rubens dood. In Instellingen zie je hoe: om 22:21 is de telefoon met Face ID ontgrendeld. Iemand hield hem voor Rubens gezicht."},
+  {id:4,q:"Om 22:29 ging het alarm aan met de personeelscode. Wie van de verdachten kenden die code?",type:'multi',
+   opts:[['lotte','Lotte'],['daan','Daan'],['mila','Mila'],['henk','Henk']],ans:'daan,mila',
+   hint:"Beveiliging zegt welk soort code het was. Zoek in Berichten waar die code gedeeld is, en met wie.",
+   done:"De code 4417 is alleen gedeeld in de groep Galerie Team, met Daan en Mila. Lotte en Henk kenden hem niet."},
+  {id:5,q:"Mila kende de code ook. Waar was zij vlak voordat het alarm aanging?",type:'choice',
+   opts:[['galerie','In de galerie'],['thuis','Thuis in Haarlem'],['zandvoort','Op een pubquiz in Zandvoort'],['amsterdam','In Amsterdam']],ans:'zandvoort',
+   hint:"Ruben volgt Mila op Kiekje.",
+   done:"Om 22:26 stond Mila nog op een pubquiz in Zandvoort, minstens twintig minuten rijden van de galerie. Om 22:29 kan zij het alarm niet hebben aangezet. Dan blijft er één over."}
 ];
 
 const Q={
@@ -444,7 +450,7 @@ const KEY='telefoon-zaak-001-v1';
 const fresh=()=>({started:false,unlocked:false,stack:[],pins:[],step:1,wrong:0,hints:[],report:null,memo:{}});
 let S; try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){S=fresh()}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-let shareText='', viewer=null, pinEntry='', pinFails=0, fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
+let msel={}, shareText='', viewer=null, pinEntry='', pinFails=0, fb={}, draft=null, confirmArm=false, resetArm=false, showResult=false;
 let uidc=0; const uid=()=>'u'+(++uidc);
 
 const score=()=>{let p=100-5*S.wrong-10*S.hints.length; if(S.report){p-=S.report.pen} return Math.max(0,p)};
@@ -606,13 +612,14 @@ const av=(t,c)=>`<span class="av" style="background:${c}">${t}</span>`;
 
 const CHATS={
  daan:{n:'Daan Verbeek',a:['DV','#6b7a8f'],last:'Geen probleem. Slaap lekker.',t:'do',msgs:[
+   ['d','Woensdag 12 november'],
+   ['mdel','Dit bericht is verwijderd','23:14','deletedmsg'],
+   ['mdel','Dit bericht is verwijderd','23:15'],
    ['d','Donderdag 13 november'],
    ['o','Ruben, ik heb je mail gelezen. Laat me het uitleggen voordat je iemand belt.','08:11','daanwo'],
    ['m','Vanavond om tien uur. Niet eerder.','08:26'],
    ['o','Ben er over 10 minuten. Ik parkeer op de kade.','21:47','raaks'],
    ['m','Sorry voor vanavond. Ga slapen, morgen verder.','22:22','msg2222'],
-   ['mdel','Dit bericht is verwijderd','22:23','deletedmsg'],
-   ['mdel','Dit bericht is verwijderd','22:23'],
    ['o','Geen probleem. Slaap lekker.','22:40','daan2240']]},
  lotte:{n:'Lotte',a:['L','#d0708a'],last:'Pap? Ik heb je drie keer gebeld. Sorry van dinsdag…',t:'do',unread:1,msgs:[
    ['d','Dinsdag 11 november'],
@@ -804,6 +811,7 @@ function taskHTML(t){
   if(done) h+=`<p class="res">${t.done}</p>`;
   if(active){
     if(t.type==='auto') h+=`<p class="res">Vind de pincode van vier cijfers en voer die in op de telefoon.</p>`;
+    else if(t.type==='multi') h+=`<div class="act multi" role="group" aria-label="Kies alle juiste">${t.opts.map(o=>`<label class="opt"><input type="checkbox" name="m-${t.id}" value="${o[0]}" ${(msel[t.id]||[]).includes(o[0])?'checked':''}>${o[1]}</label>`).join('')}<button class="btn" data-act="answer" data-id="${t.id}">Controleer</button></div>`;
     else if(t.type==='choice') h+=`<div class="act choice">${t.opts.map(o=>`<button class="btn ghost" data-act="answer" data-id="${t.id}" data-v="${o[0]}">${o[1]}</button>`).join('')}</div>`;
     else h+=`<div class="act"><input id="ans-${t.id}" inputmode="numeric" autocomplete="off" placeholder="${t.ph}" aria-label="Antwoord opdracht ${t.id}"><button class="btn" data-act="answer" data-id="${t.id}">Controleer</button></div>`;
     if(fb[t.id]) h+=`<p class="fb">${fb[t.id]}</p>`;
@@ -922,9 +930,10 @@ function checkAnswer(id,val){
   const t=TASKS.find(x=>x.id===id);
   let ok;
   if(t.type==='choice') ok=val===t.ans;
+  else if(t.type==='multi'){ msel[id]=val; if(!val.length){fb[id]='Kies eerst wie de code kenden.';renderDossier();return} ok=val.slice().sort().join(',')===t.ans }
   else { if(!val||!val.trim()){fb[id]='Vul eerst een antwoord in.';renderDossier();return} ok=val.replace(/\D/g,'')===t.ans }
   if(ok){S.step=id+1;delete fb[id];save();toast(id===5?'Goed. Je eindrapport staat open.':'Goed. Opdracht '+(id+1)+' staat klaar.');render();}
-  else{S.wrong++;fb[id]=t.type==='choice'?'Nee, die kan het wel geweest zijn. Kijk nog eens waar beiden die avond waren. (−5)':'Dat klopt niet. Kijk nog eens goed. (−5)';save();renderDossier();
+  else{S.wrong++;fb[id]=t.type==='choice'?'Daar was ze niet. Zoek een spoor met tijd en plaats. (−5)':t.type==='multi'?'Dat klopt niet helemaal. Wie zaten er in het gesprek waar de code gedeeld werd? (−5)':'Dat klopt niet. Kijk nog eens goed. (−5)';save();renderDossier();
     const inp=document.getElementById('ans-'+id); if(inp){inp.value='';inp.focus()}}
 }
 
@@ -974,6 +983,7 @@ document.addEventListener('click',e=>{
    case 'answer': {
      const task=TASKS.find(x=>x.id===+id);
      if(task.type==='choice') checkAnswer(+id,t.dataset.v);
+     else if(task.type==='multi') checkAnswer(+id,[...document.querySelectorAll(`input[name="m-${id}"]:checked`)].map(i=>i.value));
      else checkAnswer(+id,(document.getElementById('ans-'+id)||{}).value);
      break;}
    case 'hint': if(!S.hints.includes(+id)){S.hints.push(+id);save()} renderDossier(); break;
