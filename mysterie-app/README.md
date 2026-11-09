@@ -1,12 +1,17 @@
-# Mysterie-app: Zaak #001 "De Reiger"
+# Mysterie-app
 
 Een gratis detectivespel voor volwassenen. Je lost de zaak op door de telefoon
 van het slachtoffer te doorzoeken: berichten, foto's, mail, agenda,
 gezondheidsdata, beveiligingslogs en meer.
 
+## Zaken
+
+- **Zaak #001 · De Reiger** (`index.html`): een galeriehouder dood onder aan zijn trap in Haarlem.
+- **Zaak #002 · Hoogwater** (`zaak-002.html`): een journalist verdronken bij de Nolledijk in Vlissingen. Iedereen denkt aan zelfmoord.
+
 ## Spelen
 
-Open `index.html` in een browser, op desktop of telefoon. Er is geen server of
+Open `index.html` of `zaak-002.html` in een browser, op desktop of telefoon. Er is geen server of
 installatie nodig. Je voortgang wordt bewaard in je browser (localStorage).
 
 ## Hoe het werkt
@@ -22,8 +27,8 @@ installatie nodig. Je voortgang wordt bewaard in je browser (localStorage).
 
 ## Bestanden
 
-- `game.html`: de bron van het spel (één bestand, zonder `<html>`/`<head>`-wrapper).
-- `index.html`: de zelfstandige versie, gegenereerd met `node build.js`.
-- `build.js`: zet `game.html` om naar `index.html`.
+- `game.html` en `zaak002.html`: de bron van zaak #001 en #002 (elk één bestand, zonder `<html>`/`<head>`-wrapper).
+- `index.html` en `zaak-002.html`: de zelfstandige versies, gegenereerd met `node build.js`.
+- `build.js`: zet de bronbestanden om naar zelfstandige pagina's.
 
-Pas het spel aan in `game.html` en draai daarna `node build.js`.
+Pas een zaak aan in het bronbestand en draai daarna `node build.js`.

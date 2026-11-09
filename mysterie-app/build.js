@@ -1,6 +1,5 @@
 const fs=require('fs');
 const dir=__dirname+'/';
-const frag=fs.readFileSync(dir+'game.html','utf8');
 const head=`<!doctype html>
 <html lang="nl">
 <head>
@@ -10,5 +9,10 @@ const head=`<!doctype html>
 </head>
 <body>
 `;
-fs.writeFileSync(dir+'index.html',head+frag+'\n</body>\n</html>\n');
-console.log('built');
+// bron (fragment) → zelfstandige pagina
+const cases=[['game.html','index.html'],['zaak002.html','zaak-002.html']];
+for(const [from,to] of cases){
+  const frag=fs.readFileSync(dir+from,'utf8');
+  fs.writeFileSync(dir+to,head+frag+'\n</body>\n</html>\n');
+  console.log('built',to);
+}
